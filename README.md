@@ -1,5 +1,17 @@
 # yfinance-go — Yahoo Finance Client for Go (Open Source)
 
+> ⚠️ **IMPORTANT DISCLAIMER** ⚠️
+> 
+> **This project is NOT affiliated with, endorsed by, or sponsored by Yahoo Finance or Yahoo Inc.**
+> 
+> This is an **independent, open-source Go client** that accesses publicly available financial data from Yahoo Finance's website. Yahoo Finance does not provide an official API for this data, and this client operates by scraping publicly accessible web pages.
+> 
+> **Use at your own risk.** Yahoo Finance may change their website structure at any time, which could break this client. We make no guarantees about data accuracy, availability, or compliance with Yahoo Finance's terms of service.
+> 
+> **Legal Notice:** Users are responsible for ensuring their use of this software complies with Yahoo Finance's terms of service and applicable laws in their jurisdiction.
+
+---
+
 > **Purpose:** A production‑grade **Go client** for Yahoo Finance data that:
 > - Fetches **historicals** (bars), **quotes**, and **fundamentals** with correct **currency units**, **intervals**, and **corporate action adjustments**.
 > - Produces **`ampy-proto`** payloads (e.g., `ampy.bars.v1.BarBatch`, `ampy.fundamentals.v1.Snapshot`) and, when configured, **publishes to `ampy-bus`** topics (e.g., `ampy/{env}/bars/v1/{mic}.{symbol}`).
