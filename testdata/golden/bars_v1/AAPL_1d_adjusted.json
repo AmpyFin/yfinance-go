@@ -1,0 +1,22 @@
+{
+  "security": {"symbol": "AAPL", "mic": "XNAS"},
+  "start": "2024-01-01T00:00:00Z",
+  "end": "2024-01-02T00:00:00Z",
+  "open": {"scaled": 1931200, "scale": 4},
+  "high": {"scaled": 1945000, "scale": 4},
+  "low": {"scaled": 1926500, "scale": 4},
+  "close": {"scaled": 1939800, "scale": 4},
+  "vwap": {"scaled": 1939701, "scale": 4},
+  "volume": 53498123,
+  "adjusted": true,
+  "adjustment_policy_id": "split_dividend",
+  "event_time": "2024-01-02T00:00:00Z",
+  "ingest_time": "2024-01-02T00:00:01Z",
+  "as_of": "2024-01-02T00:00:01Z",
+  "meta": {
+    "run_id": "yfin_pull_20240102",
+    "source": "yfinance-go",
+    "producer": "proto-smoke",
+    "schema_version": "ampy.bars.v1:1.0.0"
+  }
+}

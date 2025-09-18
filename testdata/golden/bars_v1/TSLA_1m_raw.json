@@ -1,0 +1,21 @@
+{
+  "security": {"symbol": "TSLA", "mic": "XNAS"},
+  "start": "2024-01-02T15:30:00Z",
+  "end": "2024-01-02T15:31:00Z",
+  "open": {"scaled": 2541200, "scale": 4},
+  "high": {"scaled": 2543300, "scale": 4},
+  "low": {"scaled": 2539900, "scale": 4},
+  "close": {"scaled": 2541000, "scale": 4},
+  "volume": 182345,
+  "adjusted": false,
+  "adjustment_policy_id": "raw",
+  "event_time": "2024-01-02T15:31:00Z",
+  "ingest_time": "2024-01-02T15:31:01Z",
+  "as_of": "2024-01-02T15:31:01Z",
+  "meta": {
+    "run_id": "yfin_pull_20240102_intraday",
+    "source": "yfinance-go",
+    "producer": "proto-smoke",
+    "schema_version": "ampy.bars.v1:1.0.0"
+  }
+}

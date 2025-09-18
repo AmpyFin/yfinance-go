@@ -1,0 +1,17 @@
+{
+  "security": {"symbol": "MSFT", "mic": "XNAS"},
+  "type": "QUOTE",
+  "bid": {"scaled": 4275000, "scale": 4},
+  "bid_size": 200,
+  "ask": {"scaled": 4275300, "scale": 4},
+  "ask_size": 300,
+  "venue": "XNMS",
+  "event_time": "2024-09-05T19:30:12Z",
+  "ingest_time": "2024-09-05T19:30:12Z",
+  "meta": {
+    "run_id": "yfin_live_20240905",
+    "source": "yfinance-go",
+    "producer": "proto-smoke",
+    "schema_version": "ampy.ticks.v1:1.0.0"
+  }
+}
