@@ -1,0 +1,65 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "EUR",
+          "symbol": "SAP",
+          "exchangeName": "XETR",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 946684800,
+          "regularMarketTime": 1704326400,
+          "gmtoffset": 3600,
+          "timezone": "CET",
+          "exchangeTimezoneName": "Europe/Berlin",
+          "regularMarketPrice": 129.99,
+          "chartPreviousClose": 128.34,
+          "previousClose": 128.34,
+          "scale": 3,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "CET",
+              "start": 1704303000,
+              "end": 1704326400,
+              "gmtoffset": 3600
+            },
+            "regular": {
+              "timezone": "CET",
+              "start": 1704326400,
+              "end": 1704349800,
+              "gmtoffset": 3600
+            },
+            "post": {
+              "timezone": "CET",
+              "start": 1704349800,
+              "end": 1704364200,
+              "gmtoffset": 3600
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "1d",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1704326400],
+        "indicators": {
+          "quote": [
+            {
+              "open": [128.34],
+              "high": [130.0],
+              "low": [127.8],
+              "close": [129.99],
+              "volume": [2150000]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [129.99]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

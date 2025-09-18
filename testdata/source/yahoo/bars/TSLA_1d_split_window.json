@@ -1,0 +1,65 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "TSLA",
+          "exchangeName": "NASDAQ",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 1277942400,
+          "regularMarketTime": 1704326400,
+          "gmtoffset": -18000,
+          "timezone": "EST",
+          "exchangeTimezoneName": "America/New_York",
+          "regularMarketPrice": 247.89,
+          "chartPreviousClose": 248.42,
+          "previousClose": 248.42,
+          "scale": 3,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "EST",
+              "start": 1704303000,
+              "end": 1704326400,
+              "gmtoffset": -18000
+            },
+            "regular": {
+              "timezone": "EST",
+              "start": 1704326400,
+              "end": 1704349800,
+              "gmtoffset": -18000
+            },
+            "post": {
+              "timezone": "EST",
+              "start": 1704349800,
+              "end": 1704364200,
+              "gmtoffset": -18000
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "1d",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1704326400],
+        "indicators": {
+          "quote": [
+            {
+              "open": [245.67],
+              "high": [248.9],
+              "low": [243.21],
+              "close": [247.89],
+              "volume": [125000000]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [247.89]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

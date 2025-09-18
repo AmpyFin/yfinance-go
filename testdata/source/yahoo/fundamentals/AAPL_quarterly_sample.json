@@ -1,0 +1,204 @@
+{
+  "quoteSummary": {
+    "result": [
+      {
+        "incomeStatementHistoryQuarterly": {
+          "incomeStatementHistory": [
+            {
+              "maxAge": 1,
+              "endDate": {
+                "raw": 1719705600,
+                "fmt": "2024-06-29"
+              },
+              "totalRevenue": {
+                "raw": 1198700000000,
+                "fmt": "1.2T",
+                "longFmt": "1,198,700,000,000"
+              },
+              "costOfRevenue": {
+                "raw": 672000000000,
+                "fmt": "672.0B",
+                "longFmt": "672,000,000,000"
+              },
+              "grossProfit": {
+                "raw": 526700000000,
+                "fmt": "526.7B",
+                "longFmt": "526,700,000,000"
+              },
+              "researchDevelopment": {
+                "raw": 28900000000,
+                "fmt": "28.9B",
+                "longFmt": "28,900,000,000"
+              },
+              "sellingGeneralAdministrative": {
+                "raw": 18900000000,
+                "fmt": "18.9B",
+                "longFmt": "18,900,000,000"
+              },
+              "totalOperatingExpenses": {
+                "raw": 719800000000,
+                "fmt": "719.8B",
+                "longFmt": "719,800,000,000"
+              },
+              "operatingIncome": {
+                "raw": 478900000000,
+                "fmt": "478.9B",
+                "longFmt": "478,900,000,000"
+              },
+              "totalOtherIncomeExpenseNet": {
+                "raw": 1000000000,
+                "fmt": "1.0B",
+                "longFmt": "1,000,000,000"
+              },
+              "incomeBeforeTax": {
+                "raw": 479900000000,
+                "fmt": "479.9B",
+                "longFmt": "479,900,000,000"
+              },
+              "incomeTaxExpense": {
+                "raw": 120000000000,
+                "fmt": "120.0B",
+                "longFmt": "120,000,000,000"
+              },
+              "netIncome": {
+                "raw": 359900000000,
+                "fmt": "359.9B",
+                "longFmt": "359,900,000,000"
+              },
+              "netIncomeCommonStockholders": {
+                "raw": 359900000000,
+                "fmt": "359.9B",
+                "longFmt": "359,900,000,000"
+              }
+            }
+          ]
+        },
+        "defaultKeyStatistics": {
+          "sharesOutstanding": {
+            "raw": 15550000000,
+            "fmt": "15.55B",
+            "longFmt": "15,550,000,000"
+          },
+          "floatShares": {
+            "raw": 15520000000,
+            "fmt": "15.52B",
+            "longFmt": "15,520,000,000"
+          },
+          "sharesShort": {
+            "raw": 85000000,
+            "fmt": "85.0M",
+            "longFmt": "85,000,000"
+          },
+          "sharesShortPriorMonth": {
+            "raw": 90000000,
+            "fmt": "90.0M",
+            "longFmt": "90,000,000"
+          },
+          "sharesShortPreviousMonthDate": {
+            "raw": 1706745600,
+            "fmt": "2024-02-01"
+          },
+          "dateShortInterest": {
+            "raw": 1706745600,
+            "fmt": "2024-02-01"
+          },
+          "sharesPercentSharesOut": {
+            "raw": 0.0055,
+            "fmt": "0.55%"
+          },
+          "heldPercentInsiders": {
+            "raw": 0.0007,
+            "fmt": "0.07%"
+          },
+          "heldPercentInstitutions": {
+            "raw": 0.61,
+            "fmt": "61.0%"
+          },
+          "shortRatio": {
+            "raw": 1.2,
+            "fmt": "1.20"
+          },
+          "shortPercentOfFloat": {
+            "raw": 0.0055,
+            "fmt": "0.55%"
+          },
+          "beta": {
+            "raw": 1.29,
+            "fmt": "1.29"
+          },
+          "impliedSharesOutstanding": {
+            "raw": 15550000000,
+            "fmt": "15.55B",
+            "longFmt": "15,550,000,000"
+          },
+          "bookValue": {
+            "raw": 4.44,
+            "fmt": "4.44"
+          },
+          "priceToBook": {
+            "raw": 42.9,
+            "fmt": "42.90"
+          },
+          "lastFiscalYearEnd": {
+            "raw": 1696032000,
+            "fmt": "2023-09-30"
+          },
+          "nextFiscalYearEnd": {
+            "raw": 1727568000,
+            "fmt": "2024-09-30"
+          },
+          "mostRecentQuarter": {
+            "raw": 1719705600,
+            "fmt": "2024-06-29"
+          },
+          "netIncomeToCommon": {
+            "raw": 359900000000,
+            "fmt": "359.9B",
+            "longFmt": "359,900,000,000"
+          },
+          "trailingAnnualDividendRate": {
+            "raw": 1.0,
+            "fmt": "1.00"
+          },
+          "trailingAnnualDividendYield": {
+            "raw": 0.0052,
+            "fmt": "0.52%"
+          },
+          "fiveYearAverageDividendYield": {
+            "raw": 0.0085,
+            "fmt": "0.85%"
+          },
+          "dividendRate": {
+            "raw": 1.0,
+            "fmt": "1.00"
+          },
+          "dividendYield": {
+            "raw": 0.0052,
+            "fmt": "0.52%"
+          },
+          "exDividendDate": {
+            "raw": 1706745600,
+            "fmt": "2024-02-01"
+          },
+          "lastDividendDate": {
+            "raw": 1706745600,
+            "fmt": "2024-02-01"
+          },
+          "lastDividendValue": {
+            "raw": 0.25,
+            "fmt": "0.25"
+          },
+          "lastCapGain": {
+            "raw": 0,
+            "fmt": "0"
+          },
+          "annualHoldingsTurnover": {
+            "raw": 0.15,
+            "fmt": "0.15"
+          }
+        }
+      }
+    ],
+    "error": null
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "JPY",
+          "symbol": "7203.T",
+          "exchangeName": "TSE",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 946684800,
+          "regularMarketTime": 1704326400,
+          "gmtoffset": 32400,
+          "timezone": "JST",
+          "exchangeTimezoneName": "Asia/Tokyo",
+          "regularMarketPrice": 2748.0,
+          "chartPreviousClose": 2710.0,
+          "previousClose": 2710.0,
+          "scale": 2,
+          "priceHint": 0,
+          "currentTradingPeriod": {
+            "pre": {
+              "timezone": "JST",
+              "start": 1704303000,
+              "end": 1704326400,
+              "gmtoffset": 32400
+            },
+            "regular": {
+              "timezone": "JST",
+              "start": 1704326400,
+              "end": 1704349800,
+              "gmtoffset": 32400
+            },
+            "post": {
+              "timezone": "JST",
+              "start": 1704349800,
+              "end": 1704364200,
+              "gmtoffset": 32400
+            }
+          },
+          "dataGranularity": "1d",
+          "range": "1d",
+          "validRanges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"]
+        },
+        "timestamp": [1704326400],
+        "indicators": {
+          "quote": [
+            {
+              "open": [2710.0],
+              "high": [2755.0],
+              "low": [2705.0],
+              "close": [2748.0],
+              "volume": [1200000]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [2748.0]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

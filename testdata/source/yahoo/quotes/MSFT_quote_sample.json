@@ -1,0 +1,45 @@
+{
+  "quoteResponse": {
+    "result": [
+      {
+        "language": "en-US",
+        "region": "US",
+        "quoteType": "EQUITY",
+        "typeDisp": "Equity",
+        "quoteSourceName": "Delayed Quote",
+        "triggerable": true,
+        "customPriceAlertConfidence": "HIGH",
+        "currency": "USD",
+        "exchange": "NMS",
+        "shortName": "Microsoft Corporation",
+        "longName": "Microsoft Corporation",
+        "messageBoardId": "finmb_21835",
+        "exchangeTimezoneName": "America/New_York",
+        "exchangeTimezoneShortName": "EST",
+        "gmtOffSetMilliseconds": -18000000,
+        "market": "us_market",
+        "esgPopulated": false,
+        "regularMarketPrice": 427.53,
+        "regularMarketTime": 1704326412,
+        "regularMarketChange": 2.15,
+        "regularMarketOpen": 425.38,
+        "regularMarketDayHigh": 428.25,
+        "regularMarketDayLow": 424.12,
+        "regularMarketVolume": 18500000,
+        "bid": 427.50,
+        "ask": 427.53,
+        "bidSize": 200,
+        "askSize": 300,
+        "fullExchangeName": "NasdaqGS",
+        "financialCurrency": "USD",
+        "regularMarketPrice": 427.53,
+        "regularMarketChangePercent": 0.00505,
+        "regularMarketChange": 2.15,
+        "regularMarketTime": 1704326412,
+        "marketState": "REGULAR",
+        "symbol": "MSFT"
+      }
+    ],
+    "error": null
+  }
+}
