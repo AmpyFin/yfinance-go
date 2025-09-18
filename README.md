@@ -46,7 +46,7 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 
 ## 3) Scope (What `yfinance-go` Covers)
 
-- **Historical bars** (OHLCV) for equities/ETFs; intervals such as `1m`, `2m`, `5m`, `15m`, `1h`, `1d`, `1wk`, `1mo` (subject to provider limits).
+- **Historical bars** (OHLCV) for equities/ETFs; **daily intervals only** (`1d`) - Yahoo Finance does not provide minute, hourly, weekly, or monthly historical data.
 - **Quotes** (snapshot bid/ask/last, where available).
 - **Fundamentals** (income/balance/cashflow lines, ratios) normalized into `ampy.fundamentals.v1`.
 - **Corporate actions** awareness (splits/dividends) for adjusted vs raw bars.
@@ -191,14 +191,14 @@ When enabled, the client publishes to `ampy-bus` with envelopes per `ampy-bus` s
 ```bash
 yfin pull --ticker AAPL --interval 1d --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
 
-yfin pull --universe-file nasdaq100.txt --interval 1m --start 2025-09-03 --end 2025-09-05 --publish --env prod --topic-prefix ampy/prod
+yfin pull --universe-file nasdaq100.txt --interval 1d --start 2025-09-03 --end 2025-09-05 --publish --env prod --topic-prefix ampy/prod
 
 yfin fundamentals --ticker AAPL --as-of 2025-08-01 --preview
 ```
 
 **Flags (illustrative)**
 - `--ticker`, `--universe-file`, `--market XNAS`
-- `--interval 1m|5m|1d|1wk|1mo`
+- `--interval 1d` (daily only - Yahoo Finance limitation)
 - `--start`, `--end` (UTC)
 - `--adjusted raw|split_only|split_dividend`
 - `--publish`, `--env`, `--topic-prefix`
@@ -216,7 +216,7 @@ yfin fundamentals --ticker AAPL --as-of 2025-08-01 --preview
 
 - **Transport**: base URLs, timeouts, compression, and cache TTLs.
 - **Concurrency**: max inflight, QPS, burst per host.
-- **Intervals**: allowed intervals per market; default adjustment policy.
+- **Intervals**: daily (`1d`) only due to Yahoo Finance limitations; default adjustment policy.
 - **Bus**: topic prefix, env, publish toggle.
 - **Observability**: exporter endpoints, sampling, log level.
 - **Secrets**: none required for public endpoints; if proxy/API key used, reference via secret URIs.
@@ -225,7 +225,7 @@ yfin fundamentals --ticker AAPL --as-of 2025-08-01 --preview
 
 ## 10) Validation & Testing
 
-- **Golden samples**: For 1m/1d/1wk intervals across USD/EUR/JPY quotes; adjusted vs raw; fundamentals quarterly and trailing.
+- **Golden samples**: For daily (`1d`) intervals across USD/EUR/JPY quotes; adjusted vs raw; fundamentals quarterly and trailing.
 - **Round‑trip**: Serialize in Go, deserialize in Python using `ampy-proto`—values match exactly (including decimals).
 - **Gap detection**: Known holiday windows produce expected absence; half‑days truncated correctly.
 - **Backoff**: Inject 429/503; verify retry policy and counters.
@@ -241,8 +241,8 @@ yfin fundamentals --ticker AAPL --as-of 2025-08-01 --preview
 - **Metrics**: Latency, throughput, failure counters; backoff totals.
 - **Tracing**: Spans for `ingest.fetch`, `ingest.decode`, `bus.publish`.
 - **SLO targets**:
-  - p99 fetch latency (1d bars): **≤ 500 ms** per request (provider dependent)
-  - p99 end‑to‑end ingest (fetch→publish) for 1m bars: **≤ 1500 ms** under normal load
+  - p99 fetch latency (daily bars): **≤ 500 ms** per request (provider dependent)
+  - p99 end‑to‑end ingest (fetch→publish) for daily bars: **≤ 1500 ms** under normal load
   - Error budget: 429/5xx rate **< 1%** sustained with backoff
 
 ---
