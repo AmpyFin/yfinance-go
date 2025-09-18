@@ -1,0 +1,17 @@
+{
+  "security": {"symbol": "MSFT", "mic": "XNAS"},
+  "type": "QUOTE",
+  "bid": {"scaled": 4275000, "scale": 4},
+  "bid_size": 200,
+  "ask": {"scaled": 4275300, "scale": 4},
+  "ask_size": 300,
+  "venue": "XNMS",
+  "event_time": "2024-01-03T15:30:12Z",
+  "ingest_time": "2024-01-03T15:30:12Z",
+  "meta": {
+    "run_id": "golden_quote_v1",
+    "source": "yfinance-go",
+    "producer": "local",
+    "schema_version": "ampy.ticks.v1:1.0.0"
+  }
+}

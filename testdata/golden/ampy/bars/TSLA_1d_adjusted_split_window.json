@@ -1,0 +1,25 @@
+{
+  "security": {"symbol": "TSLA", "mic": "XNAS"},
+  "bars": [
+    {
+      "start": "2024-01-02T00:00:00Z",
+      "end":   "2024-01-03T00:00:00Z",
+      "open":  {"scaled": 2456700, "scale": 4},
+      "high":  {"scaled": 2489000, "scale": 4},
+      "low":   {"scaled": 2432100, "scale": 4},
+      "close": {"scaled": 2478900, "scale": 4},
+      "volume": 125000000,
+      "adjusted": true,
+      "adjustment_policy_id": "split_dividend",
+      "event_time": "2024-01-03T00:00:00Z",
+      "ingest_time": "2024-01-03T00:00:01Z",
+      "as_of": "2024-01-03T00:00:00Z"
+    }
+  ],
+  "meta": {
+    "run_id": "golden_bars_v1",
+    "source": "yfinance-go",
+    "producer": "local",
+    "schema_version": "ampy.bars.v1:1.0.0"
+  }
+}

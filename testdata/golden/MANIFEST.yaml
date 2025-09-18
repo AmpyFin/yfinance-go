@@ -1,0 +1,30 @@
+version: 1
+items:
+  - path: testdata/golden/ampy/bars/AAPL_1d_adjusted.json
+    schema_fqdn: ampy.bars.v1.BarBatch
+    sha256: "c96f1fbd2a6ebccd2496eada30d488df6e3663cb5a1cbee06767665ed50ff1a3"
+    notes: ["USD", "1d", "adjusted"]
+  - path: testdata/golden/ampy/bars/AAPL_1d_raw.json
+    schema_fqdn: ampy.bars.v1.BarBatch
+    sha256: "ec804e074dc37372dd94c16cdf753bad7cda0c3636e485c10aa3b0b831209f53"
+    notes: ["USD", "1d", "raw"]
+  - path: testdata/golden/ampy/bars/TSLA_1d_adjusted_split_window.json
+    schema_fqdn: ampy.bars.v1.BarBatch
+    sha256: "9681c9c38c0cb0f9359110f155f6984cf3bff7599bfdd78bfebdd2dc611ee893"
+    notes: ["USD", "1d", "adjusted", "split_window"]
+  - path: testdata/golden/ampy/bars/SAP_XETR_1d_adjusted_eur.json
+    schema_fqdn: ampy.bars.v1.BarBatch
+    sha256: "6fa1df760cdce3371dcfeb0fc6b35613b6ee1e8fdf6439ac8be9994c92f63ede"
+    notes: ["EUR", "1d", "adjusted"]
+  - path: testdata/golden/ampy/bars/TM_XTKS_1d_adjusted_jpy.json
+    schema_fqdn: ampy.bars.v1.BarBatch
+    sha256: "62bc8a9d4007f41a2f247fa372fe131f7bdeb36d98bd5cda2b0379a415105e0e"
+    notes: ["JPY", "1d", "adjusted"]
+  - path: testdata/golden/ampy/quotes/MSFT_snapshot_quote.json
+    schema_fqdn: ampy.ticks.v1.Quote
+    sha256: "44674b69a9abfc8c20c42500413df661990ae4ea8579ebcbcd786fb4df478c24"
+    notes: ["USD", "snapshot"]
+  - path: testdata/golden/ampy/fundamentals/AAPL_quarterly_snapshot.json
+    schema_fqdn: ampy.fundamentals.v1.Snapshot
+    sha256: "a8b71f81a42166382e567978f1c19f928e45e45d7d089a1025c4389f9e67fbf7"
+    notes: ["USD", "quarterly"]
