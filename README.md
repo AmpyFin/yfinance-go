@@ -21,6 +21,15 @@
 
 ---
 
+## Installation
+
+```bash
+git clone https://github.com/AlphaQuantSystem/benzinga-golang.git
+cd benzinga-golang
+```
+
+---
+
 ## 1) Mission & Success Criteria
 
 **Mission**  
