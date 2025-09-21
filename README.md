@@ -24,7 +24,7 @@
 ## Installation
 
 ```bash
-git clone https://github.com/AlphaQuantSystem/benzinga-golang.git
+git clone https://github.com/yourusername/benzinga-golang.git
 cd benzinga-golang
 ```
 
