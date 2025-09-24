@@ -60,11 +60,15 @@ jobs:
       - name: Merge coverage files (Windows)
         if: runner.os == 'Windows'
         run: |
-          echo mode: atomic > coverage_combined.out
-          if exist coverage.out (type coverage.out | findstr /v "^mode:" >> coverage_combined.out)
-          if exist coverage_obsv.out (type coverage_obsv.out | findstr /v "^mode:" >> coverage_combined.out)
-          move coverage_combined.out coverage.out
-        shell: cmd
+          echo "mode: atomic" | Out-File -FilePath coverage_combined.out -Encoding utf8
+          if (Test-Path coverage.out) {
+            Get-Content coverage.out | Where-Object { $_ -notmatch "^mode:" } | Add-Content coverage_combined.out
+          }
+          if (Test-Path coverage_obsv.out) {
+            Get-Content coverage_obsv.out | Where-Object { $_ -notmatch "^mode:" } | Add-Content coverage_combined.out
+          }
+          Move-Item coverage_combined.out coverage.out
+        shell: pwsh
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
