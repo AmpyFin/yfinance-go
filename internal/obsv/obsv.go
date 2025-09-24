@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/AmpyFin/ampy-observability/go/ampyobs"
@@ -41,10 +42,16 @@ type Observability struct {
 }
 
 // Global observability instance
-var globalObsv *Observability
+var (
+	globalObsv *Observability
+	globalMux  sync.RWMutex
+)
 
 // Init initializes the observability system using ampy-observability
 func Init(ctx context.Context, config *Config) error {
+	globalMux.Lock()
+	defer globalMux.Unlock()
+	
 	if globalObsv != nil {
 		return fmt.Errorf("observability already initialized")
 	}
@@ -85,6 +92,9 @@ func Init(ctx context.Context, config *Config) error {
 
 // Shutdown shuts down the observability system
 func Shutdown(ctx context.Context) error {
+	globalMux.Lock()
+	defer globalMux.Unlock()
+	
 	if globalObsv == nil {
 		return nil
 	}
@@ -101,16 +111,30 @@ func Shutdown(ctx context.Context) error {
 
 // Reset resets the global observability state (for testing)
 func Reset() {
+	globalMux.Lock()
+	defer globalMux.Unlock()
 	globalObsv = nil
 }
 
 // Logger returns the ampy-observability logger
 func Logger() *slog.Logger {
+	globalMux.RLock()
+	defer globalMux.RUnlock()
+	
+	if globalObsv == nil || !globalObsv.initialized {
+		return slog.Default()
+	}
 	return ampyobs.L()
 }
 
 // Tracer returns the ampy-observability tracer
 func Tracer() trace.Tracer {
+	globalMux.RLock()
+	defer globalMux.RUnlock()
+	
+	if globalObsv == nil || !globalObsv.initialized {
+		return noop.NewTracerProvider().Tracer("yfinance-go")
+	}
 	// ampy-observability doesn't expose tracer directly, use context logger
 	return noop.NewTracerProvider().Tracer("yfinance-go")
 }

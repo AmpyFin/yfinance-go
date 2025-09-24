@@ -1,9 +1,9 @@
 
 
-AAPLXNAS6
+AAPLXNAS4
 revenue
-€°§Œ­Á6USD"‚ïõÂæğÌ*‚½ĞÆæğÌ9
+€°§Œ­Á6USD"Í–öÂ‚¦]*ÍäĞÆ‚¦]7
 
 net_income
-€ĞõŠñŠUSD"‚ïõÂæğÌ*‚½ĞÆæğÌyfinance"‚½ĞÆæğÌ*?
+€ĞõŠñŠUSD"Í–öÂ‚¦]*ÍäĞÆ‚¦]yfinance"ÍäĞÆ‚¦]*?
 crosslang_testyfinance-gotest"ampy.fundamentals.v1:1.0.0

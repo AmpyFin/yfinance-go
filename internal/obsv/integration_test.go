@@ -33,6 +33,7 @@ func TestObservabilityIntegration(t *testing.T) {
 	require.NoError(t, err)
 	defer func() {
 		_ = Shutdown(ctx)
+		Reset() // Clean up after test
 	}()
 	
 	// Test that observability is properly initialized
@@ -94,6 +95,7 @@ func TestObservabilityDisabled(t *testing.T) {
 	require.NoError(t, err)
 	defer func() {
 		_ = Shutdown(ctx)
+		Reset() // Clean up after test
 	}()
 	
 	// Test that observability is initialized but features are disabled
@@ -168,6 +170,7 @@ func TestSpanHierarchy(t *testing.T) {
 	require.NoError(t, err)
 	defer func() {
 		_ = Shutdown(ctx)
+		Reset() // Clean up after test
 	}()
 	
 	// Test the complete span hierarchy
@@ -232,6 +235,7 @@ func TestLoggingIntegration(t *testing.T) {
 	require.NoError(t, err)
 	defer func() {
 		_ = Shutdown(ctx)
+		Reset() // Clean up after test
 	}()
 	
 	// Test logging with trace context
