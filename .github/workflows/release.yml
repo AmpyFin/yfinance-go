@@ -21,7 +21,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        go: ["1.23.x"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,7 +30,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
+          go-version: "1.23.x"
 
       - name: Verify module tidiness
         run: |
@@ -104,11 +103,22 @@ jobs:
         with:
           path: artifacts/
 
+      - name: Debug artifacts
+        run: |
+          echo "Artifacts directory contents:"
+          ls -la artifacts/ || echo "artifacts directory not found"
+          echo "Ubuntu artifacts:"
+          ls -la artifacts/binaries-ubuntu-latest/ || echo "ubuntu artifacts not found"
+          echo "macOS artifacts:"
+          ls -la artifacts/binaries-macos-latest/ || echo "macos artifacts not found"
+
       - name: Combine artifacts
         run: |
           mkdir -p dist
-          cp artifacts/binaries-ubuntu-latest/dist/* dist/ 2>/dev/null || true
-          cp artifacts/binaries-macos-latest/dist/* dist/ 2>/dev/null || true
+          echo "Copying ubuntu artifacts..."
+          cp artifacts/binaries-ubuntu-latest/dist/* dist/ 2>/dev/null || echo "No ubuntu artifacts to copy"
+          echo "Copying macos artifacts..."
+          cp artifacts/binaries-macos-latest/dist/* dist/ 2>/dev/null || echo "No macos artifacts to copy"
           echo "Files in dist directory:"
           ls -la dist/ || echo "dist directory is empty or doesn't exist"
 
@@ -119,12 +129,18 @@ jobs:
           config-name: release-drafter.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
 
       - name: Prepare release body
         run: |
           cat scripts/release_notes_header.md > release_body.md
           echo "" >> release_body.md
-          echo "${{ steps.notes.outputs.body }}" >> release_body.md
+          if [ -n "${{ steps.notes.outputs.body }}" ]; then
+            echo "${{ steps.notes.outputs.body }}" >> release_body.md
+          else
+            echo "## Changes" >> release_body.md
+            echo "- Bug fixes and improvements" >> release_body.md
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
