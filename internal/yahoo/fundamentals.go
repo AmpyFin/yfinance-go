@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 )
 
 // FundamentalsResponse represents the Yahoo Finance fundamentals API response
