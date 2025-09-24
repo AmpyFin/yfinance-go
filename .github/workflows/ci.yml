@@ -63,8 +63,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           go build -o merge_coverage.exe scripts/merge_coverage.go
-          .\merge_coverage.exe
-        shell: pwsh
+          merge_coverage.exe
+        shell: cmd
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
