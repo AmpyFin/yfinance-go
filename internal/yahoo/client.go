@@ -140,20 +140,6 @@ func (c *Client) buildBarsURL(symbol string, start, end time.Time, adjusted bool
 	return u.String(), nil
 }
 
-// buildQuoteURL builds the URL for fetching quotes
-func (c *Client) buildQuoteURL(symbol string) (string, error) {
-	u, err := url.Parse(c.baseURL + "/v7/finance/quote")
-	if err != nil {
-		return "", err
-	}
-	
-	// Add query parameters
-	params := url.Values{}
-	params.Set("symbols", symbol)
-	
-	u.RawQuery = params.Encode()
-	return u.String(), nil
-}
 
 // buildFundamentalsURL builds the URL for fetching fundamentals
 func (c *Client) buildFundamentalsURL(symbol string) (string, error) {

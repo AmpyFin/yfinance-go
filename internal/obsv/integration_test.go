@@ -31,7 +31,9 @@ func TestObservabilityIntegration(t *testing.T) {
 	
 	err := Init(ctx, config)
 	require.NoError(t, err)
-	defer Shutdown(ctx)
+	defer func() {
+		_ = Shutdown(ctx)
+	}()
 	
 	// Test that observability is properly initialized
 	assert.NotNil(t, globalObsv)
@@ -90,7 +92,9 @@ func TestObservabilityDisabled(t *testing.T) {
 	
 	err := Init(ctx, config)
 	require.NoError(t, err)
-	defer Shutdown(ctx)
+	defer func() {
+		_ = Shutdown(ctx)
+	}()
 	
 	// Test that observability is initialized but features are disabled
 	assert.NotNil(t, globalObsv)
@@ -162,7 +166,9 @@ func TestSpanHierarchy(t *testing.T) {
 	
 	err := Init(ctx, config)
 	require.NoError(t, err)
-	defer Shutdown(ctx)
+	defer func() {
+		_ = Shutdown(ctx)
+	}()
 	
 	// Test the complete span hierarchy
 	ctx, runSpan := StartRunSpan(ctx, "test-run-123", "test", []string{"arg1", "arg2"})
@@ -185,7 +191,7 @@ func TestSpanHierarchy(t *testing.T) {
 	ctx, publishSpan := StartPublishBusSpan(ctx, "ampy.bars", "AAPL", 0, 1024)
 	defer publishSpan.End()
 	
-	ctx, fxSpan := StartFXRatesSpan(ctx, "USD", "EUR")
+	_, fxSpan := StartFXRatesSpan(ctx, "USD", "EUR")
 	defer fxSpan.End()
 	
 	// Test error recording
@@ -224,7 +230,9 @@ func TestLoggingIntegration(t *testing.T) {
 	
 	err := Init(ctx, config)
 	require.NoError(t, err)
-	defer Shutdown(ctx)
+	defer func() {
+		_ = Shutdown(ctx)
+	}()
 	
 	// Test logging with trace context
 	ctx, span := StartSpan(ctx, "test.operation")

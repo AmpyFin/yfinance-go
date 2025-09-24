@@ -324,12 +324,9 @@ func (s *CashflowStatement) Validate() error {
 
 // validateFinancialValue validates a financial value
 func validateFinancialValue(value int64) error {
-	if math.IsNaN(float64(value)) {
-		return fmt.Errorf("NaN value")
-	}
-	if math.IsInf(float64(value), 0) {
-		return fmt.Errorf("infinite value")
-	}
+	// int64 values cannot be NaN or infinite, so this is always valid
+	// This function is kept for future extensibility if we switch to float64
+	_ = value // Suppress unused parameter warning
 	return nil
 }
 

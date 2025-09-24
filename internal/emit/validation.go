@@ -2,6 +2,7 @@ package emit
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -70,7 +71,7 @@ func ValidateDecimal(d norm.ScaledDecimal) error {
 	}
 	
 	// Check if scaled value fits in int64
-	if d.Scaled < -9223372036854775808 || d.Scaled > 9223372036854775807 {
+	if d.Scaled < math.MinInt64 || d.Scaled > math.MaxInt64 {
 		return ValidationError{
 			Field:   "scaled",
 			Message: "scaled value must fit in int64 range",
@@ -114,6 +115,7 @@ func ValidateCurrency(code string) error {
 	if !majorCurrencies[code] {
 		// Allow pass-through for other currencies but log a warning
 		// In production, you might want to maintain a more comprehensive list
+		_ = code // Suppress unused variable warning
 	}
 	
 	return nil

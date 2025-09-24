@@ -97,7 +97,7 @@ func NewClient(config *Config) *Client {
 	if config.EnableSessionRotation {
 		sessionManager = NewSessionManager(config.BaseURL, config.NumSessions)
 		// Initialize sessions to get initial cookies
-		sessionManager.InitializeSessions()
+		_ = sessionManager.InitializeSessions()
 	}
 
 	// Create HTTP client with timeouts and connection pooling

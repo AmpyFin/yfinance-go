@@ -18,7 +18,7 @@ func TestCircuitBreakerIntegration(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		failureCount++
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Server Error"))
+		_, _ = w.Write([]byte("Server Error"))
 	}))
 	defer server.Close()
 	

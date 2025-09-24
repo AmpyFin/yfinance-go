@@ -353,9 +353,5 @@ func validateDailyBarTime(bar Bar) bool {
 	
 	// end should be start + 24 hours
 	expectedEnd := start.Add(24 * time.Hour)
-	if !end.Equal(expectedEnd) {
-		return false
-	}
-
-	return true
+	return end.Equal(expectedEnd)
 }

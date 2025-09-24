@@ -217,8 +217,8 @@ func TestCircuitBreaker_GetStats(t *testing.T) {
 	
 	// Execute some operations
 	ctx := context.Background()
-	cb.Execute(ctx, func() error { return nil })
-	cb.Execute(ctx, func() error { return &RetryableError{Err: errors.New("error")} })
+	_ = cb.Execute(ctx, func() error { return nil })
+	_ = cb.Execute(ctx, func() error { return &RetryableError{Err: errors.New("error")} })
 	
 	stats := cb.GetStats()
 	assert.Equal(t, CircuitBreakerClosed, stats.State)

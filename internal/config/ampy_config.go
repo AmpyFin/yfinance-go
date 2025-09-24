@@ -302,6 +302,7 @@ func (l *Loader) validate(config *Config) error {
 	if config.App.Env != "dev" && config.App.Env != "staging" && config.App.Env != "prod" {
 		// Allow custom env but warn
 		// In a real implementation, you might want to log a warning
+		_ = config.App.Env // Suppress unused variable warning
 	}
 	
 	// Validate concurrency constraints
@@ -319,6 +320,7 @@ func (l *Loader) validate(config *Config) error {
 	if config.RateLimit.PerSessionQPS*float64(config.Sessions.N) > config.RateLimit.PerHostQPS {
 		// This is a warning, not an error
 		// In a real implementation, you might want to log a warning
+		_ = config.RateLimit.PerSessionQPS // Suppress unused variable warning
 	}
 	
 	// Validate markets.allowed_intervals (daily-only enforcement)

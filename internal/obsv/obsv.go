@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // Config represents observability configuration
@@ -111,7 +112,7 @@ func Logger() *slog.Logger {
 // Tracer returns the ampy-observability tracer
 func Tracer() trace.Tracer {
 	// ampy-observability doesn't expose tracer directly, use context logger
-	return trace.NewNoopTracerProvider().Tracer("yfinance-go")
+	return noop.NewTracerProvider().Tracer("yfinance-go")
 }
 
 // StartSpan creates a new span using ampy-observability

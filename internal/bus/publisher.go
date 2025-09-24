@@ -299,12 +299,6 @@ func createNATSBus(config *Config) (*natsbinding.Bus, error) {
 	return natsbinding.Connect(natsConfig)
 }
 
-// createKafkaBus creates a Kafka bus
-func createKafkaBus(config *Config) (*natsbinding.Bus, error) {
-	// Note: Kafka binding would be implemented here
-	// For now, return an error as it's not implemented
-	return nil, fmt.Errorf("Kafka backend not implemented yet")
-}
 
 // getHostname returns the hostname for the producer field
 func getHostname() string {

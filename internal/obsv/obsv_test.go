@@ -82,7 +82,7 @@ func TestStartIngestFetchSpan(t *testing.T) {
 
 func TestUpdateIngestFetchSpan(t *testing.T) {
 	ctx := context.Background()
-	ctx, span := StartIngestFetchSpan(ctx, "bars_1d", "AAPL", "XNAS", "https://example.com", 1)
+	_, span := StartIngestFetchSpan(ctx, "bars_1d", "AAPL", "XNAS", "https://example.com", 1)
 	defer span.End()
 	
 	UpdateIngestFetchSpan(span, 200, 1024, 100*time.Millisecond)
@@ -141,7 +141,7 @@ func TestStartFXRatesSpan(t *testing.T) {
 
 func TestRecordSpanError(t *testing.T) {
 	ctx := context.Background()
-	ctx, span := StartSpan(ctx, "test.operation")
+	_, span := StartSpan(ctx, "test.operation")
 	defer span.End()
 	
 	// Test with nil error

@@ -53,7 +53,7 @@ func TestCrossLanguageRoundTripBars(t *testing.T) {
 
 			// Write protobuf to file for Python to read
 			outputDir := "_rt"
-			os.MkdirAll(outputDir, 0755)
+			_ = os.MkdirAll(outputDir, 0755)
 			
 			pbFile := filepath.Join(outputDir, "bars_"+tc.currency+".pb")
 			err = os.WriteFile(pbFile, protobufBytes, 0644)
@@ -87,7 +87,7 @@ func TestCrossLanguageRoundTripQuotes(t *testing.T) {
 
 	// Write protobuf to file
 	outputDir := "_rt"
-	os.MkdirAll(outputDir, 0755)
+	_ = os.MkdirAll(outputDir, 0755)
 	
 	pbFile := filepath.Join(outputDir, "quote.pb")
 	err = os.WriteFile(pbFile, protobufBytes, 0644)
@@ -119,7 +119,7 @@ func TestCrossLanguageRoundTripFundamentals(t *testing.T) {
 
 	// Write protobuf to file
 	outputDir := "_rt"
-	os.MkdirAll(outputDir, 0755)
+	_ = os.MkdirAll(outputDir, 0755)
 	
 	pbFile := filepath.Join(outputDir, "fundamentals.pb")
 	err = os.WriteFile(pbFile, protobufBytes, 0644)
@@ -181,7 +181,7 @@ func TestCrossLanguageNumericPrecision(t *testing.T) {
 
 			// Write protobuf to file
 			outputDir := "_rt"
-			os.MkdirAll(outputDir, 0755)
+			_ = os.MkdirAll(outputDir, 0755)
 			
 			pbFile := filepath.Join(outputDir, "precision_"+tc.name+".pb")
 			err = os.WriteFile(pbFile, protobufBytes, 0644)
