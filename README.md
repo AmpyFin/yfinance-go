@@ -1,7 +1,7 @@
 # yfinance-go — Yahoo Finance Client for Go
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/)
-[![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yeonlee/yfinance-go)](https://goreportcard.com/report/github.com/yeonlee/yfinance-go)
 [![GoDoc](https://godoc.org/github.com/yeonlee/yfinance-go?status.svg)](https://godoc.org/github.com/yeonlee/yfinance-go)
 
@@ -563,7 +563,7 @@ go test -tags=integration ./...
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
