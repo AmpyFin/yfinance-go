@@ -1,0 +1,112 @@
+name-template: 'v$RESOLVED_VERSION 🌟'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+      - 'maintenance'
+  - title: '📚 Documentation'
+    labels:
+      - 'documentation'
+      - 'docs'
+  - title: '🔧 Configuration'
+    labels:
+      - 'config'
+      - 'configuration'
+  - title: '🧪 Testing'
+    labels:
+      - 'test'
+      - 'testing'
+  - title: '🏗️ Build'
+    labels:
+      - 'build'
+      - 'ci'
+      - 'release'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'major'
+      - 'breaking'
+  minor:
+    labels:
+      - 'minor'
+      - 'feature'
+      - 'enhancement'
+  patch:
+    labels:
+      - 'patch'
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'chore'
+      - 'dependencies'
+      - 'maintenance'
+      - 'documentation'
+      - 'docs'
+      - 'config'
+      - 'configuration'
+      - 'test'
+      - 'testing'
+      - 'build'
+      - 'ci'
+      - 'release'
+template: |
+  ## Changes
+
+  $CHANGES
+
+  ## Installation
+
+  ### Pre-built Binaries
+
+  Download the appropriate binary for your platform:
+
+  - **macOS (Intel)**: `yfin_darwin_amd64.tar.gz`
+  - **macOS (Apple Silicon)**: `yfin_darwin_arm64.tar.gz`
+  - **Linux (x86_64)**: `yfin_linux_amd64.tar.gz`
+  - **Linux (ARM64)**: `yfin_linux_arm64.tar.gz`
+
+  ### Quick Install
+
+  ```bash
+  # Download and install (replace with your platform)
+  curl -L "https://github.com/yeonlee/yfinance-go/releases/download/$RESOLVED_VERSION/yfin_linux_amd64.tar.gz" | tar xz
+  sudo mv yfin /usr/local/bin/
+  yfin version
+  ```
+
+  ### Verify Installation
+
+  ```bash
+  # Verify binary integrity
+  curl -L "https://github.com/yeonlee/yfinance-go/releases/download/$RESOLVED_VERSION/checksums.txt" -o checksums.txt
+  shasum -a 256 -c checksums.txt
+  ```
+
+  ## Go Module
+
+  ```bash
+  go get github.com/yeonlee/yfinance-go@$RESOLVED_VERSION
+  ```
+
+  ## Documentation
+
+  - [Installation Guide](https://github.com/yeonlee/yfinance-go/blob/main/docs/install.md)
+  - [Usage Guide](https://github.com/yeonlee/yfinance-go/blob/main/docs/usage.md)
+  - [Versioning Policy](https://github.com/yeonlee/yfinance-go/blob/main/docs/versioning.md)
+
+  ## Full Changelog
+
+  $FULL_CHANGELOG

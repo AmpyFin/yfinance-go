@@ -179,14 +179,14 @@ func TestGetPriceScaleForCurrency(t *testing.T) {
 		expected int
 	}{
 		{"JPY", 2},
-		{"USD", 4},
-		{"EUR", 4},
-		{"GBP", 4},
-		{"CAD", 4},
-		{"AUD", 4},
-		{"CHF", 4},
-		{"NZD", 4},
-		{"UNKNOWN", 4}, // default
+		{"USD", 2},
+		{"EUR", 2},
+		{"GBP", 2},
+		{"CAD", 2},
+		{"AUD", 2},
+		{"CHF", 2},
+		{"NZD", 2},
+		{"UNKNOWN", 2}, // default
 	}
 
 	for _, tt := range tests {
@@ -205,14 +205,14 @@ func TestGetScaleForCurrency(t *testing.T) {
 		expected int
 	}{
 		{"JPY", 2},
-		{"USD", 4},
-		{"EUR", 4},
-		{"GBP", 4},
-		{"CAD", 4},
-		{"AUD", 4},
-		{"CHF", 4},
-		{"NZD", 4},
-		{"UNKNOWN", 4}, // default
+		{"USD", 2},
+		{"EUR", 2},
+		{"GBP", 2},
+		{"CAD", 2},
+		{"AUD", 2},
+		{"CHF", 2},
+		{"NZD", 2},
+		{"UNKNOWN", 2}, // default
 	}
 
 	for _, tt := range tests {

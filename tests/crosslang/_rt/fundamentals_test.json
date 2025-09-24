@@ -1,0 +1,36 @@
+{
+  "as_of": 1758677128,
+  "lines": [
+    {
+      "currency": "USD",
+      "key": "revenue",
+      "period_end": 1735603200,
+      "period_start": 1704067200,
+      "value": {
+        "scale": 2,
+        "scaled": 100000000000000
+      }
+    },
+    {
+      "currency": "USD",
+      "key": "net_income",
+      "period_end": 1735603200,
+      "period_start": 1704067200,
+      "value": {
+        "scale": 2,
+        "scaled": 20000000000000
+      }
+    }
+  ],
+  "meta": {
+    "producer": "test",
+    "run_id": "roundtrip_test",
+    "schema_version": "ampy.fundamentals.v1:1.0.0",
+    "source": "yfinance-go"
+  },
+  "security": {
+    "mic": "XNAS",
+    "symbol": "TEST"
+  },
+  "source": "yfinance"
+}

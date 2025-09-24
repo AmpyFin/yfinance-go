@@ -8,7 +8,7 @@ import (
 
 func TestTokenBucketLimiter(t *testing.T) {
 	// Test basic token bucket functionality
-	limiter := NewTokenBucketLimiter(2.0, 5.0) // 2 QPS, burst of 5
+	limiter := NewRateLimiter(2, 5) // 2 QPS, burst of 5
 	
 	ctx := context.Background()
 	
@@ -39,7 +39,7 @@ func TestTokenBucketLimiter(t *testing.T) {
 }
 
 func TestTokenBucketLimiterContextCancellation(t *testing.T) {
-	limiter := NewTokenBucketLimiter(0.1, 1.0) // Very slow rate
+	limiter := NewRateLimiter(1, 1) // Very slow rate
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -58,7 +58,7 @@ func TestTokenBucketLimiterContextCancellation(t *testing.T) {
 }
 
 func TestTokenBucketLimiterConcurrency(t *testing.T) {
-	limiter := NewTokenBucketLimiter(10.0, 5.0) // 10 QPS, burst of 5
+	limiter := NewRateLimiter(10, 5) // 10 QPS, burst of 5
 	
 	ctx := context.Background()
 	done := make(chan bool, 10)

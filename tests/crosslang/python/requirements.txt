@@ -1,0 +1,11 @@
+# Cross-language round-trip test requirements
+# Note: ampy-proto may need to be installed from internal index or source
+
+# Core dependencies
+protobuf>=4.21.0
+
+# ampy-proto (install from your internal index or source)
+# ampy-proto>=2.0.0
+
+# Test dependencies
+pytest>=7.0.0

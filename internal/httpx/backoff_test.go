@@ -7,17 +7,19 @@ import (
 
 func TestCalculateBackoff(t *testing.T) {
 	config := &Config{
-		BackoffBaseMs: 100,
-		MaxDelayMs:    5000,
+		BackoffBaseMs:   100,
+		BackoffJitterMs: 50,
+		MaxDelayMs:      5000,
 	}
 	
 	client := &Client{config: config}
 	
-	// Test first attempt (should return base delay)
+	// Test first attempt (should return base delay + jitter)
 	delay := client.calculateBackoff(0)
-	expected := 100 * time.Millisecond
-	if delay != expected {
-		t.Errorf("Expected first attempt delay to be %v, got %v", expected, delay)
+	expectedMin := 100 * time.Millisecond
+	expectedMax := 150 * time.Millisecond // 100ms base + up to 50ms jitter
+	if delay < expectedMin || delay > expectedMax {
+		t.Errorf("Expected first attempt delay to be between %v and %v, got %v", expectedMin, expectedMax, delay)
 	}
 	
 	// Test subsequent attempts (should have exponential backoff with jitter)
@@ -42,8 +44,9 @@ func TestCalculateBackoff(t *testing.T) {
 
 func TestCalculateBackoffMaxDelay(t *testing.T) {
 	config := &Config{
-		BackoffBaseMs: 1000,
-		MaxDelayMs:    2000, // Low max delay
+		BackoffBaseMs:   1000,
+		BackoffJitterMs: 100,
+		MaxDelayMs:      2000, // Low max delay
 	}
 	
 	client := &Client{config: config}
@@ -59,8 +62,9 @@ func TestCalculateBackoffMaxDelay(t *testing.T) {
 
 func TestCalculateBackoffJitter(t *testing.T) {
 	config := &Config{
-		BackoffBaseMs: 100,
-		MaxDelayMs:    10000,
+		BackoffBaseMs:   100,
+		BackoffJitterMs: 50,
+		MaxDelayMs:      10000,
 	}
 	
 	client := &Client{config: config}

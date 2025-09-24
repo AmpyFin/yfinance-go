@@ -1,0 +1,4 @@
+# Python dependencies for cross-language round-trip tests
+ampy-proto>=2.1.0
+protobuf>=4.0.0
+pytest>=7.0.0

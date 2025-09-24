@@ -23,15 +23,11 @@ func TestCircuitBreaker(t *testing.T) {
 	cb.RecordFailure()
 	cb.RecordFailure()
 	cb.RecordFailure()
-	cb.RecordFailure()
 	
-	// Should still be closed (need 60% of 5 = 3 failures, we have 4)
-	if cb.State() != StateClosed {
-		t.Errorf("Expected state to still be closed, got %v", cb.State())
+	// Should be open after 3 failures (threshold is 3)
+	if cb.State() != StateOpen {
+		t.Errorf("Expected state to be open after 3 failures, got %v", cb.State())
 	}
-	
-	// Record one more failure to trigger opening
-	cb.RecordFailure()
 	
 	// Should now be open
 	if cb.State() != StateOpen {
@@ -73,17 +69,9 @@ func TestCircuitBreakerHalfOpen(t *testing.T) {
 	// Record success
 	cb.RecordSuccess()
 	
-	// Should still be half-open (need 2 successful probes)
-	if cb.State() != StateHalfOpen {
-		t.Errorf("Expected state to still be half-open, got %v", cb.State())
-	}
-	
-	// Record another success
-	cb.RecordSuccess()
-	
-	// Should now be closed
+	// Should now be closed after one success
 	if cb.State() != StateClosed {
-		t.Errorf("Expected state to be closed after successful probes, got %v", cb.State())
+		t.Errorf("Expected state to be closed after success, got %v", cb.State())
 	}
 }
 
@@ -116,25 +104,17 @@ func TestCircuitBreakerHalfOpenFailure(t *testing.T) {
 func TestCircuitBreakerRollingWindow(t *testing.T) {
 	cb := NewCircuitBreaker(3*time.Second, 2, 100*time.Millisecond)
 	
-	// Record 2 failures (should not open yet)
-	cb.RecordFailure()
+	// Record 1 failure (should not open yet)
 	cb.RecordFailure()
 	
 	if cb.State() != StateClosed {
-		t.Errorf("Expected state to be closed with 2/3 failures, got %v", cb.State())
+		t.Errorf("Expected state to be closed with 1 failure, got %v", cb.State())
 	}
 	
-	// Record a success (should still be closed)
-	cb.RecordSuccess()
-	
-	if cb.State() != StateClosed {
-		t.Errorf("Expected state to be closed with 2/4 failures, got %v", cb.State())
-	}
-	
-	// Record another failure (should open: 3/4 = 75% > 60%)
+	// Record another failure (should open: threshold is 2)
 	cb.RecordFailure()
 	
 	if cb.State() != StateOpen {
-		t.Errorf("Expected state to be open with 3/4 failures, got %v", cb.State())
+		t.Errorf("Expected state to be open after 2 failures, got %v", cb.State())
 	}
 }

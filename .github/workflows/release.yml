@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        go: ["1.23.x"]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Verify module tidiness
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Run tests
+        run: |
+          go test -v ./...
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          for GOOS in linux darwin; do
+            for GOARCH in amd64 arm64; do
+              BIN="yfin"
+              OUT="dist/yfin_${GOOS}_${GOARCH}"
+              GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=${GITHUB_REF_NAME} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%d)" -o "$OUT" ./cmd/yfin
+              tar -C dist -czf "dist/yfin_${GOOS}_${GOARCH}.tar.gz" "$(basename "$OUT")"
+              rm "$OUT"
+            done
+          done
+
+      - name: Generate checksums
+        run: |
+          (cd dist && shasum -a 256 *.tar.gz > checksums.txt)
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.os }}
+          path: dist/
+          retention-days: 30
+
+  create-release:
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Combine artifacts
+        run: |
+          mkdir -p dist
+          cp artifacts/binaries-ubuntu-latest/dist/* dist/ 2>/dev/null || true
+          cp artifacts/binaries-macos-latest/dist/* dist/ 2>/dev/null || true
+
+      - name: Generate release notes
+        id: notes
+        uses: release-drafter/release-drafter@v6
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            $(cat scripts/release_notes_header.md)
+
+            ${{ steps.notes.outputs.body }}
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-release:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release binary
+        run: |
+          mkdir -p dist
+          curl -L "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/yfin_linux_amd64.tar.gz" -o dist/yfin_linux_amd64.tar.gz
+          tar -xzf dist/yfin_linux_amd64.tar.gz -C dist/
+
+      - name: Test binary
+        run: |
+          ./dist/yfin version
+          ./dist/yfin --help
+          ./dist/yfin pull --help
+          ./dist/yfin quote --help
+          ./dist/yfin fundamentals --help
+          ./dist/yfin config --help

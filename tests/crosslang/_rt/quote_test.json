@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "producer": "test",
+    "run_id": "roundtrip_test",
+    "schema_version": "ampy.ticks.v1:1.0.0",
+    "source": "yfinance-go"
+  },
+  "quote": {
+    "ask": {
+      "scale": 4,
+      "scaled": 1002600
+    },
+    "ask_size": 200,
+    "bid": {
+      "scale": 4,
+      "scaled": 1002500
+    },
+    "bid_size": 100,
+    "currency": "USD",
+    "event_time": 1704123000,
+    "venue": "XNMS"
+  },
+  "security": {
+    "mic": "XNAS",
+    "symbol": "TEST"
+  }
+}

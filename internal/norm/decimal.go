@@ -3,6 +3,7 @@ package norm
 import (
 	"fmt"
 	"math"
+	"math/big"
 )
 
 // GetScaleForCurrency returns the appropriate scale for a given currency
@@ -127,4 +128,38 @@ func MultiplyAndRound(a ScaledDecimal, b ScaledDecimal, targetScale int) (Scaled
 			Scale:  targetScale,
 		}, nil
 	}
+}
+
+// RoundHalfUp rounds a big.Int value from one scale to another using half-up rounding
+func RoundHalfUp(value *big.Int, fromScale, toScale int) *big.Int {
+	if fromScale == toScale {
+		return new(big.Int).Set(value)
+	}
+	
+	if fromScale < toScale {
+		// Scale up: multiply by 10^(toScale - fromScale)
+		multiplier := big.NewInt(1)
+		for i := 0; i < toScale-fromScale; i++ {
+			multiplier.Mul(multiplier, big.NewInt(10))
+		}
+		return new(big.Int).Mul(value, multiplier)
+	}
+	
+	// Scale down: divide by 10^(fromScale - toScale)
+	divisor := big.NewInt(1)
+	for i := 0; i < fromScale-toScale; i++ {
+		divisor.Mul(divisor, big.NewInt(10))
+	}
+	
+	// Perform division with half-up rounding
+	quotient := new(big.Int).Div(value, divisor)
+	remainder := new(big.Int).Mod(value, divisor)
+	
+	// Half-up rounding: if remainder >= divisor/2, round up
+	half := new(big.Int).Div(divisor, big.NewInt(2))
+	if remainder.Cmp(half) >= 0 {
+		quotient.Add(quotient, big.NewInt(1))
+	}
+	
+	return quotient
 }
