@@ -1,0 +1,37 @@
+name: Test Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to test (e.g., test-v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  test-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create test file
+        run: |
+          mkdir -p dist
+          echo "This is a test file" > dist/test.txt
+          echo "Files created:"
+          ls -la dist/
+
+      - name: Create test release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.tag }}
+          body: "Test release to debug file upload issues"
+          files: dist/test.txt
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

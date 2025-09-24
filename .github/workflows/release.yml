@@ -115,12 +115,24 @@ jobs:
       - name: Combine artifacts
         run: |
           mkdir -p dist
+          echo "Artifacts directory structure:"
+          find artifacts/ -type f -name "*.tar.gz" -o -name "checksums.txt" || echo "No artifacts found"
           echo "Copying ubuntu artifacts..."
-          cp artifacts/binaries-ubuntu-latest/dist/* dist/ 2>/dev/null || echo "No ubuntu artifacts to copy"
+          if [ -d "artifacts/binaries-ubuntu-latest/dist" ]; then
+            cp -v artifacts/binaries-ubuntu-latest/dist/* dist/ || echo "Failed to copy ubuntu artifacts"
+          else
+            echo "Ubuntu artifacts directory not found"
+          fi
           echo "Copying macos artifacts..."
-          cp artifacts/binaries-macos-latest/dist/* dist/ 2>/dev/null || echo "No macos artifacts to copy"
-          echo "Files in dist directory:"
+          if [ -d "artifacts/binaries-macos-latest/dist" ]; then
+            cp -v artifacts/binaries-macos-latest/dist/* dist/ || echo "Failed to copy macos artifacts"
+          else
+            echo "macOS artifacts directory not found"
+          fi
+          echo "Files in dist directory after copy:"
           ls -la dist/ || echo "dist directory is empty or doesn't exist"
+          echo "File sizes:"
+          du -h dist/* || echo "No files to show sizes for"
 
       - name: Generate release notes
         id: notes
