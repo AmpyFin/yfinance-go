@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2025-01-24
+
+### Fixed
+- Resolved Windows CI workflow issues with coverage file merging
+- Fixed coverage file existence checks to prevent merge failures
+- Removed gosec security scanner due to repository access issues
+- Security scanning is now handled by CodeQL analysis
+- All tests now pass successfully across all platforms (Linux, macOS, Windows)
+
+### Changed
+- Improved CI workflow robustness and cross-platform compatibility
+- Enhanced error handling for missing coverage files
+
 ## [1.0.3] - 2025-01-24
 
 ### Fixed
