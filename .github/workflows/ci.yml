@@ -53,17 +53,18 @@ jobs:
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
         shell: cmd
 
-      - name: Build coverage merger
-        run: go build -o merge_coverage scripts/merge_coverage.go
-
-      - name: Merge coverage files (Unix)
+      - name: Build and run coverage merger (Unix)
         if: runner.os != 'Windows'
-        run: ./merge_coverage
+        run: |
+          go build -o merge_coverage scripts/merge_coverage.go
+          ./merge_coverage
 
-      - name: Merge coverage files (Windows)
+      - name: Build and run coverage merger (Windows)
         if: runner.os == 'Windows'
-        run: .\merge_coverage.exe
-        shell: cmd
+        run: |
+          go build -o merge_coverage.exe scripts/merge_coverage.go
+          .\merge_coverage.exe
+        shell: pwsh
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
