@@ -62,7 +62,7 @@ jobs:
 
       - name: Merge coverage files (Windows)
         if: runner.os == 'Windows'
-        run: merge_coverage.exe
+        run: .\merge_coverage.exe
         shell: cmd
 
       - name: Upload coverage to Codecov
