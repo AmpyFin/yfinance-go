@@ -38,12 +38,20 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: Run tests
+      - name: Run tests (Unix)
+        if: runner.os != 'Windows'
         run: |
           # Run tests with race detection for all packages except observability
           go test -v -race -coverprofile=coverage.out ./cmd/... ./internal/bus/... ./internal/config/... ./internal/emit/... ./internal/fx/... ./internal/httpx/... ./internal/norm/... ./internal/yahoo/... ./tests/... ./tools/...
           # Run observability tests without race detection due to external dependency issues
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          go test -v -race -coverprofile=coverage.out ./cmd/... ./internal/bus/... ./internal/config/... ./internal/emit/... ./internal/fx/... ./internal/httpx/... ./internal/norm/... ./internal/yahoo/... ./tests/... ./tools/...
+          go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
+        shell: cmd
 
       - name: Build coverage merger
         run: go build -o merge_coverage scripts/merge_coverage.go
