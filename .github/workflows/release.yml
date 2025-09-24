@@ -11,6 +11,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build-release:
     runs-on: ${{ matrix.os }}
@@ -81,6 +85,8 @@ jobs:
           mkdir -p dist
           cp artifacts/binaries-ubuntu-latest/dist/* dist/ 2>/dev/null || true
           cp artifacts/binaries-macos-latest/dist/* dist/ 2>/dev/null || true
+          echo "Files in dist directory:"
+          ls -la dist/ || echo "dist directory is empty or doesn't exist"
 
       - name: Generate release notes
         id: notes
@@ -90,15 +96,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare release body
+        run: |
+          cat scripts/release_notes_header.md > release_body.md
+          echo "" >> release_body.md
+          echo "${{ steps.notes.outputs.body }}" >> release_body.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: |
-            $(cat scripts/release_notes_header.md)
-
-            ${{ steps.notes.outputs.body }}
+          body_path: release_body.md
           files: |
             dist/*.tar.gz
             dist/checksums.txt
