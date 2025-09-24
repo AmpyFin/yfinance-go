@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go/internal/httpx"
 )
 
 // Client provides methods to fetch and normalize Yahoo Finance data

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // NormalizeCompanyInfo normalizes company information from chart metadata

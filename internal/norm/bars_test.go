@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // Golden file tests removed - they were testing against outdated scale expectations

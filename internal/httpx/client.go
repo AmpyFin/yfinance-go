@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/obsv"
+	"github.com/AmpyFin/yfinance-go/internal/obsv"
 )
 
 // Config holds HTTP client configuration

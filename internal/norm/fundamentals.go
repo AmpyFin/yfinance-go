@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // NormalizeFundamentals converts Yahoo Finance fundamentals to normalized fundamentals

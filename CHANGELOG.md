@@ -134,4 +134,4 @@ Each release should include:
 
 ## Links
 
-- [Compare v1.0.0...HEAD](https://github.com/yeonlee/yfinance-go/compare/v1.0.0...HEAD)
+- [Compare v1.0.0...HEAD](https://github.com/AmpyFin/yfinance-go/compare/v1.0.0...HEAD)

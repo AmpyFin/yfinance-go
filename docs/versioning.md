@@ -142,20 +142,20 @@ build date: 2024-01-15
 ### Module Path
 
 ```
-github.com/yeonlee/yfinance-go
+github.com/AmpyFin/yfinance-go
 ```
 
 ### Import Examples
 
 ```go
 // Latest version
-import "github.com/yeonlee/yfinance-go"
+import "github.com/AmpyFin/yfinance-go"
 
 // Specific version
-import "github.com/yeonlee/yfinance-go@v1.2.3"
+import "github.com/AmpyFin/yfinance-go@v1.2.3"
 
 // Latest minor version of v1
-import "github.com/yeonlee/yfinance-go@v1"
+import "github.com/AmpyFin/yfinance-go@v1"
 ```
 
 ### Version Constraints
@@ -163,7 +163,7 @@ import "github.com/yeonlee/yfinance-go@v1"
 Use semantic version constraints in `go.mod`:
 
 ```go
-require github.com/yeonlee/yfinance-go v1.2.3
+require github.com/AmpyFin/yfinance-go v1.2.3
 ```
 
 ## Compatibility Matrix

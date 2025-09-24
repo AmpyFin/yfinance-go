@@ -34,7 +34,7 @@ The GitHub Actions workflow will:
 
 ### 3. Verify the Release
 
-Check the [Releases page](https://github.com/yeonlee/yfinance-go/releases) for:
+Check the [Releases page](https://github.com/AmpyFin/yfinance-go/releases) for:
 - Binary downloads for all platforms
 - Checksums file
 - Release notes
@@ -104,10 +104,10 @@ yfin version
 
 ```bash
 # Import specific version
-go get github.com/yeonlee/yfinance-go@v1.0.0
+go get github.com/AmpyFin/yfinance-go@v1.0.0
 
 # Import latest version
-go get github.com/yeonlee/yfinance-go@latest
+go get github.com/AmpyFin/yfinance-go@latest
 ```
 
 ## Release Assets
@@ -125,7 +125,7 @@ Each release includes:
 
 ```bash
 # Download and install
-curl -L "https://github.com/yeonlee/yfinance-go/releases/download/v1.0.0/yfin_linux_amd64.tar.gz" | tar xz
+curl -L "https://github.com/AmpyFin/yfinance-go/releases/download/v1.0.0/yfin_linux_amd64.tar.gz" | tar xz
 sudo mv yfin /usr/local/bin/
 
 # Verify installation
@@ -136,7 +136,7 @@ yfin version
 
 ```bash
 # Download checksums
-curl -L "https://github.com/yeonlee/yfinance-go/releases/download/v1.0.0/checksums.txt" -o checksums.txt
+curl -L "https://github.com/AmpyFin/yfinance-go/releases/download/v1.0.0/checksums.txt" -o checksums.txt
 
 # Verify binary
 shasum -a 256 -c checksums.txt

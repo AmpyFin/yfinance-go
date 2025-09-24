@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeonlee/yfinance-go/internal/config"
+	"github.com/AmpyFin/yfinance-go/internal/config"
 )
 
 func TestConfigDefaults(t *testing.T) {

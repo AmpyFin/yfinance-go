@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // Validation errors

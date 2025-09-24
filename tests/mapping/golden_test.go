@@ -8,9 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeonlee/yfinance-go/internal/emit"
-	"github.com/yeonlee/yfinance-go/internal/norm"
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/emit"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 func TestMappingRegressionBars(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // NoneProvider is the default FX provider that returns errors for conversion requests

@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/yeonlee/yfinance-go"
-	"github.com/yeonlee/yfinance-go/internal/bus"
-	"github.com/yeonlee/yfinance-go/internal/config"
-	"github.com/yeonlee/yfinance-go/internal/emit"
-	"github.com/yeonlee/yfinance-go/internal/httpx"
-	"github.com/yeonlee/yfinance-go/internal/norm"
-	"github.com/yeonlee/yfinance-go/internal/obsv"
+	"github.com/AmpyFin/yfinance-go"
+	"github.com/AmpyFin/yfinance-go/internal/bus"
+	"github.com/AmpyFin/yfinance-go/internal/config"
+	"github.com/AmpyFin/yfinance-go/internal/emit"
+	"github.com/AmpyFin/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/obsv"
 )
 
 // Version information set via ldflags during build

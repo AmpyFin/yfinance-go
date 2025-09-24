@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/yeonlee/yfinance-go/internal/emit"
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/emit"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"google.golang.org/protobuf/proto"
 )
 

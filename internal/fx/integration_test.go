@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // TestYahooWebProviderIntegration tests the yahoo-web provider with a fake server

@@ -361,7 +361,7 @@ fi
 docker run --rm \
   -v $(pwd)/config:/config \
   -v $(pwd)/data:/data \
-  ghcr.io/yeonlee/yfinance-go:latest \
+  ghcr.io/AmpyFin/yfinance-go:latest \
   yfin pull \
   --config /config/prod.yaml \
   --ticker AAPL \
@@ -408,4 +408,4 @@ yfin config --print-effective
 
 - [Installation Guide](install.md) - How to install yfinance-go
 - [Versioning Policy](versioning.md) - Understanding versions and compatibility
-- [Configuration](https://github.com/yeonlee/yfinance-go/tree/main/configs) - Configuration examples and options
+- [Configuration](https://github.com/AmpyFin/yfinance-go/tree/main/configs) - Configuration examples and options

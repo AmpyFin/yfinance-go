@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // CacheEntry represents a cached FX rate entry

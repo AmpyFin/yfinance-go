@@ -3,7 +3,7 @@ package emit
 import (
 	"fmt"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

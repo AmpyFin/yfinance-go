@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/httpx"
-	"github.com/yeonlee/yfinance-go/internal/norm"
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // Client provides a high-level interface for fetching Yahoo Finance data

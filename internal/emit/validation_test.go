@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/stretchr/testify/assert"
 )
 

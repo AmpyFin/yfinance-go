@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // NormalizeMarketData normalizes comprehensive market data from chart metadata

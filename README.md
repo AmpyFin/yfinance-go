@@ -2,8 +2,8 @@
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/yeonlee/yfinance-go)](https://goreportcard.com/report/github.com/yeonlee/yfinance-go)
-[![GoDoc](https://godoc.org/github.com/yeonlee/yfinance-go?status.svg)](https://godoc.org/github.com/yeonlee/yfinance-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/AmpyFin/yfinance-go)](https://goreportcard.com/report/github.com/AmpyFin/yfinance-go)
+[![GoDoc](https://godoc.org/github.com/AmpyFin/yfinance-go?status.svg)](https://godoc.org/github.com/AmpyFin/yfinance-go)
 
 > ⚠️ **IMPORTANT DISCLAIMER** ⚠️
 > 
@@ -44,13 +44,13 @@
 ### As a Go Module
 
 ```bash
-go get github.com/yeonlee/yfinance-go
+go get github.com/AmpyFin/yfinance-go
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/yeonlee/yfinance-go.git
+git clone https://github.com/AmpyFin/yfinance-go.git
 cd yfinance-go
 go build ./cmd/yfin
 ```
@@ -70,7 +70,7 @@ import (
     "log"
     "time"
 
-    "github.com/yeonlee/yfinance-go"
+    "github.com/AmpyFin/yfinance-go"
 )
 
 func main() {
@@ -183,7 +183,7 @@ import (
     "sync"
     "time"
 
-    "github.com/yeonlee/yfinance-go"
+    "github.com/AmpyFin/yfinance-go"
 )
 
 func main() {
@@ -232,7 +232,7 @@ import (
     "log"
     "time"
 
-    "github.com/yeonlee/yfinance-go"
+    "github.com/AmpyFin/yfinance-go"
 )
 
 func main() {
@@ -264,7 +264,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/yeonlee/yfinance-go"
+    "github.com/AmpyFin/yfinance-go"
 )
 
 func main() {
@@ -295,8 +295,8 @@ import (
     "log"
     "time"
 
-    "github.com/yeonlee/yfinance-go"
-    "github.com/yeonlee/yfinance-go/internal/httpx"
+    "github.com/AmpyFin/yfinance-go"
+    "github.com/AmpyFin/yfinance-go/internal/httpx"
 )
 
 func main() {
@@ -346,7 +346,7 @@ The `yfin` CLI tool provides command-line access to all functionality:
 go build -o yfin ./cmd/yfin
 
 # Or install globally
-go install github.com/yeonlee/yfinance-go/cmd/yfin@latest
+go install github.com/AmpyFin/yfinance-go/cmd/yfin@latest
 ```
 
 ### Basic Commands
@@ -536,7 +536,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Clone the repository
-git clone https://github.com/yeonlee/yfinance-go.git
+git clone https://github.com/AmpyFin/yfinance-go.git
 cd yfinance-go
 
 # Install dependencies
@@ -578,9 +578,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yeonlee/yfinance-go/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yeonlee/yfinance-go/discussions)
-- **Documentation**: [GoDoc](https://godoc.org/github.com/yeonlee/yfinance-go)
+- **Issues**: [GitHub Issues](https://github.com/AmpyFin/yfinance-go/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/AmpyFin/yfinance-go/discussions)
+- **Documentation**: [GoDoc](https://godoc.org/github.com/AmpyFin/yfinance-go)
 
 ---
 

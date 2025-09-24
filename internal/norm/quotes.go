@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/yahoo"
+	"github.com/AmpyFin/yfinance-go/internal/yahoo"
 )
 
 // NormalizeQuote converts a Yahoo Finance quote to a normalized quote

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/httpx"
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // YahooWebProvider implements FX interface using Yahoo Finance web scraping

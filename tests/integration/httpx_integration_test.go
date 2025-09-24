@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/yeonlee/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go/internal/httpx"
 )
 
 func TestHTTPAdapterRetriesBackoff(t *testing.T) {

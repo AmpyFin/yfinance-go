@@ -1,4 +1,4 @@
-module github.com/yeonlee/yfinance-go
+module github.com/AmpyFin/yfinance-go
 
 go 1.23.0
 

@@ -15,7 +15,7 @@ Download the appropriate binary for your platform:
 
 ```bash
 # Download and install (replace with your platform)
-curl -L "https://github.com/yeonlee/yfinance-go/releases/download/{{TAG_NAME}}/yfin_linux_amd64.tar.gz" | tar xz
+curl -L "https://github.com/AmpyFin/yfinance-go/releases/download/${{ github.ref_name }}/yfin_linux_amd64.tar.gz" | tar xz
 sudo mv yfin /usr/local/bin/
 yfin version
 ```
@@ -24,21 +24,21 @@ yfin version
 
 ```bash
 # Verify binary integrity
-curl -L "https://github.com/yeonlee/yfinance-go/releases/download/{{TAG_NAME}}/checksums.txt" -o checksums.txt
+curl -L "https://github.com/AmpyFin/yfinance-go/releases/download/${{ github.ref_name }}/checksums.txt" -o checksums.txt
 shasum -a 256 -c checksums.txt
 ```
 
 ## Go Module
 
 ```bash
-go get github.com/yeonlee/yfinance-go@{{TAG_NAME}}
+go get github.com/AmpyFin/yfinance-go@${{ github.ref_name }}
 ```
 
 ## Documentation
 
-- [Installation Guide](https://github.com/yeonlee/yfinance-go/blob/main/docs/install.md)
-- [Usage Guide](https://github.com/yeonlee/yfinance-go/blob/main/docs/usage.md)
-- [Versioning Policy](https://github.com/yeonlee/yfinance-go/blob/main/docs/versioning.md)
+- [Installation Guide](https://github.com/AmpyFin/yfinance-go/blob/main/docs/install.md)
+- [Usage Guide](https://github.com/AmpyFin/yfinance-go/blob/main/docs/usage.md)
+- [Versioning Policy](https://github.com/AmpyFin/yfinance-go/blob/main/docs/versioning.md)
 
 ## What's New
 

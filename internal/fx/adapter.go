@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 )
 
 // Adapter adapts the FX Manager to the norm.FXConverter interface

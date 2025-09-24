@@ -3,7 +3,7 @@ package emit
 import (
 	"time"
 
-	"github.com/yeonlee/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/norm"
 	barsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/bars/v1"
 	ticksv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/ticks/v1"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
