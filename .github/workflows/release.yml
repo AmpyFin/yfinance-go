@@ -218,9 +218,22 @@ jobs:
 
       - name: Test binary
         run: |
-          ./dist/yfin version
-          ./dist/yfin --help
-          ./dist/yfin pull --help
-          ./dist/yfin quote --help
-          ./dist/yfin fundamentals --help
-          ./dist/yfin config --help
+          echo "Files in dist directory after extraction:"
+          ls -la dist/
+          echo "Testing binary:"
+          if [ -f "./dist/yfin" ]; then
+            ./dist/yfin version
+            ./dist/yfin --help
+            ./dist/yfin pull --help
+            ./dist/yfin quote --help
+            ./dist/yfin fundamentals --help
+            ./dist/yfin config --help
+          else
+            echo "Binary not found at ./dist/yfin, trying ./yfin"
+            ./yfin version
+            ./yfin --help
+            ./yfin pull --help
+            ./yfin quote --help
+            ./yfin fundamentals --help
+            ./yfin config --help
+          fi
