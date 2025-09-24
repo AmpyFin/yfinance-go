@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-01-24
+
+### Fixed
+- Resolved all golangci-lint issues for CI compliance
+- Fixed unchecked error returns in HTTP handlers and observability shutdown
+- Removed unused functions and imports
+- Updated deprecated OpenTelemetry API usage
+- Fixed staticcheck warnings for better code quality
+
+### Changed
+- Improved CI/CD pipeline reliability
+- Enhanced code quality and maintainability
+
+## [1.0.1] - 2025-01-24
+
+### Fixed
+- Resolved Go module tidiness issues
+- Fixed all linting errors and warnings
+
+## [1.0.0] - 2025-01-24
+
 ### Added
 - Initial implementation of yfinance-go CLI tool
 - Support for fetching daily bars from Yahoo Finance
