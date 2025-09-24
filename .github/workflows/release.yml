@@ -35,14 +35,12 @@ jobs:
       - name: Verify module tidiness
         run: |
           go mod tidy
-          git diff --exit-code go.mod go.sum || echo "Module tidiness check failed, but continuing with build"
-        continue-on-error: true
+          git diff --exit-code go.mod go.sum
 
       - name: Run tests
         run: |
           echo "Running tests..."
-          go test -v ./... || echo "Some tests failed, but continuing with build"
-        continue-on-error: true
+          go test -v ./...
 
       - name: Build binaries
         run: |
