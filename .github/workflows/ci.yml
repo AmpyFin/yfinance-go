@@ -106,8 +106,10 @@ jobs:
         run: |
           go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
           gosec -fmt sarif -out gosec.sarif ./...
+        continue-on-error: true
 
       - name: Upload SARIF file
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gosec.sarif

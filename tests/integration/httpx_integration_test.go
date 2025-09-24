@@ -26,10 +26,10 @@ func TestHTTPAdapterRetriesBackoff(t *testing.T) {
 		
 		if currentAttempt <= 2 {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Server Error"))
+			_, _ = w.Write([]byte("Server Error"))
 		} else {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("Success"))
+			_, _ = w.Write([]byte("Success"))
 		}
 	}))
 	defer server.Close()
@@ -76,7 +76,7 @@ func TestHTTPAdapterCircuitBreaker(t *testing.T) {
 	// Test server that always fails
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Server Error"))
+		_, _ = w.Write([]byte("Server Error"))
 	}))
 	defer server.Close()
 
@@ -125,7 +125,7 @@ func TestHTTPAdapterRateLimiting(t *testing.T) {
 		mu.Unlock()
 		
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 	defer server.Close()
 
@@ -188,7 +188,7 @@ func TestHTTPAdapterSessionRotation(t *testing.T) {
 		mu.Unlock()
 		
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	}))
 	defer server.Close()
 
@@ -271,7 +271,7 @@ func TestHTTPAdapterErrorHandling(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tc.statusCode)
-				w.Write([]byte("Error"))
+				_, _ = w.Write([]byte("Error"))
 			}))
 			defer server.Close()
 

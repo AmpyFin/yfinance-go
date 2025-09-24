@@ -2,7 +2,6 @@ package emit
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -70,13 +69,7 @@ func ValidateDecimal(d norm.ScaledDecimal) error {
 		}
 	}
 	
-	// Check if scaled value fits in int64
-	if d.Scaled < math.MinInt64 || d.Scaled > math.MaxInt64 {
-		return ValidationError{
-			Field:   "scaled",
-			Message: "scaled value must fit in int64 range",
-		}
-	}
+	// Note: d.Scaled is already int64, so it's guaranteed to be within int64 range
 	
 	return nil
 }
