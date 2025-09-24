@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2025-01-24
+
+### Fixed
+- Resolved race conditions in observability tests by adding proper synchronization
+- Updated CI workflow to handle external dependency race conditions gracefully
+- Fixed missing cmd/yfin directory that was causing GitHub Actions build failures
+- All tests now pass successfully with comprehensive coverage reporting
+
+### Changed
+- Improved CI/CD pipeline reliability and test execution
+- Enhanced observability state management with mutex protection
+
 ## [1.0.2] - 2025-01-24
 
 ### Fixed
