@@ -44,7 +44,10 @@ jobs:
           go test -v -race -coverprofile=coverage.out ./cmd/... ./internal/bus/... ./internal/config/... ./internal/emit/... ./internal/fx/... ./internal/httpx/... ./internal/norm/... ./internal/yahoo/... ./tests/... ./tools/...
           # Run observability tests without race detection due to external dependency issues
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
-          # Merge coverage files if they exist
+
+      - name: Merge coverage files (Unix)
+        if: runner.os != 'Windows'
+        run: |
           echo "mode: atomic" > coverage_combined.out
           if [ -f coverage.out ]; then
             grep -h -v "^mode:" coverage.out >> coverage_combined.out
@@ -53,6 +56,15 @@ jobs:
             grep -h -v "^mode:" coverage_obsv.out >> coverage_combined.out
           fi
           mv coverage_combined.out coverage.out
+
+      - name: Merge coverage files (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo mode: atomic > coverage_combined.out
+          if exist coverage.out (type coverage.out | findstr /v "^mode:" >> coverage_combined.out)
+          if exist coverage_obsv.out (type coverage_obsv.out | findstr /v "^mode:" >> coverage_combined.out)
+          move coverage_combined.out coverage.out
+        shell: cmd
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
