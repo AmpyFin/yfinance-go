@@ -353,16 +353,16 @@ go install github.com/AmpyFin/yfinance-go/cmd/yfin@latest
 
 ```bash
 # Fetch daily bars for a single symbol
-yfin pull --ticker AAPL --interval 1d --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
+yfin pull --ticker AAPL --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
 
 # Fetch data for multiple symbols from a file
-yfin pull --universe-file symbols.txt --interval 1d --start 2024-01-01 --end 2024-12-31 --publish --env prod
+yfin pull --universe-file symbols.txt --start 2024-01-01 --end 2024-12-31 --publish --env prod
 
 # Get current quote
-yfin quote --ticker AAPL
+yfin quote --tickers AAPL
 
-# Get company information
-yfin company --ticker AAPL
+# Get company information (via quote command)
+yfin quote --tickers AAPL
 
 # Get fundamentals (requires paid subscription)
 yfin fundamentals --ticker AAPL --as-of 2024-01-01
@@ -372,7 +372,6 @@ yfin fundamentals --ticker AAPL --as-of 2024-01-01
 
 - `--ticker` - Single symbol to fetch
 - `--universe-file` - File containing list of symbols
-- `--interval` - Time interval (1d, 1wk, 1mo, 1m, 5m, 15m, 30m, 60m)
 - `--start`, `--end` - Date range (UTC)
 - `--adjusted` - Adjustment policy (raw, split_only, split_dividend)
 - `--publish` - Publish to ampy-bus
