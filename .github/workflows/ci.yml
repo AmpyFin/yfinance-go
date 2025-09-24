@@ -44,9 +44,14 @@ jobs:
           go test -v -race -coverprofile=coverage.out ./cmd/... ./internal/bus/... ./internal/config/... ./internal/emit/... ./internal/fx/... ./internal/httpx/... ./internal/norm/... ./internal/yahoo/... ./tests/... ./tools/...
           # Run observability tests without race detection due to external dependency issues
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
-          # Merge coverage files
+          # Merge coverage files if they exist
           echo "mode: atomic" > coverage_combined.out
-          grep -h -v "^mode:" coverage.out coverage_obsv.out >> coverage_combined.out
+          if [ -f coverage.out ]; then
+            grep -h -v "^mode:" coverage.out >> coverage_combined.out
+          fi
+          if [ -f coverage_obsv.out ]; then
+            grep -h -v "^mode:" coverage_obsv.out >> coverage_combined.out
+          fi
           mv coverage_combined.out coverage.out
 
       - name: Upload coverage to Codecov
@@ -110,14 +115,5 @@ jobs:
         with:
           go-version: "1.23.x"
 
-      - name: Run Gosec Security Scanner
-        run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          gosec -fmt sarif -out gosec.sarif ./...
-        continue-on-error: true
-
-      - name: Upload SARIF file
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: gosec.sarif
+      # Note: Gosec security scanner removed due to repository access issues
+      # Security scanning is handled by CodeQL analysis above
