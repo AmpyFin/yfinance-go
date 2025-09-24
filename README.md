@@ -89,10 +89,10 @@ func main() {
     
     fmt.Printf("Fetched %d bars for AAPL\n", len(bars.Bars))
     for _, bar := range bars.Bars {
-        fmt.Printf("Date: %s, Close: %d.%d\n", 
+        price := float64(bar.Close.Scaled) / float64(bar.Close.Scale)
+        fmt.Printf("Date: %s, Close: %.4f %s\n", 
             bar.EventTime.Format("2006-01-02"),
-            bar.Close.Scaled/10000, 
-            bar.Close.Scaled%10000)
+            price, bar.CurrencyCode)
     }
 }
 ```
@@ -106,14 +106,6 @@ func main() {
 ```go
 // Default client with standard configuration
 client := yfinance.NewClient()
-
-// Client with custom configuration
-config := &httpx.Config{
-    Timeout: 30 * time.Second,
-    QPS:     2.0,
-    Burst:   5,
-}
-client := yfinance.NewClientWithConfig(config)
 
 // Client with session rotation (recommended for production)
 client := yfinance.NewClientWithSessionRotation()
@@ -132,6 +124,7 @@ bars, err := client.FetchDailyBars(ctx, "AAPL", start, end, adjusted, runID)
 ```go
 bars, err := client.FetchIntradayBars(ctx, "AAPL", start, end, "1m", runID)
 ```
+> **Note:** Intraday data may not be available for all symbols and may return HTTP 422 errors for some requests.
 
 **FetchWeeklyBars** - Get weekly OHLCV data
 ```go
@@ -244,13 +237,15 @@ func main() {
         log.Fatal(err)
     }
     
-    fmt.Printf("Symbol: %s\n", quote.Security.Symbol)
-    fmt.Printf("Price: %d.%d %s\n", 
-        quote.Last.Scaled/10000, 
-        quote.Last.Scaled%10000,
-        quote.Currency)
-    fmt.Printf("Volume: %d\n", quote.Volume)
-    fmt.Printf("Market State: %s\n", quote.MarketState)
+	fmt.Printf("Symbol: %s\n", quote.Security.Symbol)
+	if quote.RegularMarketPrice != nil {
+		price := float64(quote.RegularMarketPrice.Scaled) / float64(quote.RegularMarketPrice.Scale)
+		fmt.Printf("Price: %.4f %s\n", price, quote.CurrencyCode)
+	}
+	if quote.RegularMarketVolume != nil {
+		fmt.Printf("Volume: %d\n", *quote.RegularMarketVolume)
+	}
+	fmt.Printf("Event Time: %s\n", quote.EventTime.Format("2006-01-02 15:04:05"))
 }
 ```
 
@@ -276,60 +271,59 @@ func main() {
         log.Fatal(err)
     }
     
-    fmt.Printf("Company: %s\n", companyInfo.LongName)
-    fmt.Printf("Exchange: %s (%s)\n", companyInfo.Exchange, companyInfo.Mic)
-    fmt.Printf("Currency: %s\n", companyInfo.Currency)
-    fmt.Printf("Industry: %s\n", companyInfo.Industry)
-    fmt.Printf("Sector: %s\n", companyInfo.Sector)
+	fmt.Printf("Company: %s\n", companyInfo.LongName)
+	fmt.Printf("Exchange: %s\n", companyInfo.Exchange)
+	fmt.Printf("Full Exchange: %s\n", companyInfo.FullExchangeName)
+	fmt.Printf("Currency: %s\n", companyInfo.Currency)
+	fmt.Printf("Instrument Type: %s\n", companyInfo.InstrumentType)
+	fmt.Printf("Timezone: %s\n", companyInfo.Timezone)
 }
 ```
 
-### Example 4: Custom Configuration
+### Example 4: Error Handling
 
 ```go
 package main
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"time"
 
-    "github.com/AmpyFin/yfinance-go"
-    "github.com/AmpyFin/yfinance-go/internal/httpx"
+	"github.com/AmpyFin/yfinance-go"
 )
 
 func main() {
-    // Create custom configuration
-    config := &httpx.Config{
-        BaseURL:         "https://query1.finance.yahoo.com",
-        Timeout:         30 * time.Second,
-        MaxAttempts:     3,
-        BackoffBaseMs:   1000,
-        BackoffJitterMs: 500,
-        MaxDelayMs:      10000,
-        QPS:             1.0,  // 1 request per second
-        Burst:           2,
-        CircuitWindow:   60 * time.Second,
-        FailureThreshold: 5,
-        ResetTimeout:    30 * time.Second,
-        UserAgent:       "MyApp/1.0",
-    }
-    
-    client := yfinance.NewClientWithConfig(config)
-    ctx := context.Background()
-    
-    // Use the client with custom settings
-    bars, err := client.FetchDailyBars(ctx, "AAPL", 
-        time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
-        time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
-        true, "custom-config-run")
-    
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    fmt.Printf("Fetched %d bars with custom configuration\n", len(bars.Bars))
+	client := yfinance.NewClient()
+	ctx := context.Background()
+	
+	// Fetch data with proper error handling
+	bars, err := client.FetchDailyBars(ctx, "AAPL", 
+		time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+		time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
+		true, "error-handling-run")
+	
+	if err != nil {
+		log.Printf("Error fetching bars: %v", err)
+		return
+	}
+	
+	fmt.Printf("Successfully fetched %d bars\n", len(bars.Bars))
+	
+	// Handle empty results
+	if len(bars.Bars) == 0 {
+		fmt.Println("No data available for the specified date range")
+		return
+	}
+	
+	// Process the data
+	for _, bar := range bars.Bars {
+		price := float64(bar.Close.Scaled) / float64(bar.Close.Scale)
+		fmt.Printf("Date: %s, Close: %.4f %s\n", 
+			bar.EventTime.Format("2006-01-02"),
+			price, bar.CurrencyCode)
+	}
 }
 ```
 
@@ -338,6 +332,8 @@ func main() {
 ## 🖥️ CLI Usage
 
 The `yfin` CLI tool provides command-line access to all functionality:
+
+> **Note:** All CLI commands require a configuration file. Use `--config configs/effective.yaml` or set up your own config file.
 
 ### Installation
 
@@ -353,19 +349,19 @@ go install github.com/AmpyFin/yfinance-go/cmd/yfin@latest
 
 ```bash
 # Fetch daily bars for a single symbol
-yfin pull --ticker AAPL --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
+yfin pull --ticker AAPL --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview --config configs/effective.yaml
 
 # Fetch data for multiple symbols from a file
-yfin pull --universe-file symbols.txt --start 2024-01-01 --end 2024-12-31 --publish --env prod
+yfin pull --universe-file symbols.txt --start 2024-01-01 --end 2024-12-31 --publish --env prod --config configs/effective.yaml
 
 # Get current quote
-yfin quote --tickers AAPL
+yfin quote --tickers AAPL --preview --config configs/effective.yaml
 
 # Get company information (via quote command)
-yfin quote --tickers AAPL
+yfin quote --tickers AAPL --preview --config configs/effective.yaml
 
 # Get fundamentals (requires paid subscription)
-yfin fundamentals --ticker AAPL --as-of 2024-01-01
+yfin fundamentals --ticker AAPL --preview --config configs/effective.yaml
 ```
 
 ### CLI Options
@@ -465,6 +461,24 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 6) **Lineage**: Every message has `meta.run_id`, `meta.source="yfinance-go"`, `meta.producer="<host|pod>"`, `schema_version`.  
 7) **Batching**: Prefer `BarBatch` for efficiency. Maintain **in‑batch order** by `event_time` ascending.  
 8) **Compatibility**: Additive evolution only; breaking changes require new major (`bars.v2`, `fundamentals.v2`).
+
+### 💰 Price Formatting
+
+All prices are stored as `ScaledDecimal` with explicit scale for financial precision:
+
+```go
+// ✅ CORRECT: Use the scale field to convert back to decimal
+price := float64(bar.Close.Scaled) / float64(bar.Close.Scale)
+fmt.Printf("Price: %.4f %s\n", price, bar.CurrencyCode)
+
+// ❌ WRONG: Don't hardcode division by 10000
+// price := bar.Close.Scaled / 10000  // This is incorrect!
+```
+
+**Example:**
+- Raw Yahoo price: $221.74
+- Stored as: `Scaled: 22174, Scale: 2`
+- Converted back: `22174 / 100 = 221.74` ✅
 
 ---
 
