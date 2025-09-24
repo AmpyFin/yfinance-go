@@ -45,9 +45,16 @@ jobs:
           # Run observability tests without race detection due to external dependency issues
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
 
+      - name: Build coverage merger
+        run: go build -o merge_coverage scripts/merge_coverage.go
+
       - name: Merge coverage files
         run: |
-          go run scripts/merge_coverage.go
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            ./merge_coverage.exe
+          else
+            ./merge_coverage
+          fi
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
