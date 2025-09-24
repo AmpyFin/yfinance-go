@@ -45,30 +45,9 @@ jobs:
           # Run observability tests without race detection due to external dependency issues
           go test -v -coverprofile=coverage_obsv.out ./internal/obsv/...
 
-      - name: Merge coverage files (Unix)
-        if: runner.os != 'Windows'
+      - name: Merge coverage files
         run: |
-          echo "mode: atomic" > coverage_combined.out
-          if [ -f coverage.out ]; then
-            grep -h -v "^mode:" coverage.out >> coverage_combined.out
-          fi
-          if [ -f coverage_obsv.out ]; then
-            grep -h -v "^mode:" coverage_obsv.out >> coverage_combined.out
-          fi
-          mv coverage_combined.out coverage.out
-
-      - name: Merge coverage files (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          echo "mode: atomic" | Out-File -FilePath coverage_combined.out -Encoding utf8
-          if (Test-Path coverage.out) {
-            Get-Content coverage.out | Where-Object { $_ -notmatch "^mode:" } | Add-Content coverage_combined.out
-          }
-          if (Test-Path coverage_obsv.out) {
-            Get-Content coverage_obsv.out | Where-Object { $_ -notmatch "^mode:" } | Add-Content coverage_combined.out
-          }
-          Move-Item coverage_combined.out coverage.out
-        shell: pwsh
+          go run scripts/merge_coverage.go
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest'

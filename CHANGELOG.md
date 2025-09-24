@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2025-01-24
+
+### Fixed
+- Resolved Windows PowerShell syntax error in CI workflow
+- Replaced CMD syntax with PowerShell for Windows coverage merging
+- Fixed Windows package resolution error with proper PowerShell file operations
+- All platforms now have reliable coverage file merging
+
+### Changed
+- Improved Windows CI workflow reliability using PowerShell instead of CMD
+- Enhanced cross-platform compatibility for coverage reporting
+
+## [1.0.5] - 2025-01-24
+
+### Fixed
+- Resolved Windows PowerShell syntax error in CI workflow
+- Split coverage merging into separate steps for Unix and Windows
+- Used proper Windows CMD syntax for Windows runners
+- Used bash syntax for Unix runners (Linux, macOS)
+
 ## [1.0.4] - 2025-01-24
 
 ### Fixed
