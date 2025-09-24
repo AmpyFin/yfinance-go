@@ -1,0 +1,111 @@
+# ampy-config (yfinance-go) - Staging Environment
+# This is an example configuration file for staging
+
+app:
+  env: "staging"                     # dev | staging | prod
+  run_id: ""                         # optional; CLI can override
+
+yahoo:
+  base_url: "https://query2.finance.yahoo.com"   # abstracted behind adapter
+  timeout_ms: 8000                   # Moderate timeout for staging
+  idle_timeout_ms: 45000             # Moderate idle timeout
+  max_conns_per_host: 96             # Moderate connections
+  user_agent: "AmpyFin-yfinance-go/1.x"
+
+concurrency:
+  global_workers: 96                 # Moderate workers for staging
+  per_host_workers: 48
+
+rate_limit:
+  per_host_qps: 4.0                  # Moderate QPS for staging
+  per_host_burst: 4
+  per_session_qps: 0.8               # Moderate per session
+  per_session_burst: 1
+
+sessions:
+  n: 8                               # Moderate sessions for staging
+  eject_after: 4                     # Moderate ejection
+  recreate_cooldown_ms: 17500        # Moderate cooldown
+
+retry:
+  attempts: 6                        # Moderate retries for staging
+  base_ms: 375                       # Moderate base delay
+  max_delay_ms: 12000                # Moderate max delay
+
+circuit_breaker:
+  window: 75                         # Moderate window for staging
+  failure_threshold: 0.25            # Moderate threshold
+  reset_timeout_ms: 45000            # Moderate reset timeout
+  half_open_probes: 4                # Moderate probes
+
+markets:
+  # Daily-only enforcement; other intervals are invalid for yfinance-go.
+  allowed_intervals: ["1d"]          # enforce daily-only here
+  # Staging MIC allowlist
+  allowed_mics: ["XNAS","XNYS","XNMS","NYQ","KSC","XETR","XTKS","LSE"]
+  default_adjustment_policy: "split_dividend"   # raw | split_dividend
+
+fx:
+  provider: "yahoo-web"              # Enable FX for staging
+  target: "USD"                      # Default target currency
+  cache_ttl_ms: 180000               # 3 minutes cache for staging
+  rate_scale: 8
+  rounding: "half_up"
+  yahoo_web:
+    qps: 0.3                         # Moderate QPS for staging
+    burst: 1
+    timeout_ms: 7500                 # Moderate timeout
+    backoff_attempts: 5              # Moderate attempts
+    backoff_base_ms: 375             # Moderate base delay
+    backoff_max_delay_ms: 6000       # Moderate max delay
+    circuit_reset_ms: 45000          # Moderate reset
+
+bus:
+  enabled: true                      # Enable bus for staging
+  env: "staging"                     # topic env segment
+  topic_prefix: "ampy"
+  max_payload_bytes: 1572864         # 1.5 MiB for staging
+  publisher:
+    backend: "nats"                  # nats | kafka (as supported by ampy-bus)
+    nats:
+      url: "${NATS_URL:-nats://staging-nats:4222}"
+      subject_style: "topic"
+      ack_wait_ms: 7500              # Moderate ack wait for staging
+    kafka:
+      brokers: ["${KAFKA_BROKERS:-staging-kafka:9092}"]
+      acks: "all"
+      compression: "snappy"
+  retry:
+    attempts: 6                      # Moderate retries for staging
+    base_ms: 375                     # Moderate base delay
+    max_delay_ms: 12000              # Moderate max delay
+  circuit_breaker:
+    window: 75                       # Moderate window
+    failure_threshold: 0.25          # Moderate threshold
+    reset_timeout_ms: 45000          # Moderate reset
+    half_open_probes: 4              # Moderate probes
+
+observability:
+  logs:
+    level: "info"                    # Info level for staging
+  metrics:
+    prometheus:
+      enabled: true
+      addr: ":9090"                  # exporter bind address
+  tracing:
+    otlp:
+      enabled: true
+      endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:-http://staging-otel:4317}"
+      sample_ratio: 0.02             # Moderate sampling for staging
+
+secrets:
+  # Staging secrets - use staging secret backends
+  - name: "nats_password"
+    ref: "aws-sm://staging/nats/password?versionStage=AWSCURRENT"
+    required: true
+  - name: "kafka_sasl_password"
+    ref: "gcp-sm://projects/ampy-staging/secrets/kafka-sasl-password/versions/latest"
+    required: true
+  - name: "otel_auth_token"
+    ref: "secret://vault/staging/otel#auth_token"
+    required: true

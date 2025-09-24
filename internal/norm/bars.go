@@ -114,6 +114,7 @@ func normalizeBar(bar yahoo.Bar, currency string, scale int, isAdjusted bool, ad
 		Volume:             bar.Volume,
 		Adjusted:           isAdjusted,
 		AdjustmentPolicyID: adjustmentPolicyID,
+		CurrencyCode:       currency,
 		EventTime:          eventTime,
 		IngestTime:         now,
 		AsOf:               eventTime,

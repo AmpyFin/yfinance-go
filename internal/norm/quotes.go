@@ -104,6 +104,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		RegularMarketLow:    regularMarketLow,
 		RegularMarketVolume: quote.RegularMarketVolume,
 		Venue:               venue,
+		CurrencyCode:        quote.Currency,
 		EventTime:           eventTime,
 		IngestTime:          eventTime,
 		Meta:                meta,

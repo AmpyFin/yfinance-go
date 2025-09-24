@@ -6,8 +6,11 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/yeonlee/yfinance-go/internal/obsv"
 )
 
 // Config holds HTTP client configuration
@@ -122,17 +125,30 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 	// Set User-Agent
 	req.Header.Set("User-Agent", c.config.UserAgent)
 
+	// Extract endpoint from URL path for observability
+	endpoint := extractEndpoint(req.URL.Path)
+	
+	// Start fetch span
+	ctx, span := obsv.StartIngestFetchSpan(ctx, endpoint, "", "", req.URL.String(), 0)
+	defer span.End()
+
 	// Check circuit breaker
 	if !c.circuitBreaker.Allow() {
+		obsv.RecordRequest(endpoint, "error", "circuit_open")
+		obsv.RecordSpanError(span, ErrCircuitOpen)
 		return nil, ErrCircuitOpen
 	}
 
 	// Rate limiting
 	if err := c.rateLimiter.Wait(ctx); err != nil {
+		obsv.RecordRequest(endpoint, "error", "rate_limit")
+		obsv.RecordSpanError(span, err)
 		return nil, fmt.Errorf("rate limiter: %w", err)
 	}
 
 	var lastErr error
+	startTime := time.Now()
+	
 	for attempt := 0; attempt < c.config.MaxAttempts; attempt++ {
 		// Get session for this attempt if session rotation is enabled
 		var clientToUse *http.Client = c.httpClient
@@ -145,7 +161,16 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 		if err != nil {
 			lastErr = err
 			c.circuitBreaker.RecordFailure()
+			
+			// Record retry
+			if attempt > 0 {
+				obsv.RecordRetry(endpoint, "network_error")
+			}
+			
 			if !c.shouldRetry(err, attempt) {
+				obsv.RecordRequest(endpoint, "error", "network_error")
+				obsv.RecordRequestLatency(endpoint, time.Since(startTime))
+				obsv.RecordSpanError(span, err)
 				return nil, err
 			}
 		} else {
@@ -154,12 +179,21 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 				resp.Body.Close()
 				lastErr = fmt.Errorf("HTTP %d", resp.StatusCode)
 				c.circuitBreaker.RecordFailure()
+				
+				// Record retry
+				if attempt > 0 {
+					obsv.RecordRetry(endpoint, fmt.Sprintf("http_%d", resp.StatusCode))
+				}
+				
 				// Don't return here, continue to backoff and retry
 			} else {
 				// Check if this is actually a success or a failure we can't retry
 				if c.isSuccessResponse(resp) {
 					// Success
 					c.circuitBreaker.RecordSuccess()
+					obsv.RecordRequest(endpoint, "success", fmt.Sprintf("%d", resp.StatusCode))
+					obsv.RecordRequestLatency(endpoint, time.Since(startTime))
+					obsv.UpdateIngestFetchSpan(span, resp.StatusCode, resp.ContentLength, time.Since(startTime))
 					return resp, nil
 				} else {
 					// Failure that we can't retry (e.g., 400, 404, etc.)
@@ -171,6 +205,10 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 					if resp.StatusCode != 401 {
 						c.circuitBreaker.RecordFailure()
 					}
+					
+					obsv.RecordRequest(endpoint, "error", fmt.Sprintf("%d", resp.StatusCode))
+					obsv.RecordRequestLatency(endpoint, time.Since(startTime))
+					obsv.RecordSpanError(span, lastErr)
 					return nil, lastErr
 				}
 			}
@@ -179,9 +217,15 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 		// Calculate backoff delay
 		delay := c.calculateBackoff(attempt)
 		
+		// Record backoff
+		obsv.RecordBackoff(endpoint, "retry")
+		obsv.RecordBackoffSleep(endpoint, delay)
+		
 		// Wait with context cancellation support
 		select {
 		case <-ctx.Done():
+			obsv.RecordRequest(endpoint, "error", "context_cancelled")
+			obsv.RecordSpanError(span, ctx.Err())
 			return nil, ctx.Err()
 		case <-time.After(delay):
 			// Continue to next attempt
@@ -189,6 +233,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 	}
 
 	c.circuitBreaker.RecordFailure()
+	obsv.RecordRequest(endpoint, "error", "max_attempts")
+	obsv.RecordRequestLatency(endpoint, time.Since(startTime))
+	obsv.RecordSpanError(span, fmt.Errorf("max attempts exceeded: %w", lastErr))
 	return nil, fmt.Errorf("max attempts exceeded: %w", lastErr)
 }
 
@@ -423,4 +470,21 @@ func (c *Client) GetSessionStats() map[string]interface{} {
 	stats := c.sessionManager.GetSessionStats()
 	stats["session_rotation_enabled"] = true
 	return stats
+}
+
+// extractEndpoint extracts the endpoint name from a URL path
+func extractEndpoint(path string) string {
+	// Map common Yahoo Finance paths to endpoint names
+	switch {
+	case strings.Contains(path, "/v8/finance/chart/"):
+		return "bars_1d"
+	case strings.Contains(path, "/v1/finance/quote"):
+		return "quote"
+	case strings.Contains(path, "/v11/finance/quoteSummary/"):
+		return "fundamentals"
+	case strings.Contains(path, "/v1/finance/quoteSummary/"):
+		return "fundamentals"
+	default:
+		return "unknown"
+	}
 }

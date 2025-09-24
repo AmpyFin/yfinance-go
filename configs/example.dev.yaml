@@ -1,0 +1,109 @@
+# ampy-config (yfinance-go) - Development Environment
+# This is an example configuration file for development
+
+app:
+  env: "dev"                         # dev | staging | prod
+  run_id: ""                         # optional; CLI can override
+
+yahoo:
+  base_url: "https://query2.finance.yahoo.com"   # abstracted behind adapter
+  timeout_ms: 6000
+  idle_timeout_ms: 30000
+  max_conns_per_host: 64
+  user_agent: "AmpyFin-yfinance-go/1.x"
+
+concurrency:
+  global_workers: 64
+  per_host_workers: 32
+
+rate_limit:
+  per_host_qps: 5.0
+  per_host_burst: 5
+  per_session_qps: 1.0
+  per_session_burst: 1
+
+sessions:
+  n: 7
+  eject_after: 5
+  recreate_cooldown_ms: 15000
+
+retry:
+  attempts: 5
+  base_ms: 250
+  max_delay_ms: 8000
+
+circuit_breaker:
+  window: 50
+  failure_threshold: 0.30
+  reset_timeout_ms: 30000
+  half_open_probes: 3
+
+markets:
+  # Daily-only enforcement; other intervals are invalid for yfinance-go.
+  allowed_intervals: ["1d"]          # enforce daily-only here
+  # Optional MIC allowlist; if empty, no filtering.
+  allowed_mics: ["XNAS","XNYS","XNMS","NYQ","KSC","XETR","XTKS"]
+  default_adjustment_policy: "split_dividend"   # raw | split_dividend
+
+fx:
+  provider: "none"                    # none | yahoo-web
+  target: ""                          # optional; CLI preview override allowed
+  cache_ttl_ms: 60000
+  rate_scale: 8
+  rounding: "half_up"
+  yahoo_web:
+    qps: 0.5
+    burst: 1
+    timeout_ms: 5000
+    backoff_attempts: 4
+    backoff_base_ms: 250
+    backoff_max_delay_ms: 4000
+    circuit_reset_ms: 30000
+
+bus:
+  enabled: false
+  env: "dev"                          # topic env segment
+  topic_prefix: "ampy"
+  max_payload_bytes: 1048576
+  publisher:
+    backend: "nats"                   # nats | kafka (as supported by ampy-bus)
+    nats:
+      url: "${NATS_URL:-nats://localhost:4222}"
+      subject_style: "topic"
+      ack_wait_ms: 5000
+    kafka:
+      brokers: []
+      acks: "all"
+      compression: "snappy"
+  retry:
+    attempts: 5
+    base_ms: 250
+    max_delay_ms: 8000
+  circuit_breaker:
+    window: 50
+    failure_threshold: 0.30
+    reset_timeout_ms: 30000
+    half_open_probes: 3
+
+observability:
+  logs:
+    level: "info"                     # info | debug | warn | error
+  metrics:
+    prometheus:
+      enabled: true
+      addr: ":9090"                   # exporter bind address (Step 10 wiring)
+  tracing:
+    otlp:
+      enabled: true
+      endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4317}"
+      sample_ratio: 0.05
+
+secrets:
+  # Reference secrets by URI; resolution handled by ampy-config (e.g., env:, file:, gcp-sm:, aws-sm:)
+  # Examples:
+  - name: "nats_password"
+    ref: "env:NATS_PASSWORD"
+    required: false
+  - name: "kafka_sasl_password"
+    ref: "file:/etc/ampy/secret/kafka.pass"
+    required: false

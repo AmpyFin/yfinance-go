@@ -70,7 +70,7 @@ func (c *Client) FetchQuote(ctx context.Context, symbol string) (*QuoteResponse,
 	// Use chart endpoint to get quote data from metadata
 	// This is more reliable since v7 quote endpoint returns 401
 	end := time.Now()
-	start := end.AddDate(0, 0, -1) // Just get 1 day of data to minimize response size
+	start := end.AddDate(0, 0, -7) // Get 7 days of data to ensure we have recent data
 	
 	barsResp, err := c.FetchDailyBars(ctx, symbol, start, end, true)
 	if err != nil {
@@ -179,6 +179,39 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 	result := barsResp.Chart.Result[0]
 	meta := result.Meta
 	
+	// Get the most recent close price from the bars data
+	var regularMarketPrice *float64
+	var regularMarketDayHigh, regularMarketDayLow *float64
+	
+	if len(result.Indicators.Quote) > 0 {
+		quote := result.Indicators.Quote[0]
+		
+		
+		if len(quote.Close) > 0 {
+			// Get the last close price
+			lastClose := quote.Close[len(quote.Close)-1]
+			if lastClose != nil {
+				regularMarketPrice = lastClose
+			}
+		}
+		
+		// Get the last high and low
+		if len(quote.High) > 0 {
+			lastHigh := quote.High[len(quote.High)-1]
+			if lastHigh != nil {
+				regularMarketDayHigh = lastHigh
+			}
+		}
+		
+		if len(quote.Low) > 0 {
+			lastLow := quote.Low[len(quote.Low)-1]
+			if lastLow != nil {
+				regularMarketDayLow = lastLow
+			}
+		}
+	}
+	
+	
 	// Create a quote result from chart metadata
 	quoteResult := QuoteResult{
 		Symbol:                        meta.Symbol,
@@ -187,9 +220,9 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 		FullExchangeName:              meta.FullExchangeName,
 		ShortName:                     meta.ShortName,
 		LongName:                      meta.LongName,
-		RegularMarketPrice:            meta.RegularMarketPrice,
-		RegularMarketDayHigh:          meta.RegularMarketDayHigh,
-		RegularMarketDayLow:           meta.RegularMarketDayLow,
+		RegularMarketPrice:            regularMarketPrice,
+		RegularMarketDayHigh:          regularMarketDayHigh,
+		RegularMarketDayLow:           regularMarketDayLow,
 		RegularMarketVolume:           meta.RegularMarketVolume,
 		RegularMarketTime:             &meta.RegularMarketTime,
 		ExchangeTimezoneName:          meta.ExchangeTimezoneName,

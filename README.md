@@ -1,4 +1,9 @@
-# yfinance-go — Yahoo Finance Client for Go (Open Source)
+# yfinance-go — Yahoo Finance Client for Go
+
+[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/yeonlee/yfinance-go)](https://goreportcard.com/report/github.com/yeonlee/yfinance-go)
+[![GoDoc](https://godoc.org/github.com/yeonlee/yfinance-go?status.svg)](https://godoc.org/github.com/yeonlee/yfinance-go)
 
 > ⚠️ **IMPORTANT DISCLAIMER** ⚠️
 > 
@@ -12,28 +17,376 @@
 
 ---
 
-> **Purpose:** A production‑grade **Go client** for Yahoo Finance data that:
-> - Fetches **historicals** (bars), **quotes**, and **fundamentals** with correct **currency units**, **intervals**, and **corporate action adjustments**.
-> - Produces **`ampy-proto`** payloads (e.g., `ampy.bars.v1.BarBatch`, `ampy.fundamentals.v1.Snapshot`) and, when configured, **publishes to `ampy-bus`** topics (e.g., `ampy/{env}/bars/v1/{mic}.{symbol}`).
-> - Scales with **goroutines** (fan-out), **bounded concurrency**, and **rate‑limit backoff** to respect provider constraints.
->
-> **Artifacts:** Library (Go) + **CLI** (`yfin pull --ticker AAPL --interval 1d`) for ops and CI.
+## 🎯 Problem We're Solving
+
+**The Challenge:** Most financial data clients suffer from inconsistent data formats, unreliable APIs, and poor error handling. When building financial applications, developers often face:
+
+- **Inconsistent Data Formats**: Different APIs return data in various shapes and formats
+- **Floating Point Precision Issues**: Financial calculations require exact decimal precision
+- **Rate Limiting Problems**: Unbounded requests lead to API bans and throttling
+- **Poor Error Handling**: Limited retry logic and circuit breaking
+- **Currency Conversion Complexity**: Multi-currency support is often missing or buggy
+- **No Standardization**: Each client has its own data structures and conventions
+
+**Our Solution:** A production-grade Go client that provides:
+
+✅ **Standardized Data Formats** - Consistent `ampy-proto` message structures  
+✅ **High Precision Decimals** - Scaled decimal arithmetic for financial accuracy  
+✅ **Robust Rate Limiting** - Built-in backoff, circuit breakers, and session rotation  
+✅ **Multi-Currency Support** - Automatic currency conversion with FX providers  
+✅ **Production Ready** - Comprehensive error handling, observability, and monitoring  
+✅ **Easy Integration** - Simple API with both library and CLI interfaces  
 
 ---
 
-## Installation
+## 🚀 Installation
+
+### As a Go Module
 
 ```bash
-git clone https://github.com/AmpyFin/benzinga-golang.git
-cd benzinga-golang
+go get github.com/yeonlee/yfinance-go
+```
+
+### From Source
+
+```bash
+git clone https://github.com/yeonlee/yfinance-go.git
+cd yfinance-go
+go build ./cmd/yfin
 ```
 
 ---
 
-## 1) Mission & Success Criteria
+## 📖 Quick Start
+
+### Basic Usage
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+
+    "github.com/yeonlee/yfinance-go"
+)
+
+func main() {
+    // Create a new client
+    client := yfinance.NewClient()
+    ctx := context.Background()
+    
+    // Fetch daily bars for Apple
+    start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+    end := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+    
+    bars, err := client.FetchDailyBars(ctx, "AAPL", start, end, true, "my-run-id")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Fetched %d bars for AAPL\n", len(bars.Bars))
+    for _, bar := range bars.Bars {
+        fmt.Printf("Date: %s, Close: %d.%d\n", 
+            bar.EventTime.Format("2006-01-02"),
+            bar.Close.Scaled/10000, 
+            bar.Close.Scaled%10000)
+    }
+}
+```
+
+---
+
+## 🔧 API Reference
+
+### Client Creation
+
+```go
+// Default client with standard configuration
+client := yfinance.NewClient()
+
+// Client with custom configuration
+config := &httpx.Config{
+    Timeout: 30 * time.Second,
+    QPS:     2.0,
+    Burst:   5,
+}
+client := yfinance.NewClientWithConfig(config)
+
+// Client with session rotation (recommended for production)
+client := yfinance.NewClientWithSessionRotation()
+```
+
+### Available Functions
+
+#### 📊 Historical Data
+
+**FetchDailyBars** - Get daily OHLCV data
+```go
+bars, err := client.FetchDailyBars(ctx, "AAPL", start, end, adjusted, runID)
+```
+
+**FetchIntradayBars** - Get intraday data (1m, 5m, 15m, 30m, 60m)
+```go
+bars, err := client.FetchIntradayBars(ctx, "AAPL", start, end, "1m", runID)
+```
+
+**FetchWeeklyBars** - Get weekly OHLCV data
+```go
+bars, err := client.FetchWeeklyBars(ctx, "AAPL", start, end, adjusted, runID)
+```
+
+**FetchMonthlyBars** - Get monthly OHLCV data
+```go
+bars, err := client.FetchMonthlyBars(ctx, "AAPL", start, end, adjusted, runID)
+```
+
+#### 💰 Real-time Data
+
+**FetchQuote** - Get current market quote
+```go
+quote, err := client.FetchQuote(ctx, "AAPL", runID)
+```
+
+**FetchMarketData** - Get comprehensive market data
+```go
+marketData, err := client.FetchMarketData(ctx, "AAPL", runID)
+```
+
+#### 🏢 Company Information
+
+**FetchCompanyInfo** - Get basic company information
+```go
+companyInfo, err := client.FetchCompanyInfo(ctx, "AAPL", runID)
+```
+
+**FetchFundamentalsQuarterly** - Get quarterly financials (requires paid subscription)
+```go
+fundamentals, err := client.FetchFundamentalsQuarterly(ctx, "AAPL", runID)
+```
+
+---
+
+## 📝 Usage Examples
+
+### Example 1: Fetch Daily Bars for Multiple Symbols
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "sync"
+    "time"
+
+    "github.com/yeonlee/yfinance-go"
+)
+
+func main() {
+    client := yfinance.NewClient()
+    ctx := context.Background()
+    
+    symbols := []string{"AAPL", "GOOGL", "MSFT", "TSLA"}
+    start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+    end := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
+    
+    var wg sync.WaitGroup
+    results := make(chan string, len(symbols))
+    
+    for _, symbol := range symbols {
+        wg.Add(1)
+        go func(sym string) {
+            defer wg.Done()
+            
+            bars, err := client.FetchDailyBars(ctx, sym, start, end, true, "batch-run")
+            if err != nil {
+                results <- fmt.Sprintf("Error fetching %s: %v", sym, err)
+                return
+            }
+            
+            results <- fmt.Sprintf("%s: %d bars fetched", sym, len(bars.Bars))
+        }(symbol)
+    }
+    
+    wg.Wait()
+    close(results)
+    
+    for result := range results {
+        fmt.Println(result)
+    }
+}
+```
+
+### Example 2: Get Current Market Quote
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+
+    "github.com/yeonlee/yfinance-go"
+)
+
+func main() {
+    client := yfinance.NewClient()
+    ctx := context.Background()
+    
+    quote, err := client.FetchQuote(ctx, "AAPL", "quote-run")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Symbol: %s\n", quote.Security.Symbol)
+    fmt.Printf("Price: %d.%d %s\n", 
+        quote.Last.Scaled/10000, 
+        quote.Last.Scaled%10000,
+        quote.Currency)
+    fmt.Printf("Volume: %d\n", quote.Volume)
+    fmt.Printf("Market State: %s\n", quote.MarketState)
+}
+```
+
+### Example 3: Fetch Company Information
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/yeonlee/yfinance-go"
+)
+
+func main() {
+    client := yfinance.NewClient()
+    ctx := context.Background()
+    
+    companyInfo, err := client.FetchCompanyInfo(ctx, "AAPL", "company-run")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Company: %s\n", companyInfo.LongName)
+    fmt.Printf("Exchange: %s (%s)\n", companyInfo.Exchange, companyInfo.Mic)
+    fmt.Printf("Currency: %s\n", companyInfo.Currency)
+    fmt.Printf("Industry: %s\n", companyInfo.Industry)
+    fmt.Printf("Sector: %s\n", companyInfo.Sector)
+}
+```
+
+### Example 4: Custom Configuration
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+
+    "github.com/yeonlee/yfinance-go"
+    "github.com/yeonlee/yfinance-go/internal/httpx"
+)
+
+func main() {
+    // Create custom configuration
+    config := &httpx.Config{
+        BaseURL:         "https://query1.finance.yahoo.com",
+        Timeout:         30 * time.Second,
+        MaxAttempts:     3,
+        BackoffBaseMs:   1000,
+        BackoffJitterMs: 500,
+        MaxDelayMs:      10000,
+        QPS:             1.0,  // 1 request per second
+        Burst:           2,
+        CircuitWindow:   60 * time.Second,
+        FailureThreshold: 5,
+        ResetTimeout:    30 * time.Second,
+        UserAgent:       "MyApp/1.0",
+    }
+    
+    client := yfinance.NewClientWithConfig(config)
+    ctx := context.Background()
+    
+    // Use the client with custom settings
+    bars, err := client.FetchDailyBars(ctx, "AAPL", 
+        time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+        time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC),
+        true, "custom-config-run")
+    
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Printf("Fetched %d bars with custom configuration\n", len(bars.Bars))
+}
+```
+
+---
+
+## 🖥️ CLI Usage
+
+The `yfin` CLI tool provides command-line access to all functionality:
+
+### Installation
+
+```bash
+# Build from source
+go build -o yfin ./cmd/yfin
+
+# Or install globally
+go install github.com/yeonlee/yfinance-go/cmd/yfin@latest
+```
+
+### Basic Commands
+
+```bash
+# Fetch daily bars for a single symbol
+yfin pull --ticker AAPL --interval 1d --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
+
+# Fetch data for multiple symbols from a file
+yfin pull --universe-file symbols.txt --interval 1d --start 2024-01-01 --end 2024-12-31 --publish --env prod
+
+# Get current quote
+yfin quote --ticker AAPL
+
+# Get company information
+yfin company --ticker AAPL
+
+# Get fundamentals (requires paid subscription)
+yfin fundamentals --ticker AAPL --as-of 2024-01-01
+```
+
+### CLI Options
+
+- `--ticker` - Single symbol to fetch
+- `--universe-file` - File containing list of symbols
+- `--interval` - Time interval (1d, 1wk, 1mo, 1m, 5m, 15m, 30m, 60m)
+- `--start`, `--end` - Date range (UTC)
+- `--adjusted` - Adjustment policy (raw, split_only, split_dividend)
+- `--publish` - Publish to ampy-bus
+- `--env` - Environment (dev, staging, prod)
+- `--preview` - Show data preview without publishing
+- `--concurrency` - Number of concurrent requests
+- `--qps` - Requests per second limit
+
+---
+
+## 🎯 Mission & Success Criteria
 
 **Mission**  
-Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that speaks **Ampy’s canonical contracts** (`ampy-proto`) and optionally **emits** to `ampy-bus`, so ingestion pipelines and research tools work identically across providers.
+Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that speaks **Ampy's canonical contracts** (`ampy-proto`) and optionally **emits** to `ampy-bus`, so ingestion pipelines and research tools work identically across providers.
 
 **Success looks like**
 - Library returns **validated `ampy-proto` messages** with correct UTC times, currency semantics, and adjustment flags.
@@ -44,30 +397,66 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 
 ---
 
-## 2) Problems This Solves
+## 📊 Data Coverage
 
-- **Ad‑hoc yfinance usage** with drifting JSON shapes and ambiguous fields.
-- **Float precision** and **currency mismatch** that break P&L and research.
-- **Unbounded parallelism** causing bans/throttling.
-- Missing **bus integration** and **ampy-proto** compliance.
+### ✅ Supported Data Types
+
+- **Historical Bars** - Daily, weekly, monthly, and intraday OHLCV data
+- **Real-time Quotes** - Current market prices, bid/ask, volume
+- **Company Information** - Basic company details, exchange info, industry/sector
+- **Market Data** - 52-week ranges, market state, trading hours
+- **Multi-Currency Support** - Automatic currency conversion with FX providers
+
+### ❌ Not Supported (Requires Paid Subscription)
+
+- **Financial Statements** - Income statement, balance sheet, cash flow
+- **Analyst Recommendations** - Price targets, ratings
+- **Key Statistics** - P/E ratios, market cap, etc.
+- **Options Data** - Options chains and pricing
+- **Insider Trading** - Insider transactions
+- **Institutional Holdings** - Major shareholders
+
+### 🌍 Supported Markets
+
+- **US Markets** - NYSE, NASDAQ, AMEX
+- **International** - Major exchanges worldwide
+- **Currencies** - Forex pairs and cryptocurrency
+- **Commodities** - Gold, oil, agricultural products
+- **Indices** - S&P 500, Dow Jones, NASDAQ Composite
 
 ---
 
-## 3) Scope (What `yfinance-go` Covers)
+## ⚡ Key Features
 
-- **Historical bars** (OHLCV) for equities/ETFs; **daily intervals only** (`1d`) - Yahoo Finance does not provide minute, hourly, weekly, or monthly historical data.
-- **Quotes** (snapshot bid/ask/last, where available).
-- **Fundamentals** (income/balance/cashflow lines, ratios) normalized into `ampy.fundamentals.v1`.
-- **Corporate actions** awareness (splits/dividends) for adjusted vs raw bars.
-- **Fan‑out** symbol fetches with **bounded goroutines**, **jittered exponential backoff**, and **rate‑limit windows**.
-- **Optional publish** to `ampy-bus` using `ampy-bus` envelope conventions.
-- **CLI** for operators, CI, and backfills.
+### 🛡️ Production Ready
+- **Rate Limiting** - Built-in QPS limits and burst control
+- **Circuit Breakers** - Automatic failure detection and recovery
+- **Retry Logic** - Exponential backoff with jitter
+- **Session Rotation** - Prevents IP blocking and rate limits
+- **Observability** - Comprehensive metrics, logs, and tracing
 
-**Non‑goals:** Options chains, intraday full‑depth order books, or broker execution. Those belong to other modules.
+### 💰 Financial Accuracy
+- **High Precision Decimals** - Scaled decimal arithmetic for exact calculations
+- **Currency Support** - Multi-currency with automatic conversion
+- **Corporate Actions** - Split and dividend adjustments
+- **Market Hours** - Proper handling of trading sessions and holidays
+
+### 🚀 Performance
+- **Concurrent Requests** - Configurable goroutine pools
+- **Connection Pooling** - Efficient HTTP connection reuse
+- **Caching** - Built-in response caching for FX rates
+- **Batching** - Efficient data batching and chunking
+
+### 🔧 Developer Experience
+- **Simple API** - Clean, intuitive Go interface
+- **Type Safety** - Strongly typed data structures
+- **Error Handling** - Comprehensive error types and messages
+- **CLI Tool** - Command-line interface for operations
+- **Documentation** - Extensive examples and API docs
 
 ---
 
-## 4) Global Conventions (Ingest Contract)
+## 📋 Data Formats & Conventions
 
 1) **Time**: All timestamps **UTC** ISO‑8601. Bars use `start` inclusive, `end` exclusive; `event_time` at bar close.  
 2) **Precision**: Prices/amounts are **scaled decimals** (`scaled`, `scale`). Volumes are integers.  
@@ -80,234 +469,120 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 
 ---
 
-## 5) Data Mappings (Yahoo → `ampy-proto`)
-
-> Shapes below are **illustrative**. The library **must** handle provider quirks (missing fields, NaNs, market holidays).
-
-### 5.1 Historical Bars → `ampy.bars.v1.BarBatch`
-
-**Input (conceptual from Yahoo)**  
-- `timestamp[]`, `open[]`, `high[]`, `low[]`, `close[]`, `adjclose[]`, `volume[]`, `currency`, `gmtoffset`, `validRanges`, `meta.exchangeName`
-
-**Output (typical 1d adjusted bar)**
-```json
-{
-  "security":{"symbol":"AAPL","mic":"XNAS"},
-  "start":"2025-09-03T00:00:00Z",
-  "end":"2025-09-04T00:00:00Z",
-  "open":{"scaled":1931200,"scale":4},
-  "high":{"scaled":1945000,"scale":4},
-  "low":{"scaled":1926500,"scale":4},
-  "close":{"scaled":1939800,"scale":4},
-  "vwap":{"scaled":1939701,"scale":4},
-  "volume":53498123,
-  "trade_count":null,
-  "adjusted":true,
-  "adjustment_policy_id":"split_dividend",
-  "event_time":"2025-09-04T00:00:00Z",
-  "ingest_time":"2025-09-04T00:00:01Z",
-  "as_of":"2025-09-04T00:00:01Z",
-  "meta":{"run_id":"yfin_pull_20250904","source":"yfinance-go","producer":"ing-1","schema_version":"ampy.bars.v1:1.0.0"}
-}
-```
-
-**Edge cases**
-- Holidays/half‑days → bars absent or partial.
-- Splits/dividends → adjusted vs raw track `adjclose` vs `close`.
-- Currency differs from USD (`currency="JPY"`); ensure decimal scales per FX domain guidance.
-
-### 5.2 Quotes → `ampy.ticks.v1` (snapshot as quote tick)
-
-**Output example**
-```json
-{
-  "security":{"symbol":"MSFT","mic":"XNAS"},
-  "type":"QUOTE",
-  "bid":{"scaled":4275000,"scale":4},
-  "bid_size":200,
-  "ask":{"scaled":4275300,"scale":4},
-  "ask_size":300,
-  "venue":"XNMS",
-  "event_time":"2025-09-05T19:30:12Z",
-  "ingest_time":"2025-09-05T19:30:12Z",
-  "meta":{"run_id":"yfin_live_20250905","source":"yfinance-go","producer":"ing-2","schema_version":"ampy.ticks.v1:1.0.0"}
-}
-```
-
-### 5.3 Fundamentals → `ampy.fundamentals.v1.Snapshot`
-
-**Input (conceptual)**  
-- Income/Balance/Cashflow items; currencies; period start/end; trailing vs quarterly.
-
-**Output example (quarterly)**
-```json
-{
-  "security":{"symbol":"AAPL","mic":"XNAS"},
-  "lines":[
-    {"key":"revenue","value":{"scaled":119870000000000,"scale":2},"currency_code":"USD","period_start":"2025-03-30T00:00:00Z","period_end":"2025-06-29T00:00:00Z"},
-    {"key":"net_income","value":{"scaled":2386000000000,"scale":2},"currency_code":"USD","period_start":"2025-03-30T00:00:00Z","period_end":"2025-06-29T00:00:00Z"},
-    {"key":"eps_basic","value":{"scaled":1525,"scale":2},"currency_code":"USD","period_start":"2025-03-30T00:00:00Z","period_end":"2025-06-29T00:00:00Z"}
-  ],
-  "source":"yfinance",
-  "as_of":"2025-08-01T00:00:00Z",
-  "meta":{"run_id":"yfin_fund_20250801","source":"yfinance-go","producer":"fund-1","schema_version":"ampy.fundamentals.v1:1.0.0"}
-}
-```
-
-**Edge cases**: Restatements, negative EPS, mixed currency lines, missing items.
-
 ---
 
-## 6) Concurrency, Rate Limits, and Backoff
+## ⚙️ Configuration
 
-- **Bounded goroutine pool**: max in‑flight requests configurable (e.g., 32, 64, 128).
-- **Rate limits**: token bucket per host; configurable QPS and burst.
-- **Backoff policy**: **exponential with jitter** on 429/5xx; max attempts and ceiling delay respected.
-- **Fan‑out strategy**: group by exchange/MIC or by interval to maximize cache re‑use and reduce penalties.
-- **Circuit breakers**: trip when consecutive error rate crosses threshold; auto half‑open probes.
-- **Cold start warmup**: small initial concurrency to avoid immediate throttling.
+### Environment Variables
 
-**Telemetry (required)**
-- Counters: `yfin.requests_total{outcome}`, `yfin.backoff_total{reason}`, `yfin.decode_fail_total{reason}`
-- Histograms: `yfin.request_latency_ms`, `yfin.batch_size_bytes`
-- Gauges: `yfin.inflight_requests`
-
----
-
-## 7) Bus Integration (Optional Publish)
-
-When enabled, the client publishes to `ampy-bus` with envelopes per `ampy-bus` spec.
-
-**Topic examples**
-- `ampy/prod/bars/v1/XNAS.AAPL`
-- `ampy/prod/news/v1/raw` (not sourced here)
-- `ampy/prod/fundamentals/v1/AAPL` (if a dedicated fundamentals topic is adopted; otherwise push to a data lake writer)
-
-**Envelope headers (required)**
-- `message_id` (UUIDv7), `schema_fqdn` (e.g., `ampy.bars.v1.BarBatch`), `schema_version`, `produced_at`, `producer`, `source="yfinance-go"`, `run_id`, `partition_key` (e.g., `XNAS.AAPL`), `trace_id`.
-
-**Ordering & batching**
-- Per `(symbol, mic)` ordering; maintain time‑ascending bars within batch.
-- Chunk to keep **payload < 1 MiB** (pointer pattern if larger; rarely needed for daily bars).
-
----
-
-## 8) CLI (Operator‑Facing Behavior)
-
-> CLI is a thin wrapper over the library. It **prints** counts/summaries, can **preview** JSON payloads (redacted), and optionally **publishes**.
-
-**Examples**
 ```bash
-yfin pull --ticker AAPL --interval 1d --start 2024-01-01 --end 2024-12-31 --adjusted split_dividend --preview
+# Rate limiting
+export YFIN_QPS=2.0
+export YFIN_BURST=5
+export YFIN_CONCURRENCY=32
 
-yfin pull --universe-file nasdaq100.txt --interval 1d --start 2025-09-03 --end 2025-09-05 --publish --env prod --topic-prefix ampy/prod
+# Timeouts
+export YFIN_TIMEOUT=30s
+export YFIN_BACKOFF_BASE=1s
+export YFIN_BACKOFF_MAX=10s
 
-yfin fundamentals --ticker AAPL --as-of 2025-08-01 --preview
+# Circuit breaker
+export YFIN_CIRCUIT_THRESHOLD=5
+export YFIN_CIRCUIT_RESET=30s
+
+# Observability
+export YFIN_LOG_LEVEL=info
+export YFIN_METRICS_ENABLED=true
 ```
 
-**Flags (illustrative)**
-- `--ticker`, `--universe-file`, `--market XNAS`
-- `--interval 1d` (daily only - Yahoo Finance limitation)
-- `--start`, `--end` (UTC)
-- `--adjusted raw|split_only|split_dividend`
-- `--publish`, `--env`, `--topic-prefix`
-- `--concurrency`, `--qps`, `--retry-max`, `--backoff-max`
-- `--preview` (print redacted JSON summaries), `--out parquet|json` (for local export)
-- `--run-id` (explicit) else generated
+### Configuration File
 
-**CLI Output (preview)**
-- Counts per symbol, first/last timestamps, gaps detected, currency, and payload size summary.
-- Error table with status codes and backoff applied.
+```yaml
+# config.yaml
+yahoo:
+  timeout_ms: 30000
+  base_url: "https://query1.finance.yahoo.com"
 
----
+concurrency:
+  global_workers: 32
+  max_inflight: 64
 
-## 9) Configuration (via `ampy-config`)
+rate_limit:
+  per_host_qps: 2.0
+  burst: 5
 
-- **Transport**: base URLs, timeouts, compression, and cache TTLs.
-- **Concurrency**: max inflight, QPS, burst per host.
-- **Intervals**: daily (`1d`) only due to Yahoo Finance limitations; default adjustment policy.
-- **Bus**: topic prefix, env, publish toggle.
-- **Observability**: exporter endpoints, sampling, log level.
-- **Secrets**: none required for public endpoints; if proxy/API key used, reference via secret URIs.
+retry:
+  attempts: 3
+  backoff_base_ms: 1000
+  backoff_max_ms: 10000
 
----
+circuit_breaker:
+  failure_threshold: 5
+  reset_timeout_ms: 30000
 
-## 10) Validation & Testing
-
-- **Golden samples**: For daily (`1d`) intervals across USD/EUR/JPY quotes; adjusted vs raw; fundamentals quarterly and trailing.
-- **Round‑trip**: Serialize in Go, deserialize in Python using `ampy-proto`—values match exactly (including decimals).
-- **Gap detection**: Known holiday windows produce expected absence; half‑days truncated correctly.
-- **Backoff**: Inject 429/503; verify retry policy and counters.
-- **Cardinality**: Metrics labels bounded; no `symbol` in labels (use logs/traces).
-- **Performance**: Throughput at target concurrency without exceeding QPS/latency SLOs.
-- **Regression**: Freeze “Yahoo schema → ampy-proto” mapping tests.
+observability:
+  log_level: "info"
+  metrics_enabled: true
+  tracing_enabled: false
+```
 
 ---
 
-## 11) Observability & SLOs
+## 🤝 Contributing
 
-- **Logs**: `bars.ingest`, `fundamentals.ingest`, `decode_fail`, with `run_id`, `trace_id`, `symbol`, `mic`.
-- **Metrics**: Latency, throughput, failure counters; backoff totals.
-- **Tracing**: Spans for `ingest.fetch`, `ingest.decode`, `bus.publish`.
-- **SLO targets**:
-  - p99 fetch latency (daily bars): **≤ 500 ms** per request (provider dependent)
-  - p99 end‑to‑end ingest (fetch→publish) for daily bars: **≤ 1500 ms** under normal load
-  - Error budget: 429/5xx rate **< 1%** sustained with backoff
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
----
+### Development Setup
 
-## 12) Security & Compliance
-
-- TLS for all network calls; proxy support.
-- **No PII**; financial market data only.
-- **Respect provider ToS**: rate limits, user‑agent, cache policy.
-- Logs redact provider payloads by default (store hashes/byte sizes).
-
----
-
-## 13) Failure Modes & Recovery
-
-- **Provider outage**: throttle to minimum, surface alerts, skip publish.
-- **Schema drift**: detect changed source fields → route to **DLQ topic** or error store; never silently coerce.
-- **Clock skew**: trust provider timestamps; normalize to UTC; warn on future‑dated events.
-- **Partial batches**: emit what’s valid; include `ingest_warnings` in meta if supported.
-
----
-
-## 14) Acceptance Criteria (Definition of Done for `yfinance-go` v1)
-
-1. Library returns **`ampy.bars.v1`** (adjusted/raw) and **`ampy.fundamentals.v1`** with full precision & correct time semantics.
-2. Optional **publish** to `ampy-bus` using the canonical envelope; ordering by `(symbol, mic)` maintained.
-3. CLI supports **single ticker** and **universe file** workflows with preview and publish modes.
-4. Concurrency/backoff tested under stress; SLOs met; no rate‑limit violations in soak tests.
-5. Golden samples locked; cross‑language round‑trips pass; mapping tests protect against upstream changes.
-6. Observability: logs/metrics/traces emitted with correlation to bus messages; dashboards show ingest health.
-
----
-
-## 15) End‑to‑End Narrative (Example)
-
-1) Ops runs:
 ```bash
-yfin pull --universe-file nasdaq100.txt --interval 1d --start 2024-01-01 --end 2024-12-31 --publish --env prod --run-id backfill_2024
+# Clone the repository
+git clone https://github.com/yeonlee/yfinance-go.git
+cd yfinance-go
+
+# Install dependencies
+go mod download
+
+# Run tests
+go test ./...
+
+# Build CLI
+go build -o yfin ./cmd/yfin
+
+# Run integration tests
+go test -tags=integration ./...
 ```
-2) Client fans out with 64 goroutines, respecting QPS. Bars are normalized (UTC, scaled decimals, currency) into `BarBatch`.  
-3) Batches publish to `ampy/prod/bars/v1/{MIC}.{SYMBOL}` with UUIDv7 `message_id`, `run_id=backfill_2024`.  
-4) Downstream **ampy-features** and data lake writers consume without adapters; Grafana shows ingest throughput and zero DLQ.  
-5) A split detected for `TSLA` mid‑range: adjusted bars use `adjclose`; raw variant available by flag; both consistent with `corporate_actions.v1` semantics.
+
+### Code Style
+
+- Follow Go standard formatting (`gofmt`)
+- Use meaningful variable and function names
+- Add tests for new functionality
+- Update documentation for API changes
 
 ---
 
-### Dependencies (as needed)
-- **Ampy‑proto** (required): canonical schemas.
-- **Ampy‑config** (recommended): typed config + secrets façade.
-- **Ampy‑bus** (optional): publishing to NATS/Kafka.
-- **Ampy‑observability** (recommended): logs/metrics/traces exporters & conventions.
+## 📄 License
 
-> **Note on FX**: Real‑time currency conversion for fundamentals or non‑USD bars requires an FX source. For production we suggest choosing a provider (e.g., Open Exchange Rates, Currencylayer, ExchangeRate‑API). This may require an API key—see the step plan for where we’d integrate it.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## License
-Apache‑2.0 (OS).
+## 🙏 Acknowledgments
+
+- **Yahoo Finance** for providing publicly accessible financial data
+- **AmpyFin** for the ampy-proto schemas and infrastructure
+- **Go Community** for excellent libraries and tools
+- **Contributors** who help improve this project
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yeonlee/yfinance-go/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yeonlee/yfinance-go/discussions)
+- **Documentation**: [GoDoc](https://godoc.org/github.com/yeonlee/yfinance-go)
+
+---
+
+**⭐ If you find this project useful, please give it a star on GitHub!**
 

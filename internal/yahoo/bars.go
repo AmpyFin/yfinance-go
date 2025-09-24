@@ -163,11 +163,22 @@ func (r *ChartResult) Validate() error {
 		return fmt.Errorf("data length mismatch: timestamps=%d, quote data lengths vary", expectedLen)
 	}
 	
-	// Validate OHLCV data for each bar
+	// Validate OHLCV data for each bar - skip bars with missing data
+	validBars := 0
 	for i := 0; i < expectedLen; i++ {
-		if err := validateBarData(quote.Open[i], quote.High[i], quote.Low[i], quote.Close[i], quote.Volume[i]); err != nil {
-			return fmt.Errorf("bar[%d]: %w", i, err)
+		// Check if this bar has complete data
+		if quote.Open[i] != nil && quote.High[i] != nil && quote.Low[i] != nil && quote.Close[i] != nil && quote.Volume[i] != nil {
+			if err := validateBarData(quote.Open[i], quote.High[i], quote.Low[i], quote.Close[i], quote.Volume[i]); err != nil {
+				return fmt.Errorf("bar[%d]: %w", i, err)
+			}
+			validBars++
 		}
+		// Skip bars with missing data - this is common for international markets
+	}
+	
+	// Ensure we have at least some valid data
+	if validBars == 0 {
+		return fmt.Errorf("no valid bars found - all bars have missing OHLCV data")
 	}
 	
 	// Validate adjusted close if present
@@ -191,9 +202,21 @@ func (r *ChartResult) Validate() error {
 
 // validateBarData validates OHLCV data for a single bar
 func validateBarData(open, high, low, close *float64, volume *int64) error {
-	// Check for nil values
-	if open == nil || high == nil || low == nil || close == nil || volume == nil {
-		return fmt.Errorf("missing required OHLCV data")
+	// Check for nil values - be more specific about which field is missing
+	if open == nil {
+		return fmt.Errorf("missing open price")
+	}
+	if high == nil {
+		return fmt.Errorf("missing high price")
+	}
+	if low == nil {
+		return fmt.Errorf("missing low price")
+	}
+	if close == nil {
+		return fmt.Errorf("missing close price")
+	}
+	if volume == nil {
+		return fmt.Errorf("missing volume")
 	}
 	
 	// Validate prices
@@ -261,6 +284,11 @@ func (r *BarsResponse) GetBars() ([]Bar, error) {
 	bars := make([]Bar, 0, len(result.Timestamp))
 	
 	for i, timestamp := range result.Timestamp {
+		// Skip bars with missing OHLCV data
+		if quote.Open[i] == nil || quote.High[i] == nil || quote.Low[i] == nil || quote.Close[i] == nil || quote.Volume[i] == nil {
+			continue
+		}
+		
 		bar := Bar{
 			Timestamp: timestamp,
 			Open:      *quote.Open[i],

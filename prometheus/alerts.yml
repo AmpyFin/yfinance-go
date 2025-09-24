@@ -1,0 +1,112 @@
+groups:
+- name: yfinance-go
+  rules:
+  - alert: YFin429RateHigh
+    expr: |
+      sum(rate(yfin_requests_total{code="429"}[10m])) 
+      / sum(rate(yfin_requests_total[10m])) > 0.05
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High 429 rate (>5%)"
+      description: "Consider lowering QPS or investigating provider throttling."
+
+  - alert: YFinCBOpenSustained
+    expr: avg_over_time(yfin_cb_state[10m]) > 1.5
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Circuit breaker open sustained"
+      description: "Persistent failures causing CB to stay open."
+
+  - alert: YFinPublishErrorRateHigh
+    expr: |
+      sum(rate(yfin_publish_total{outcome="error"}[10m])) 
+      / clamp_min(sum(rate(yfin_publish_total[10m])), 1) > 0.02
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Publisher error rate >2%"
+      description: "Investigate bus connectivity, payload size, or schema issues."
+
+  - alert: YFinMetricsSilence
+    expr: absent(yfin_requests_total)
+    for: 15m
+    labels:
+      severity: warning
+    annotations:
+      summary: "No metrics received"
+      description: "Scrape failure or process down."
+
+  - alert: YFinHighLatencyP95
+    expr: |
+      histogram_quantile(0.95, sum(rate(yfin_request_latency_ms_bucket[5m])) by (le)) > 2000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High request latency p95 >2s"
+      description: "Request latency p95 is above 2 seconds for 10 minutes."
+
+  - alert: YFinHighLatencyP99
+    expr: |
+      histogram_quantile(0.99, sum(rate(yfin_request_latency_ms_bucket[5m])) by (le)) > 5000
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High request latency p99 >5s"
+      description: "Request latency p99 is above 5 seconds for 5 minutes."
+
+  - alert: YFinDecodeFailuresHigh
+    expr: |
+      sum(rate(yfin_decode_fail_total[10m])) > 0.1
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High decode failure rate"
+      description: "Decode failures are occurring at >0.1/s for 10 minutes."
+
+  - alert: YFinBackoffRateHigh
+    expr: |
+      sum(rate(yfin_backoff_total[10m])) > 1.0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High backoff rate"
+      description: "Backoffs are occurring at >1.0/s for 10 minutes."
+
+  - alert: YFinSessionEjectionsHigh
+    expr: |
+      sum(rate(yfin_session_eject_total[10m])) > 0.5
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High session ejection rate"
+      description: "Session ejections are occurring at >0.5/s for 10 minutes."
+
+  - alert: YFinPublishLatencyHigh
+    expr: |
+      histogram_quantile(0.95, sum(rate(yfin_publish_latency_ms_bucket[5m])) by (le)) > 1000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High publish latency p95 >1s"
+      description: "Publish latency p95 is above 1 second for 10 minutes."
+
+  - alert: YFinInflightRequestsHigh
+    expr: |
+      sum(yfin_inflight_requests) > 100
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High inflight request count"
+      description: "More than 100 requests are inflight for 5 minutes."

@@ -1,0 +1,111 @@
+# ampy-config (yfinance-go) - Production Environment
+# This is an example configuration file for production
+
+app:
+  env: "prod"                         # dev | staging | prod
+  run_id: ""                         # optional; CLI can override
+
+yahoo:
+  base_url: "https://query2.finance.yahoo.com"   # abstracted behind adapter
+  timeout_ms: 10000                  # Longer timeout for production
+  idle_timeout_ms: 60000             # Longer idle timeout
+  max_conns_per_host: 128            # More connections for production
+  user_agent: "AmpyFin-yfinance-go/1.x"
+
+concurrency:
+  global_workers: 128                # More workers for production
+  per_host_workers: 64
+
+rate_limit:
+  per_host_qps: 3.0                  # More conservative for production
+  per_host_burst: 3
+  per_session_qps: 0.5               # More conservative per session
+  per_session_burst: 1
+
+sessions:
+  n: 10                              # More sessions for production
+  eject_after: 3                     # More aggressive ejection
+  recreate_cooldown_ms: 20000        # Longer cooldown
+
+retry:
+  attempts: 7                        # More retries for production
+  base_ms: 500                       # Longer base delay
+  max_delay_ms: 15000                # Longer max delay
+
+circuit_breaker:
+  window: 100                        # Larger window for production
+  failure_threshold: 0.20            # More sensitive threshold
+  reset_timeout_ms: 60000            # Longer reset timeout
+  half_open_probes: 5                # More probes
+
+markets:
+  # Daily-only enforcement; other intervals are invalid for yfinance-go.
+  allowed_intervals: ["1d"]          # enforce daily-only here
+  # Production MIC allowlist
+  allowed_mics: ["XNAS","XNYS","XNMS","NYQ","KSC","XETR","XTKS","LSE","TSE"]
+  default_adjustment_policy: "split_dividend"   # raw | split_dividend
+
+fx:
+  provider: "yahoo-web"              # Enable FX for production
+  target: "USD"                      # Default target currency
+  cache_ttl_ms: 300000               # 5 minutes cache for production
+  rate_scale: 8
+  rounding: "half_up"
+  yahoo_web:
+    qps: 0.2                         # More conservative for production
+    burst: 1
+    timeout_ms: 10000                # Longer timeout
+    backoff_attempts: 6              # More attempts
+    backoff_base_ms: 500             # Longer base delay
+    backoff_max_delay_ms: 8000       # Longer max delay
+    circuit_reset_ms: 60000          # Longer reset
+
+bus:
+  enabled: true                      # Enable bus for production
+  env: "prod"                        # topic env segment
+  topic_prefix: "ampy"
+  max_payload_bytes: 2097152         # 2 MiB for production
+  publisher:
+    backend: "nats"                  # nats | kafka (as supported by ampy-bus)
+    nats:
+      url: "${NATS_URL:-nats://prod-nats:4222}"
+      subject_style: "topic"
+      ack_wait_ms: 10000             # Longer ack wait for production
+    kafka:
+      brokers: ["${KAFKA_BROKERS:-kafka1:9092,kafka2:9092}"]
+      acks: "all"
+      compression: "snappy"
+  retry:
+    attempts: 7                      # More retries for production
+    base_ms: 500                     # Longer base delay
+    max_delay_ms: 15000              # Longer max delay
+  circuit_breaker:
+    window: 100                      # Larger window
+    failure_threshold: 0.20          # More sensitive
+    reset_timeout_ms: 60000          # Longer reset
+    half_open_probes: 5              # More probes
+
+observability:
+  logs:
+    level: "warn"                    # Less verbose for production
+  metrics:
+    prometheus:
+      enabled: true
+      addr: ":9090"                  # exporter bind address
+  tracing:
+    otlp:
+      enabled: true
+      endpoint: "${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}"
+      sample_ratio: 0.01             # Lower sampling for production
+
+secrets:
+  # Production secrets - use proper secret backends
+  - name: "nats_password"
+    ref: "aws-sm://prod/nats/password?versionStage=AWSCURRENT"
+    required: true
+  - name: "kafka_sasl_password"
+    ref: "gcp-sm://projects/ampy-prod/secrets/kafka-sasl-password/versions/latest"
+    required: true
+  - name: "otel_auth_token"
+    ref: "secret://vault/otel#auth_token"
+    required: true

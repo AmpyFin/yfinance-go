@@ -25,6 +25,7 @@ type NormalizedBar struct {
 	Volume              int64         `json:"volume"`
 	Adjusted            bool          `json:"adjusted"`
 	AdjustmentPolicyID  string        `json:"adjustment_policy_id"`
+	CurrencyCode        string        `json:"currency_code"`
 	EventTime           time.Time     `json:"event_time"`
 	IngestTime          time.Time     `json:"ingest_time"`
 	AsOf                time.Time     `json:"as_of"`
@@ -50,6 +51,7 @@ type NormalizedQuote struct {
 	RegularMarketLow   *ScaledDecimal `json:"regular_market_low,omitempty"`
 	RegularMarketVolume *int64        `json:"regular_market_volume,omitempty"`
 	Venue              string         `json:"venue,omitempty"`
+	CurrencyCode       string         `json:"currency_code"`
 	EventTime          time.Time      `json:"event_time"`
 	IngestTime         time.Time      `json:"ingest_time"`
 	Meta               Meta           `json:"meta"`
@@ -103,6 +105,7 @@ type NormalizedMarketData struct {
 	ChartPreviousClose     *ScaledDecimal `json:"chart_previous_close,omitempty"`
 	RegularMarketTime      *time.Time     `json:"regular_market_time,omitempty"`
 	HasPrePostMarketData   bool           `json:"has_pre_post_market_data"`
+	CurrencyCode           string         `json:"currency_code"`
 	EventTime              time.Time      `json:"event_time"`
 	IngestTime             time.Time      `json:"ingest_time"`
 	Meta                   Meta           `json:"meta"`
