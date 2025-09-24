@@ -221,19 +221,14 @@ jobs:
           echo "Files in dist directory after extraction:"
           ls -la dist/
           echo "Testing binary:"
-          if [ -f "./dist/yfin" ]; then
-            ./dist/yfin version
-            ./dist/yfin --help
-            ./dist/yfin pull --help
-            ./dist/yfin quote --help
-            ./dist/yfin fundamentals --help
-            ./dist/yfin config --help
+          if [ -f "./dist/yfin_linux_amd64" ]; then
+            ./dist/yfin_linux_amd64 version
+            ./dist/yfin_linux_amd64 --help
+            ./dist/yfin_linux_amd64 pull --help
+            ./dist/yfin_linux_amd64 quote --help
+            ./dist/yfin_linux_amd64 fundamentals --help
+            ./dist/yfin_linux_amd64 config --help
           else
-            echo "Binary not found at ./dist/yfin, trying ./yfin"
-            ./yfin version
-            ./yfin --help
-            ./yfin pull --help
-            ./yfin quote --help
-            ./yfin fundamentals --help
-            ./yfin config --help
+            echo "Binary not found at ./dist/yfin_linux_amd64"
+            exit 1
           fi
