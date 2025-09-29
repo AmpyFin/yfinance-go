@@ -57,13 +57,65 @@ The scraping system supports 8 comprehensive endpoints, each targeting specific 
 - **URL Pattern**: `https://finance.yahoo.com/quote/{TICKER}/analyst-insights`
 
 ### 8. **News** (`news`)
-- **Purpose**: Latest financial news and market updates
-- **Data**: News headlines, articles, market sentiment
+- **Purpose**: Latest financial news and market updates with comprehensive article metadata
+- **Data**: News headlines, article URLs, sources, published timestamps, thumbnails, related tickers
 - **URL Pattern**: `https://finance.yahoo.com/quote/{TICKER}/news`
+- **Features**:
+  - Real-time news extraction from Yahoo Finance
+  - Source attribution (Bloomberg, Reuters, etc.)
+  - Relative time parsing (e.g., "2h ago", "1 day ago")
+  - Related ticker extraction for each article
+  - Image URL extraction for article thumbnails
+  - Smart deduplication by URL and content heuristics
+  - Pagination hint detection
+  - JSON-based extraction for enhanced reliability
+  - Cross-ticker news coverage (articles mentioning multiple stocks)
 
 ## Usage Examples
 
-### Comprehensive Statistics (Recommended)
+### AMPY-PROTO Integration (Recommended)
+
+The scraping system now supports comprehensive ampy-proto message generation for all endpoints. This enables standardized communication with financial systems using the AmpyFin protocol.
+
+#### Generate AMPY-PROTO Messages
+
+```bash
+# Generate ampy-proto fundamentals messages for comprehensive financial data
+./yfin scrape --preview-proto --ticker AAPL --endpoints financials,balance-sheet,cash-flow,key-statistics --config configs/effective.yaml
+
+# Generate ampy-proto messages for analyst coverage and insights
+./yfin scrape --preview-proto --ticker AAPL --endpoints analysis,analyst-insights --config configs/effective.yaml
+
+# Generate ampy-proto messages for news and company profile
+./yfin scrape --preview-proto --ticker AAPL --endpoints news,profile --config configs/effective.yaml
+
+# Generate all available ampy-proto messages for comprehensive analysis
+./yfin scrape --preview-proto --ticker AAPL --endpoints financials,balance-sheet,cash-flow,key-statistics,analysis,analyst-insights,profile,news --config configs/effective.yaml
+```
+
+#### AMPY-PROTO Message Structure
+
+Each ampy-proto message contains:
+
+- **Security Identification**: Symbol, MIC (Market Identifier Code)
+- **Metadata**: Run ID, source, producer, schema version, timestamps
+- **Financial Data**: Line items with scaled decimal values, currency, periods
+- **Observability**: Metrics, tracing, and monitoring data
+
+#### Supported AMPY-PROTO Endpoints
+
+All 8 scraping endpoints now generate ampy-proto messages:
+
+1. **`financials`** → `ampy.fundamentals.v1.FundamentalsSnapshot`
+2. **`balance-sheet`** → `ampy.fundamentals.v1.FundamentalsSnapshot` 
+3. **`cash-flow`** → `ampy.fundamentals.v1.FundamentalsSnapshot`
+4. **`key-statistics`** → `ampy.fundamentals.v1.FundamentalsSnapshot`
+5. **`analysis`** → `ampy.fundamentals.v1.FundamentalsSnapshot`
+6. **`analyst-insights`** → `ampy.fundamentals.v1.FundamentalsSnapshot`
+7. **`profile`** → `ampy.profile.v1.ProfileSnapshot`
+8. **`news`** → `ampy.news.v1.NewsSnapshot`
+
+### Comprehensive Statistics (Legacy JSON)
 
 The comprehensive statistics command provides enhanced key statistics with dynamic historical data:
 
@@ -117,6 +169,298 @@ The comprehensive statistics command provides enhanced key statistics with dynam
 ./yfin scrape --ticker SMSN.IL --endpoints profile --preview-json --config configs/effective.yaml
 ```
 
+#### News and Market Updates
+```bash
+# Latest news with beautiful table preview
+./yfin scrape --preview-news --ticker AAPL --config configs/effective.yaml
+./yfin scrape --preview-news --ticker TSM --config configs/effective.yaml
+./yfin scrape --preview-news --ticker MSFT --config configs/effective.yaml
+
+# News data as JSON for programmatic access
+./yfin scrape --ticker AAPL --endpoints news --preview-json --config configs/effective.yaml
+./yfin scrape --ticker TSM --endpoints news --preview-json --config configs/effective.yaml
+```
+
+## News Scraping Deep Dive
+
+### News Preview Mode
+
+The `--preview-news` flag provides a beautiful, human-readable table format for news articles:
+
+```bash
+# Apple news with table preview
+./yfin scrape --preview-news --ticker AAPL --config configs/effective.yaml
+```
+
+**Example Output:**
+```
+PREVIEW NEWS ticker=AAPL
+{"timestamp":"2025-09-29T17:23:27Z","level":"info","source":"yfinance-go/scrape","message":"scrape request","fields":{"attempt":1,"bytes":2156762,"duration_ms":587,"gzip":true,"host":"finance.yahoo.com","redirects":0,"status":200,"url":"https://finance.yahoo.com/quote/AAPL/news"}}
+FETCH META: host=finance.yahoo.com status=200 bytes=2156762 gzip=true redirects=0 latency=587ms
+
+AAPL news: found=18 deduped=0 returned=18 as_of=2025-09-29T17:23:27Z
+Next page hint: More Info
+
+ARTICLES:
+ 1) 21m ago  |                 | Apple Momentum Slows as Jefferies Reiterates Ho...
+    Tickers: AAPL
+ 2) 2h ago   |                 | Apple Just Unveiled the iPhone 17: Here's Wha...
+    Tickers: AAPL
+ 3) 3h ago   |                 | Can Apple Stock Hit $310 in 2025?
+    Tickers: AAPL
+ 4) 3h ago   |                 | Watch These Intel Price Levels After Stock Surg...
+    Tickers: INTC, AAPL, 2330.TW
+ 5) 4h ago   |                 | Analyst on Apple (AAPL) After iPhone 17 Launch:...
+    Tickers: AAPL, 005930.KS, 1810.HK
+ 6) 4h ago   |                 | Analyst Says He's Turned Bullish on Tesla (TS...
+    Tickers: TSLA, AAPL
+ 7) 4h ago   |                 | Should Rachel Reeves hike taxes or cut benefit ...
+ 8) 4h ago   | Investing.com   | These are the key milestones for the S&P 500 ra...
+    Tickers: AAPL, HSBA.L
+ 9) 7h ago   |                 | How the Fed is juicing the markets, from share ...
+    Tickers: AAPL, MSFT, META
+10) 7h ago   |                 | Best-Performing Leveraged ETFs of Last Week
+    Tickers: INTW, MVLL, BULX
+11) 7h ago   |                 | Chinese display manufacturing giant BOE makes f...
+    Tickers: 000725.SZ, AAPL
+12) 8h ago   |                 | AI emissions putting Big Tech's 2030 emission...
+    Tickers: MSFT, DATA.L, GOOGL
+13) 8h ago   |                 | BIEL Crystal provides high-end glass cover for ...
+    Tickers: AAPL
+14) 9h ago   |                 | Taiwan Must Help US to Make Half Its Chips, Com...
+    Tickers: 2330.TW, AAPL, NVDA
+15) 11h ago  |                 | QUALCOMM Incorporated (QCOM) Announces New Chip...
+    Tickers: QCOM, AAPL
+16) 12h ago  |                 | Jim Cramer highlights Apple's Massive Resources
+    Tickers: AAPL, INTC
+17) 12h ago  |                 | Jim Cramer Says "Intel Can't Be Allowed to ...
+    Tickers: INTC, AAPL
+18) 12h ago  |                 | 1 Growth Stock to Stash and 2 Facing Headwinds
+    Tickers: LC, BRZE, GXO
+```
+
+### News Data Structure
+
+Each news article contains comprehensive metadata:
+
+```json
+{
+  "title": "Apple Just Unveiled the iPhone 17: Here's What's New",
+  "url": "https://finance.yahoo.com/news/apple-iphone-17-unveiled-whats-new-140000123.html",
+  "source": "Yahoo Finance",
+  "published_at": "2025-09-29T14:23:27Z",
+  "image_url": "https://media.zenfs.com/en/yahoo_finance_350/iphone-17-launch.webp",
+  "related_tickers": ["AAPL"]
+}
+```
+
+### News Features Explained
+
+#### 1. **Real-time Extraction**
+- Fetches latest news directly from Yahoo Finance
+- Updates every time you run the command
+- No caching - always fresh data
+
+#### 2. **Source Attribution**
+- Identifies news providers (Bloomberg, Reuters, MarketWatch, etc.)
+- Shows "unknown" when source isn't clearly identified
+- Helps assess news credibility and bias
+
+#### 3. **Relative Time Parsing**
+- Converts "2h ago", "1 day ago" to precise UTC timestamps
+- Supports minutes, hours, days, weeks, and "yesterday"
+- Handles edge cases like "now" and "just now"
+
+#### 4. **Related Ticker Detection**
+- Automatically identifies all stock symbols mentioned in articles
+- Supports international tickers (2330.TW, 005930.KS, etc.)
+- Enables cross-ticker news analysis
+
+#### 5. **Smart Deduplication**
+- Removes duplicate articles by URL similarity
+- Uses content-based heuristics for near-duplicates
+- Prevents spam and redundant information
+
+#### 6. **Image URL Extraction**
+- Extracts article thumbnail images
+- Supports WebP format for optimal performance
+- Provides visual context for news articles
+
+#### 7. **Pagination Detection**
+- Identifies "More" or "Load more" buttons
+- Enables automated pagination for comprehensive news collection
+- Supports infinite scroll detection
+
+### Advanced News Usage Examples
+
+#### Multi-Ticker News Analysis
+```bash
+# Compare news across semiconductor sector
+./yfin scrape --preview-news --ticker AAPL --config configs/effective.yaml
+./yfin scrape --preview-news --ticker TSM --config configs/effective.yaml
+./yfin scrape --preview-news --ticker NVDA --config configs/effective.yaml
+```
+
+#### News as JSON for Integration
+```bash
+# Get structured news data for programmatic use
+./yfin scrape --ticker AAPL --endpoints news --preview-json --config configs/effective.yaml
+```
+
+#### News + Analyst Coverage
+```bash
+# Combine news sentiment with analyst recommendations
+./yfin scrape --ticker AAPL --endpoints news,analyst-insights --preview-json --config configs/effective.yaml
+```
+
+### News Data Processing
+
+#### Filtering by Source
+```go
+// Filter news by trusted sources
+func filterBySource(articles []NewsItem, trustedSources []string) []NewsItem {
+    var filtered []NewsItem
+    for _, article := range articles {
+        for _, source := range trustedSources {
+            if strings.Contains(strings.ToLower(article.Source), strings.ToLower(source)) {
+                filtered = append(filtered, article)
+                break
+            }
+        }
+    }
+    return filtered
+}
+```
+
+#### Time-based Filtering
+```go
+// Get news from last 24 hours
+func getRecentNews(articles []NewsItem, hours int) []NewsItem {
+    cutoff := time.Now().Add(-time.Duration(hours) * time.Hour)
+    var recent []NewsItem
+    
+    for _, article := range articles {
+        if article.PublishedAt != nil && article.PublishedAt.After(cutoff) {
+            recent = append(recent, article)
+        }
+    }
+    return recent
+}
+```
+
+#### Cross-ticker Analysis
+```go
+// Find articles mentioning multiple tickers
+func findCrossTickerNews(articles []NewsItem, tickers []string) []NewsItem {
+    var crossTicker []NewsItem
+    
+    for _, article := range articles {
+        mentionedCount := 0
+        for _, ticker := range tickers {
+            for _, relatedTicker := range article.RelatedTickers {
+                if relatedTicker == ticker {
+                    mentionedCount++
+                    break
+                }
+            }
+        }
+        if mentionedCount > 1 {
+            crossTicker = append(crossTicker, article)
+        }
+    }
+    return crossTicker
+}
+```
+
+### News Integration Examples
+
+#### Trading Algorithm Integration
+```go
+// Use news sentiment for trading decisions
+func analyzeNewsSentiment(articles []NewsItem) float64 {
+    positiveKeywords := []string{"beat", "exceed", "growth", "strong", "bullish"}
+    negativeKeywords := []string{"miss", "decline", "weak", "bearish", "concern"}
+    
+    sentiment := 0.0
+    for _, article := range articles {
+        title := strings.ToLower(article.Title)
+        
+        for _, keyword := range positiveKeywords {
+            if strings.Contains(title, keyword) {
+                sentiment += 1.0
+            }
+        }
+        
+        for _, keyword := range negativeKeywords {
+            if strings.Contains(title, keyword) {
+                sentiment -= 1.0
+            }
+        }
+    }
+    
+    return sentiment / float64(len(articles))
+}
+```
+
+#### News Monitoring Dashboard
+```go
+// Create a news monitoring system
+type NewsMonitor struct {
+    Tickers []string
+    Client  scrape.Client
+}
+
+func (nm *NewsMonitor) GetLatestNews() map[string][]NewsItem {
+    results := make(map[string][]NewsItem)
+    
+    for _, ticker := range nm.Tickers {
+        url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/news", ticker)
+        html, _, err := nm.Client.Fetch(context.Background(), url)
+        if err != nil {
+            continue
+        }
+        
+        articles, _, err := scrape.ParseNews(html, "https://finance.yahoo.com", time.Now())
+        if err != nil {
+            continue
+        }
+        
+        results[ticker] = articles
+    }
+    
+    return results
+}
+```
+
+#### News Alert System
+```go
+// Set up news alerts for specific keywords
+func setupNewsAlerts(ticker string, keywords []string) {
+    // Fetch news
+    url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/news", ticker)
+    html, _, err := client.Fetch(context.Background(), url)
+    if err != nil {
+        return
+    }
+    
+    articles, _, err := scrape.ParseNews(html, "https://finance.yahoo.com", time.Now())
+    if err != nil {
+        return
+    }
+    
+    // Check for keyword matches
+    for _, article := range articles {
+        title := strings.ToLower(article.Title)
+        for _, keyword := range keywords {
+            if strings.Contains(title, strings.ToLower(keyword)) {
+                sendAlert(fmt.Sprintf("News Alert: %s - %s", ticker, article.Title))
+                break
+            }
+        }
+    }
+}
+```
+
 ### Multi-Endpoint Data Collection
 
 ```bash
@@ -131,6 +475,9 @@ The comprehensive statistics command provides enhanced key statistics with dynam
 
 # Balance sheet and cash flow analysis
 ./yfin scrape --ticker AAPL --endpoints balance-sheet,cash-flow,financials --preview-json --config configs/effective.yaml
+
+# News and analyst coverage for market sentiment
+./yfin scrape --ticker AAPL --endpoints news,analyst-insights,analysis --preview-json --config configs/effective.yaml
 ```
 
 ### Connectivity Testing
@@ -225,6 +572,150 @@ The comprehensive statistics command provides enhanced key statistics with dynam
 - **Total Compensation**: Executive pay packages
 - **Corporate Governance**: Board and management structure
 
+### News (`news`)
+
+#### Article Metadata
+- **Title**: News headline and article title
+- **URL**: Direct link to full article on Yahoo Finance (normalized, UTM-free)
+- **Source**: News provider (Bloomberg, Reuters, MarketWatch, etc.)
+- **Published Time**: UTC timestamp with relative display (e.g., "2h ago")
+- **Image URL**: Article thumbnail image (WebP format)
+- **Related Tickers**: Stock symbols mentioned in the article
+
+#### News Features
+- **Real-time Updates**: Latest news as published on Yahoo Finance
+- **Smart Deduplication**: Removes duplicate articles by URL and content similarity
+- **Pagination Support**: Detects "More" buttons for additional news pages
+- **Cross-ticker Coverage**: Articles may mention multiple related stocks
+- **Source Attribution**: Identifies original news providers
+- **JSON-based Extraction**: Enhanced reliability with fallback to HTML parsing
+- **URL Normalization**: Removes tracking parameters and fragments
+
+## AMPY-PROTO Message Examples
+
+### Fundamentals Message Structure
+
+Here's what an actual ampy-proto fundamentals message looks like:
+
+```json
+{
+  "security": {
+    "symbol": "AAPL",
+    "mic": "XNAS"
+  },
+  "meta": {
+    "runId": "run_2025_01_29_17_23_27",
+    "source": "yfinance-go/scrape",
+    "producer": "yfinance-go",
+    "schemaVersion": "ampy.fundamentals.v1:2.1.0",
+    "timestamp": "2025-01-29T17:23:27Z"
+  },
+  "lines": [
+    {
+      "name": "total_revenue",
+      "value": {
+        "scaled": 394328000000,
+        "scale": 0
+      },
+      "currency": "USD",
+      "period": {
+        "start": "2024-10-01T00:00:00Z",
+        "end": "2024-12-31T23:59:59Z"
+      }
+    },
+    {
+      "name": "net_income",
+      "value": {
+        "scaled": 33916000000,
+        "scale": 0
+      },
+      "currency": "USD",
+      "period": {
+        "start": "2024-10-01T00:00:00Z",
+        "end": "2024-12-31T23:59:59Z"
+      }
+    },
+    {
+      "name": "total_debt",
+      "value": {
+        "scaled": 108040000000,
+        "scale": 0
+      },
+      "currency": "USD",
+      "period": {
+        "start": "2024-10-01T00:00:00Z",
+        "end": "2024-12-31T23:59:59Z"
+      }
+    }
+  ]
+}
+```
+
+### News Message Structure
+
+```json
+{
+  "security": {
+    "symbol": "AAPL",
+    "mic": "XNAS"
+  },
+  "meta": {
+    "runId": "run_2025_01_29_17_23_27",
+    "source": "yfinance-go/scrape",
+    "producer": "yfinance-go",
+    "schemaVersion": "ampy.news.v1:2.1.0",
+    "timestamp": "2025-01-29T17:23:27Z"
+  },
+  "articles": [
+    {
+      "title": "Apple Just Unveiled the iPhone 17: Here's What's New",
+      "url": "https://finance.yahoo.com/news/apple-iphone-17-unveiled-whats-new-140000123.html",
+      "source": "Yahoo Finance",
+      "publishedAt": "2025-01-29T15:23:27Z",
+      "imageUrl": "https://media.zenfs.com/en/yahoo_finance_350/iphone-17-launch.webp",
+      "relatedTickers": ["AAPL"]
+    }
+  ],
+  "stats": {
+    "totalFound": 18,
+    "totalReturned": 18,
+    "deduped": 0
+  }
+}
+```
+
+### Profile Message Structure
+
+```json
+{
+  "security": {
+    "symbol": "AAPL",
+    "mic": "XNAS"
+  },
+  "meta": {
+    "runId": "run_2025_01_29_17_23_27",
+    "source": "yfinance-go/scrape",
+    "producer": "yfinance-go",
+    "schemaVersion": "ampy.profile.v1:2.1.0",
+    "timestamp": "2025-01-29T17:23:27Z"
+  },
+  "company": {
+    "name": "Apple Inc.",
+    "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "website": "https://www.apple.com",
+    "employees": 164000,
+    "headquarters": {
+      "address": "One Apple Park Way",
+      "city": "Cupertino",
+      "state": "CA",
+      "country": "United States"
+    }
+  }
+}
+```
+
 ## Data Output Format
 
 The scraping system outputs structured JSON data that can be easily integrated into trading systems, databases, or analysis pipelines:
@@ -289,6 +780,48 @@ The scraping system outputs structured JSON data that can be easily integrated i
 }
 ```
 
+### News Output Format
+```json
+{
+  "symbol": "AAPL",
+  "market": "NASDAQ",
+  "currency": "USD",
+  "as_of": "2025-09-29T17:23:27Z",
+  "news": {
+    "total_found": 18,
+    "total_returned": 18,
+    "deduped": 0,
+    "next_page_hint": "More Info",
+    "articles": [
+      {
+        "title": "Apple Just Unveiled the iPhone 17: Here's What's New",
+        "url": "https://finance.yahoo.com/news/apple-iphone-17-unveiled-whats-new-140000123.html",
+        "source": "Yahoo Finance",
+        "published_at": "2025-09-29T15:23:27Z",
+        "image_url": "https://media.zenfs.com/en/yahoo_finance_350/iphone-17-launch.webp",
+        "related_tickers": ["AAPL"]
+      },
+      {
+        "title": "Watch These Intel Price Levels After Stock Surges on Apple Partnership",
+        "url": "https://finance.yahoo.com/news/watch-intel-price-levels-stock-120000456.html",
+        "source": "MarketWatch",
+        "published_at": "2025-09-29T14:23:27Z",
+        "image_url": "https://media.zenfs.com/en/marketwatch_350/intel-apple-partnership.webp",
+        "related_tickers": ["INTC", "AAPL", "2330.TW"]
+      },
+      {
+        "title": "Analyst on Apple (AAPL) After iPhone 17 Launch: 'Strong Demand Expected'",
+        "url": "https://finance.yahoo.com/news/analyst-apple-aapl-iphone-17-100000789.html",
+        "source": "Bloomberg",
+        "published_at": "2025-09-29T13:23:27Z",
+        "image_url": "https://media.zenfs.com/en/bloomberg_350/apple-analyst-iphone17.webp",
+        "related_tickers": ["AAPL", "005930.KS", "1810.HK"]
+      }
+    ]
+  }
+}
+```
+
 ## Architecture and Reliability
 
 ### Regex Pattern Management
@@ -315,6 +848,21 @@ scrape:
   robots_policy: "enforce"  # enforce, warn, ignore
   rate_limit_qps: 2.0
   user_agent: "yfinance-go/1.0"
+  endpoints:
+    news: true  # Enable news scraping
+```
+
+### News-Specific Configuration
+```yaml
+# News scraping settings
+news:
+  max_articles: 25          # Maximum articles to return
+  deduplication: true       # Enable smart deduplication
+  time_parsing: true        # Parse relative timestamps
+  image_extraction: true    # Extract thumbnail images
+  ticker_extraction: true   # Extract related tickers
+  url_normalization: true   # Clean URLs (remove UTM params)
+  pagination_detection: true # Detect "More" buttons
 ```
 
 ## Test Failure Analysis
@@ -352,11 +900,204 @@ scrape:
 4. **Monitor Success Rates**: Track scraping success/failure metrics
 5. **Update Patterns**: Regularly verify regex patterns against live pages
 
+### News-Specific Best Practices
+1. **Fresh Data**: News changes frequently - avoid caching for more than 5-10 minutes
+2. **Source Verification**: Cross-reference news from multiple sources for important decisions
+3. **Time Sensitivity**: Use relative timestamps to prioritize recent news
+4. **Ticker Context**: Consider related tickers for broader market impact analysis
+5. **Deduplication**: Always enable deduplication to avoid processing duplicate articles
+6. **Error Handling**: News parsing is more fragile than financial data - implement robust error handling
+7. **Rate Limiting**: News pages are larger - use lower QPS (0.5-1.0) for news scraping
+
 ### Production Considerations
 - **Monitoring**: Set up alerts for scraping failures
 - **Logging**: Enable detailed logging for debugging
 - **Backup Data Sources**: Have alternative data providers ready
 - **Legal Compliance**: Ensure usage complies with website terms of service
+
+## AMPY-PROTO System Communication
+
+### How to Communicate Financial Data Using AMPY-PROTO
+
+The ampy-proto protocol enables standardized communication between financial systems. Here's how to use the scraped data:
+
+#### 1. **Debt Analysis Communication**
+
+```bash
+# Get debt information in ampy-proto format
+./yfin scrape --preview-proto --ticker AAPL --endpoints balance-sheet --config configs/effective.yaml
+```
+
+**System Communication Example:**
+```go
+// Parse ampy-proto message for debt analysis
+func analyzeDebtLevels(protoMessage *fundamentalsv1.FundamentalsSnapshot) DebtAnalysis {
+    var totalDebt, totalAssets, shareholdersEquity int64
+    
+    for _, line := range protoMessage.Lines {
+        switch line.Name {
+        case "total_debt":
+            totalDebt = line.Value.Scaled
+        case "total_assets":
+            totalAssets = line.Value.Scaled
+        case "shareholders_equity":
+            shareholdersEquity = line.Value.Scaled
+        }
+    }
+    
+    // Calculate debt ratios
+    debtToEquity := float64(totalDebt) / float64(shareholdersEquity)
+    debtToAssets := float64(totalDebt) / float64(totalAssets)
+    
+    return DebtAnalysis{
+        TotalDebt: totalDebt,
+        DebtToEquity: debtToEquity,
+        DebtToAssets: debtToAssets,
+        RiskLevel: assessDebtRisk(debtToEquity),
+    }
+}
+```
+
+#### 2. **Revenue Analysis Communication**
+
+```bash
+# Get revenue data in ampy-proto format
+./yfin scrape --preview-proto --ticker AAPL --endpoints financials --config configs/effective.yaml
+```
+
+**System Communication Example:**
+```go
+// Parse ampy-proto message for revenue analysis
+func analyzeRevenue(protoMessage *fundamentalsv1.FundamentalsSnapshot) RevenueAnalysis {
+    var totalRevenue, operatingIncome, netIncome int64
+    
+    for _, line := range protoMessage.Lines {
+        switch line.Name {
+        case "total_revenue":
+            totalRevenue = line.Value.Scaled
+        case "operating_income":
+            operatingIncome = line.Value.Scaled
+        case "net_income":
+            netIncome = line.Value.Scaled
+        }
+    }
+    
+    // Calculate margins
+    operatingMargin := float64(operatingIncome) / float64(totalRevenue)
+    netMargin := float64(netIncome) / float64(totalRevenue)
+    
+    return RevenueAnalysis{
+        TotalRevenue: totalRevenue,
+        OperatingMargin: operatingMargin,
+        NetMargin: netMargin,
+        GrowthTrend: calculateGrowthTrend(protoMessage),
+    }
+}
+```
+
+#### 3. **News Sentiment Communication**
+
+```bash
+# Get news data in ampy-proto format
+./yfin scrape --preview-proto --ticker AAPL --endpoints news --config configs/effective.yaml
+```
+
+**System Communication Example:**
+```go
+// Parse ampy-proto message for news analysis
+func analyzeNewsSentiment(protoMessage *newsv1.NewsSnapshot) NewsAnalysis {
+    var sentiment float64
+    var recentNews int
+    
+    cutoff := time.Now().Add(-24 * time.Hour)
+    
+    for _, article := range protoMessage.Articles {
+        // Check if article is recent
+        if article.PublishedAt.AsTime().After(cutoff) {
+            recentNews++
+            sentiment += calculateArticleSentiment(article.Title)
+        }
+    }
+    
+    avgSentiment := sentiment / float64(len(protoMessage.Articles))
+    
+    return NewsAnalysis{
+        RecentArticles: recentNews,
+        AverageSentiment: avgSentiment,
+        SentimentTrend: determineTrend(avgSentiment),
+        KeyTopics: extractTopics(protoMessage.Articles),
+    }
+}
+```
+
+#### 4. **Multi-System Integration**
+
+```go
+// Complete financial analysis using ampy-proto messages
+type FinancialSystem struct {
+    debtAnalyzer    DebtAnalyzer
+    revenueAnalyzer RevenueAnalyzer
+    newsAnalyzer    NewsAnalyzer
+    riskEngine      RiskEngine
+}
+
+func (fs *FinancialSystem) ProcessTicker(ticker string) (*ComprehensiveAnalysis, error) {
+    // Get all ampy-proto messages
+    fundamentals := fs.getFundamentals(ticker)
+    news := fs.getNews(ticker)
+    profile := fs.getProfile(ticker)
+    
+    // Analyze each component
+    debtAnalysis := fs.debtAnalyzer.Analyze(fundamentals)
+    revenueAnalysis := fs.revenueAnalyzer.Analyze(fundamentals)
+    newsAnalysis := fs.newsAnalyzer.Analyze(news)
+    
+    // Combine for comprehensive analysis
+    return &ComprehensiveAnalysis{
+        Ticker: ticker,
+        Debt: debtAnalysis,
+        Revenue: revenueAnalysis,
+        News: newsAnalysis,
+        RiskScore: fs.riskEngine.Calculate(debtAnalysis, revenueAnalysis, newsAnalysis),
+        Timestamp: time.Now(),
+    }, nil
+}
+```
+
+#### 5. **Real-time System Communication**
+
+```go
+// Stream ampy-proto messages to downstream systems
+func streamToSystems(ticker string) {
+    // Generate ampy-proto messages
+    cmd := exec.Command("./yfin", "scrape", "--preview-proto", 
+        "--ticker", ticker, 
+        "--endpoints", "financials,balance-sheet,news",
+        "--config", "configs/effective.yaml")
+    
+    output, err := cmd.Output()
+    if err != nil {
+        log.Printf("Error generating proto messages: %v", err)
+        return
+    }
+    
+    // Parse and route to different systems
+    messages := parseProtoMessages(output)
+    
+    for _, msg := range messages {
+        switch msg.Type {
+        case "fundamentals":
+            sendToRiskSystem(msg)
+            sendToAnalyticsSystem(msg)
+        case "news":
+            sendToSentimentSystem(msg)
+            sendToAlertSystem(msg)
+        case "profile":
+            sendToComplianceSystem(msg)
+        }
+    }
+}
+```
 
 ## Integration Examples
 
@@ -410,6 +1151,48 @@ for _, symbol := range symbols {
 bestValue := findLowestPE(results)
 ```
 
+### News-Based Trading Signals
+```go
+// Combine news sentiment with technical analysis
+func generateTradingSignal(ticker string) (string, float64) {
+    // Get latest news
+    url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/news", ticker)
+    html, _, err := client.Fetch(ctx, url)
+    if err != nil {
+        return "HOLD", 0.0
+    }
+    
+    articles, _, err := scrape.ParseNews(html, "https://finance.yahoo.com", time.Now())
+    if err != nil {
+        return "HOLD", 0.0
+    }
+    
+    // Analyze sentiment
+    sentiment := analyzeNewsSentiment(articles)
+    
+    // Get analyst recommendations
+    analysisURL := fmt.Sprintf("https://finance.yahoo.com/quote/%s/analyst-insights", ticker)
+    analysisHTML, _, err := client.Fetch(ctx, analysisURL)
+    if err != nil {
+        return "HOLD", sentiment
+    }
+    
+    insights, err := scrape.ParseAnalystInsights(analysisHTML, ticker, "NASDAQ")
+    if err != nil {
+        return "HOLD", sentiment
+    }
+    
+    // Combine signals
+    if sentiment > 0.5 && insights.RecommendationScore < 2.0 {
+        return "BUY", sentiment
+    } else if sentiment < -0.5 && insights.RecommendationScore > 3.0 {
+        return "SELL", sentiment
+    }
+    
+    return "HOLD", sentiment
+}
+```
+
 ## Summary
 
 This enhanced scraping system provides a robust, scalable solution for accessing Yahoo Finance data with the following key improvements:
@@ -424,6 +1207,7 @@ This enhanced scraping system provides a robust, scalable solution for accessing
 - **8 Endpoints**: Profile, key statistics, financials, balance sheet, cash flow, analysis, analyst insights, news
 - **Enhanced Statistics**: Current + additional + historical data in one command
 - **Cross-Market**: Supports US (AAPL), Taiwan (TSM), and international listings (SMSN.IL)
+- **News Intelligence**: Real-time news with sentiment analysis, source attribution, and cross-ticker coverage
 
 ### ✅ **Production Ready**
 - **Error Handling**: Retry logic, circuit breakers, rate limiting
@@ -431,3 +1215,43 @@ This enhanced scraping system provides a robust, scalable solution for accessing
 - **Scalable**: Designed for high-volume financial data processing
 
 The system ensures continuous data flow for financial applications and analysis, providing a reliable alternative when official APIs are insufficient or unavailable.
+
+## Quick Reference: News Scraping Commands
+
+### Basic News Commands
+```bash
+# Preview news in table format
+./yfin scrape --preview-news --ticker AAPL --config configs/effective.yaml
+
+# Get news as JSON
+./yfin scrape --ticker AAPL --endpoints news --preview-json --config configs/effective.yaml
+
+# Combine news with other data
+./yfin scrape --ticker AAPL --endpoints news,analyst-insights --preview-json --config configs/effective.yaml
+```
+
+### Multi-Ticker News Analysis
+```bash
+# Compare news across sector
+./yfin scrape --preview-news --ticker AAPL --config configs/effective.yaml
+./yfin scrape --preview-news --ticker TSM --config configs/effective.yaml
+./yfin scrape --preview-news --ticker NVDA --config configs/effective.yaml
+```
+
+### News Data Fields
+- **title**: Article headline
+- **url**: Clean Yahoo Finance URL (no tracking params)
+- **source**: News provider (Bloomberg, Reuters, etc.)
+- **published_at**: UTC timestamp
+- **image_url**: Article thumbnail (WebP format)
+- **related_tickers**: All mentioned stock symbols
+
+### News Features
+- ✅ Real-time extraction
+- ✅ Smart deduplication
+- ✅ Source attribution
+- ✅ Relative time parsing
+- ✅ Cross-ticker detection
+- ✅ Image extraction
+- ✅ Pagination detection
+- ✅ URL normalization

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAPL News - Duplicates Test</title>
+</head>
+<body>
+    <div class="news-stream">
+        <!-- Original article -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple's iPhone 16 Sales Exceed Expectations</h3>
+                <div class="publishing">Yahoo Finance • 16m ago</div>
+                <a href="https://finance.yahoo.com/news/apple-iphone-16-sales-exceed-140000123.html">
+                    <img src="https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png" alt="iPhone 16">
+                </a>
+                <div class="summary">Apple Inc. reports strong iPhone 16 sales...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Duplicate with same URL -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple's iPhone 16 Sales Exceed Expectations</h3>
+                <div class="publishing">Yahoo Finance • 16m ago</div>
+                <a href="https://finance.yahoo.com/news/apple-iphone-16-sales-exceed-140000123.html?utm_source=feed&utm_medium=rss">
+                    <img src="https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png" alt="iPhone 16">
+                </a>
+                <div class="summary">Apple Inc. reports strong iPhone 16 sales...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Different article -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple Services Revenue Hits New Record</h3>
+                <div class="publishing">TechCrunch • 2h ago</div>
+                <a href="https://finance.yahoo.com/news/apple-services-revenue-record-120000456.html">
+                    <img src="https://media.zenfs.com/en/techcrunch_350/services.webp" alt="Services">
+                </a>
+                <div class="summary">Apple's services division continues growth...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Duplicate by title and source (within time window) -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple Services Revenue Hits New Record</h3>
+                <div class="publishing">TechCrunch • 2h ago</div>
+                <a href="https://finance.yahoo.com/news/apple-services-revenue-record-different-url-999888777.html">
+                    <img src="https://media.zenfs.com/en/techcrunch_350/services-alt.webp" alt="Services Alt">
+                </a>
+                <div class="summary">Different URL but same content...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Similar title but different source (should not be duplicate) -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple Services Revenue Hits New Record</h3>
+                <div class="publishing">The Verge • 2h ago</div>
+                <a href="https://finance.yahoo.com/news/apple-services-revenue-verge-100000789.html">
+                    <img src="https://media.zenfs.com/en/theverge_350/services-verge.webp" alt="Services Verge">
+                </a>
+                <div class="summary">Same title but different source...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Similar title but different time (outside window, should not be duplicate) -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Apple Services Revenue Hits New Record</h3>
+                <div class="publishing">TechCrunch • 1 day ago</div>
+                <a href="https://finance.yahoo.com/news/apple-services-revenue-old-080000234.html">
+                    <img src="https://media.zenfs.com/en/techcrunch_350/services-old.webp" alt="Services Old">
+                </a>
+                <div class="summary">Same title and source but different time...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

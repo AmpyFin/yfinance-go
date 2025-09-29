@@ -18,6 +18,9 @@ type Metrics struct {
 	inflightGauge     *prometheus.GaugeVec
 	backoffTotal      *prometheus.CounterVec
 	backoffSleep      *prometheus.HistogramVec
+	// News-specific metrics
+	newsTotal         *prometheus.CounterVec
+	newsParseLatency  *prometheus.HistogramVec
 }
 
 var (
@@ -30,6 +33,9 @@ var (
 	inflightGauge     *prometheus.GaugeVec
 	backoffTotal      *prometheus.CounterVec
 	backoffSleep      *prometheus.HistogramVec
+	// News-specific global metrics
+	newsTotal         *prometheus.CounterVec
+	newsParseLatency  *prometheus.HistogramVec
 	metricsOnce       sync.Once
 )
 
@@ -95,6 +101,21 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"host", "reason"},
 		)
+		newsTotal = promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "yfin_scrape_news_total",
+				Help: "Total number of news parsing operations",
+			},
+			[]string{"outcome"},
+		)
+		newsParseLatency = promauto.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "yfin_scrape_news_parse_latency_ms",
+				Help:    "News parsing latency in milliseconds",
+				Buckets: prometheus.ExponentialBuckets(1, 2, 12), // 1ms to ~4s
+			},
+			[]string{},
+		)
 	})
 
 	return &Metrics{
@@ -106,6 +127,8 @@ func NewMetrics() *Metrics {
 		inflightGauge:     inflightGauge,
 		backoffTotal:      backoffTotal,
 		backoffSleep:      backoffSleep,
+		newsTotal:         newsTotal,
+		newsParseLatency:  newsParseLatency,
 	}
 }
 
@@ -149,6 +172,16 @@ func (m *Metrics) RecordBackoffSleep(host, reason string, duration time.Duration
 	m.backoffSleep.WithLabelValues(host, reason).Observe(float64(duration.Milliseconds()))
 }
 
+// RecordNews records a news parsing operation
+func (m *Metrics) RecordNews(outcome string) {
+	m.newsTotal.WithLabelValues(outcome).Inc()
+}
+
+// RecordNewsParseLatency records news parsing latency
+func (m *Metrics) RecordNewsParseLatency(duration time.Duration) {
+	m.newsParseLatency.WithLabelValues().Observe(float64(duration.Milliseconds()))
+}
+
 // GetStats returns current metrics statistics
 func (m *Metrics) GetStats() map[string]interface{} {
 	// This would typically collect current metric values
@@ -164,6 +197,8 @@ func (m *Metrics) GetStats() map[string]interface{} {
 			"yfin_scrape_inflight",
 			"yfin_scrape_backoff_total",
 			"yfin_scrape_backoff_sleep_ms",
+			"yfin_scrape_news_total",
+			"yfin_scrape_news_parse_latency_ms",
 		},
 	}
 }

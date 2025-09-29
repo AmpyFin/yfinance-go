@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AAPL News - Missing Fields Test</title>
+</head>
+<body>
+    <div class="news-stream">
+        <!-- Article with missing title -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <div class="publishing">Yahoo Finance • 16m ago</div>
+                <a href="https://finance.yahoo.com/news/missing-title-article-140000123.html">
+                    <img src="https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png" alt="Missing Title">
+                </a>
+                <div class="summary">This article has no title...</div>
+            </div>
+        </section>
+
+        <!-- Article with missing URL -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Article with Missing URL</h3>
+                <div class="publishing">TechCrunch • 2h ago</div>
+                <img src="https://media.zenfs.com/en/techcrunch_350/missing-url.webp" alt="Missing URL">
+                <div class="summary">This article has no URL...</div>
+            </div>
+        </section>
+
+        <!-- Valid article for comparison -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Valid Apple News Article</h3>
+                <div class="publishing">The Verge • 5h ago</div>
+                <a href="https://finance.yahoo.com/news/valid-apple-news-100000789.html">
+                    <img src="https://media.zenfs.com/en/theverge_350/valid-article.webp" alt="Valid Article">
+                </a>
+                <div class="summary">This article has all required fields...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Article with no image -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Article Without Image</h3>
+                <div class="publishing">Barron's • 1 day ago</div>
+                <a href="https://finance.yahoo.com/news/article-without-image-080000234.html">
+                    No image here
+                </a>
+                <div class="summary">This article has no image...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Article with no publishing info -->
+        <section class="container" data-testid="storyitem" role="article">
+            <div class="story-wrapper">
+                <h3 class="clamp">Article Without Publishing Info</h3>
+                <a href="https://finance.yahoo.com/news/no-publishing-info-060000567.html">
+                    <img src="https://media.zenfs.com/en/reuters_350/no-publishing.webp" alt="No Publishing">
+                </a>
+                <div class="summary">This article has no publishing info...</div>
+                <div class="tickers">
+                    <span class="ticker-wrapper">
+                        <a aria-label="AAPL">AAPL</a>
+                    </span>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+# News Regex Patterns for Yahoo Finance
+# These patterns extract news article data from HTML containers
+
+# Article container pattern - find sections with storyitem data-testid and article role
+article_container: '(?s)<section[^>]*data-testid="storyitem"[^>]*role="article"[^>]*>(.*?)</section>'
+
+# Title extraction - from h3 with clamp class
+title: '<h3[^>]*class="[^"]*clamp[^"]*"[^>]*>(.*?)</h3>'
+
+# Article link extraction - href to Yahoo Finance news
+article_link: 'href="(https://finance\.yahoo\.com/news/[^"]*)"'
+
+# Publishing info - source and time from div with publishing class
+publishing_info: '<div[^>]*class="[^"]*publishing[^"]*"[^>]*>([^<]*)</div>'
+
+# Image extraction - img src with webp format
+image_url: '<img[^>]*src="([^"]*\.webp[^"]*)"[^>]*>'
+
+# Related tickers - from ticker-wrapper spans with aria-label
+related_tickers: '<span[^>]*class="[^"]*ticker-wrapper[^"]*"[^>]*>.*?<a[^>]*aria-label="([A-Z0-9\.\-]+)"[^>]*>.*?</span>'
+
+# Pagination hint - "More" or "Load more" controls
+next_page_hint: '(?i)<[^>]*(?:data-cursor|data-next|class="[^"]*(?:more|load[^"]*more|next)[^"]*")[^>]*>([^<]*)</[^>]*>'
+
+# Time parsing patterns for relative time conversion
+relative_time:
+  minutes: '(\d+)m\s+ago'
+  hours: '(\d+)h\s+ago'
+  days: '(\d+)\s+days?\s+ago'
+  weeks: '(\d+)\s+weeks?\s+ago'
+  yesterday: 'yesterday'
+
+# URL normalization patterns
+url_cleanup:
+  utm_params: '[?&]utm_[^=]*=[^&]*'
+  tracking_params: '[?&](?:guce_referrer|guccounter)=[^&]*'
+  fragment: '#.*$'
+  query_separator: '\?.*$'

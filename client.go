@@ -21,7 +21,7 @@ func NewClient() *Client {
 	config := httpx.DefaultConfig()
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, "")
-	
+
 	return &Client{
 		yahooClient: yahooClient,
 	}
@@ -31,7 +31,7 @@ func NewClient() *Client {
 func NewClientWithConfig(config *httpx.Config) *Client {
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, config.BaseURL)
-	
+
 	return &Client{
 		yahooClient: yahooClient,
 	}
@@ -42,7 +42,7 @@ func NewClientWithSessionRotation() *Client {
 	config := httpx.SessionRotationConfig()
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, config.BaseURL)
-	
+
 	return &Client{
 		yahooClient: yahooClient,
 	}
@@ -55,18 +55,18 @@ func (c *Client) FetchDailyBars(ctx context.Context, symbol string, start, end t
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract bars and metadata
 	bars, err := barsResp.GetBars()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize bars
 	return norm.NormalizeBars(bars, meta, runID)
 }
@@ -78,13 +78,13 @@ func (c *Client) FetchQuote(ctx context.Context, symbol string, runID string) (*
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract quotes
 	quotes := quoteResp.GetQuotes()
 	if len(quotes) == 0 {
 		return nil, fmt.Errorf("no quotes found")
 	}
-	
+
 	// Normalize first quote
 	return norm.NormalizeQuote(quotes[0], runID)
 }
@@ -101,13 +101,13 @@ func (c *Client) FetchFundamentalsQuarterly(ctx context.Context, symbol string, 
 		}
 		return nil, err
 	}
-	
+
 	// Extract fundamentals
 	fundamentals, err := fundResp.GetFundamentals()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Normalize fundamentals
 	return norm.NormalizeFundamentals(fundamentals, symbol, runID)
 }
@@ -119,18 +119,18 @@ func (c *Client) FetchIntradayBars(ctx context.Context, symbol string, start, en
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract bars and metadata
 	bars, err := barsResp.GetBars()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize bars
 	return norm.NormalizeBars(bars, meta, runID)
 }
@@ -142,18 +142,18 @@ func (c *Client) FetchWeeklyBars(ctx context.Context, symbol string, start, end 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract bars and metadata
 	bars, err := barsResp.GetBars()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize bars
 	return norm.NormalizeBars(bars, meta, runID)
 }
@@ -165,18 +165,18 @@ func (c *Client) FetchMonthlyBars(ctx context.Context, symbol string, start, end
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract bars and metadata
 	bars, err := barsResp.GetBars()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize bars
 	return norm.NormalizeBars(bars, meta, runID)
 }
@@ -186,18 +186,18 @@ func (c *Client) FetchCompanyInfo(ctx context.Context, symbol string, runID stri
 	// Use chart endpoint to get company info from metadata
 	end := time.Now()
 	start := end.AddDate(0, 0, -1)
-	
+
 	barsResp, err := c.yahooClient.FetchDailyBars(ctx, symbol, start, end, true)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract metadata
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize company info
 	return norm.NormalizeCompanyInfo(meta, runID)
 }
@@ -207,18 +207,18 @@ func (c *Client) FetchMarketData(ctx context.Context, symbol string, runID strin
 	// Use chart endpoint to get comprehensive market data
 	end := time.Now()
 	start := end.AddDate(0, 0, -1)
-	
+
 	barsResp, err := c.yahooClient.FetchDailyBars(ctx, symbol, start, end, true)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Extract metadata
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	// Normalize market data
 	return norm.NormalizeMarketData(meta, runID)
 }

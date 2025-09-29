@@ -141,3 +141,22 @@ func DefaultRateLimitConfig() *RateLimitConfig {
 		PerHostWorkers: 4,
 	}
 }
+
+// NewsItem represents a single news article extracted from Yahoo Finance
+type NewsItem struct {
+	Title          string     `json:"title"`
+	URL            string     `json:"url"`             // absolute; normalized
+	Source         string     `json:"source"`
+	PublishedAt    *time.Time `json:"published_at"`    // UTC if resolvable
+	ImageURL       string     `json:"image_url"`
+	RelatedTickers []string   `json:"related_tickers"`
+}
+
+// NewsStats represents statistics about news extraction
+type NewsStats struct {
+	TotalFound    int       `json:"total_found"`
+	TotalReturned int       `json:"total_returned"`
+	Deduped       int       `json:"deduped"`
+	NextPageHint  string    `json:"next_page_hint"` // e.g., a data-cursor or bool flag if detected
+	AsOf          time.Time `json:"as_of"`
+}

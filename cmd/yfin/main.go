@@ -19,6 +19,8 @@ import (
 	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/AmpyFin/yfinance-go/internal/obsv"
 	"github.com/AmpyFin/yfinance-go/internal/scrape"
+	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
+	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 )
 
 // Version information set via ldflags during build
@@ -92,6 +94,8 @@ type ScrapeConfig struct {
 	Endpoints    string // Comma-separated list of endpoints for preview-json
 	Preview      bool
 	PreviewJSON  bool
+	PreviewNews  bool   // Preview news articles without emitting proto
+	PreviewProto bool   // Preview proto summaries without full output
 	Force        bool
 }
 
@@ -184,7 +188,9 @@ This command provides access to scraping functionality when API endpoints are un
 Examples:
   yfin scrape --check --ticker AAPL --endpoint profile --preview
   yfin scrape --check --ticker MSFT --endpoint key-statistics --preview
-  yfin scrape --preview-json --ticker AAPL --endpoints key-statistics,financials,analysis,profile`,
+  yfin scrape --preview-json --ticker AAPL --endpoints key-statistics,financials,analysis,profile
+  yfin scrape --preview-news --ticker AAPL
+  yfin scrape --preview-proto --ticker AAPL --endpoints financials,analysis,profile,news`,
 	RunE: runScrape,
 }
 
@@ -286,6 +292,8 @@ func init() {
 	scrapeCmd.Flags().StringVar(&scrapeConfig.Endpoints, "endpoints", "", "Comma-separated list of endpoints for preview-json (e.g., key-statistics,financials,analysis,profile)")
 	scrapeCmd.Flags().BoolVar(&scrapeConfig.Preview, "preview", false, "Show preview without parsing")
 	scrapeCmd.Flags().BoolVar(&scrapeConfig.PreviewJSON, "preview-json", false, "Preview JSON extraction without emitting proto")
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.PreviewNews, "preview-news", false, "Preview news articles without emitting proto")
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.PreviewProto, "preview-proto", false, "Preview proto summaries with counts, periods, and metadata")
 	scrapeCmd.Flags().BoolVar(&scrapeConfig.Force, "force", false, "Force scraping even if API is available")
 
 	// Comprehensive stats command flags
@@ -602,7 +610,17 @@ func runScrape(cmd *cobra.Command, args []string) error {
 		return runScrapePreviewJSON(ctx, scrapeClient, scrapeConfig.Ticker, scrapeConfig.Endpoints, runID)
 	}
 
-	fmt.Fprintf(os.Stderr, "ERROR: Either --check or --preview-json mode is required\n")
+	// Execute preview-news mode
+	if scrapeConfig.PreviewNews {
+		return runScrapePreviewNews(ctx, scrapeClient, scrapeConfig.Ticker, runID)
+	}
+
+	// Execute preview-proto mode
+	if scrapeConfig.PreviewProto {
+		return runScrapePreviewProto(ctx, scrapeClient, scrapeConfig.Ticker, scrapeConfig.Endpoints, runID)
+	}
+
+	fmt.Fprintf(os.Stderr, "ERROR: Either --check, --preview-json, --preview-news, or --preview-proto mode is required\n")
 	os.Exit(ExitGeneral)
 	return nil
 }
@@ -812,12 +830,12 @@ func validateFundamentalsFlags() error {
 
 // validateScrapeFlags validates scrape command flags
 func validateScrapeFlags() error {
-	// Check that either --check or --preview-json is specified
-	if !scrapeConfig.Check && !scrapeConfig.PreviewJSON {
-		return fmt.Errorf("either --check or --preview-json flag is required")
+	// Check that either --check, --preview-json, --preview-news, or --preview-proto is specified
+	if !scrapeConfig.Check && !scrapeConfig.PreviewJSON && !scrapeConfig.PreviewNews && !scrapeConfig.PreviewProto {
+		return fmt.Errorf("either --check, --preview-json, --preview-news, or --preview-proto flag is required")
 	}
 	
-	// Both modes require ticker
+	// All modes require ticker
 	if scrapeConfig.Ticker == "" {
 		return fmt.Errorf("--ticker is required")
 	}
@@ -846,6 +864,33 @@ func validateScrapeFlags() error {
 	if scrapeConfig.PreviewJSON {
 		if scrapeConfig.Endpoints == "" {
 			return fmt.Errorf("--endpoints is required for --preview-json mode")
+		}
+		
+		// Validate endpoints
+		endpointList := strings.Split(scrapeConfig.Endpoints, ",")
+		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
+		for _, ep := range endpointList {
+			ep = strings.TrimSpace(ep)
+			if ep == "" {
+				continue
+			}
+			valid := false
+			for _, validEp := range validEndpoints {
+				if ep == validEp {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return fmt.Errorf("invalid endpoint '%s' in --endpoints", ep)
+			}
+		}
+	}
+	
+	// Preview-proto mode requires endpoints
+	if scrapeConfig.PreviewProto {
+		if scrapeConfig.Endpoints == "" {
+			return fmt.Errorf("--endpoints is required for --preview-proto mode")
 		}
 		
 		// Validate endpoints
@@ -1451,6 +1496,106 @@ func runScrapeCheck(ctx context.Context, client scrape.Client, ticker, endpoint,
 	fmt.Printf("CONTENT PREVIEW: %s\n", string(body))
 
 	return nil
+}
+
+// runScrapePreviewNews executes the preview-news mode for testing news parser
+func runScrapePreviewNews(ctx context.Context, client scrape.Client, ticker, runID string) error {
+	if ticker == "" {
+		return fmt.Errorf("ticker is required for preview-news mode")
+	}
+
+	fmt.Printf("PREVIEW NEWS ticker=%s\n", ticker)
+
+	// Create a timeout context (30 seconds max)
+	newsCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build URL and fetch
+	url := buildScrapeURL(ticker, "news")
+	body, meta, err := client.Fetch(newsCtx, url)
+	if err != nil {
+		return fmt.Errorf("failed to fetch news for %s: %v", ticker, err)
+	}
+
+	fmt.Printf("FETCH META: host=%s status=%d bytes=%d gzip=%t redirects=%d latency=%dms\n",
+		meta.Host, meta.Status, meta.Bytes, meta.Gzip, meta.Redirects, meta.Duration.Milliseconds())
+
+	// Parse news
+	now := time.Now()
+	baseURL := fmt.Sprintf("https://%s", meta.Host)
+	articles, stats, err := scrape.ParseNews(body, baseURL, now)
+	if err != nil {
+		return fmt.Errorf("failed to parse news: %v", err)
+	}
+
+	// Print summary
+	fmt.Printf("\n%s news: found=%d deduped=%d returned=%d as_of=%s\n",
+		ticker, stats.TotalFound, stats.Deduped, stats.TotalReturned, stats.AsOf.Format(time.RFC3339))
+
+	if stats.NextPageHint != "" {
+		fmt.Printf("Next page hint: %s\n", stats.NextPageHint)
+	}
+
+	// Print articles in table format
+	if len(articles) > 0 {
+		fmt.Printf("\nARTICLES:\n")
+		for i, article := range articles {
+			timeStr := "unknown"
+			if article.PublishedAt != nil {
+				timeStr = formatRelativeTime(*article.PublishedAt, now)
+			}
+
+			// Truncate title for display
+			title := article.Title
+			if len(title) > 50 {
+				title = title[:47] + "..."
+			}
+
+			fmt.Printf("%2d) %-8s | %-15s | %s\n", i+1, timeStr, truncateString(article.Source, 15), title)
+
+			// Show related tickers if any
+			if len(article.RelatedTickers) > 0 {
+				fmt.Printf("    Tickers: %s\n", strings.Join(article.RelatedTickers, ", "))
+			}
+		}
+	}
+
+	return nil
+}
+
+// formatRelativeTime formats a time relative to now for display
+func formatRelativeTime(t, now time.Time) string {
+	diff := now.Sub(t)
+	
+	if diff < time.Minute {
+		return "now"
+	} else if diff < time.Hour {
+		minutes := int(diff.Minutes())
+		return fmt.Sprintf("%dm ago", minutes)
+	} else if diff < 24*time.Hour {
+		hours := int(diff.Hours())
+		return fmt.Sprintf("%dh ago", hours)
+	} else if diff < 7*24*time.Hour {
+		days := int(diff.Hours() / 24)
+		if days == 1 {
+			return "1 day ago"
+		}
+		return fmt.Sprintf("%d days ago", days)
+	} else {
+		weeks := int(diff.Hours() / (24 * 7))
+		if weeks == 1 {
+			return "1 week ago"
+		}
+		return fmt.Sprintf("%d weeks ago", weeks)
+	}
+}
+
+// truncateString truncates a string to maxLen characters
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-3] + "..."
 }
 
 // runScrapePreviewJSON executes the preview-json mode for testing extractors
@@ -2604,6 +2749,339 @@ func countFinancialsFields(dto *scrape.ComprehensiveFinancialsDTO) int {
 	if dto.Historical.Q4_2024.TotalRevenue != nil { count++ }
 	
 	return count
+}
+
+// runScrapePreviewProto executes the preview-proto mode for testing proto emission
+func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, endpoints, runID string) error {
+	if ticker == "" {
+		return fmt.Errorf("ticker is required for preview-proto mode")
+	}
+	
+	if endpoints == "" {
+		return fmt.Errorf("endpoints is required for preview-proto mode")
+	}
+
+	// Parse endpoints
+	endpointList := strings.Split(endpoints, ",")
+	for i, ep := range endpointList {
+		endpointList[i] = strings.TrimSpace(ep)
+	}
+
+	fmt.Printf("PREVIEW PROTO EMISSION ticker=%s endpoints=%s\n", ticker, endpoints)
+
+	// Create mapper configuration
+	mapperConfig := emit.ScrapeMapperConfig{
+		RunID:    runID,
+		Producer: fmt.Sprintf("yfin-%s", version),
+		Source:   "yfinance-go/scrape",
+		TraceID:  "", // Could be extracted from context if available
+	}
+	
+	// mapper := emit.NewScrapeMapper(mapperConfig) // Not used in this function
+
+	// Process each endpoint
+	for _, endpoint := range endpointList {
+		if endpoint == "" {
+			continue
+		}
+
+		fmt.Printf("\n--- %s ---\n", strings.ToUpper(endpoint))
+		
+		// Create a timeout context for each endpoint (15 seconds max)
+		endpointCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		
+		// Build URL and fetch
+		url := buildScrapeURL(ticker, endpoint)
+		body, meta, err := client.Fetch(endpointCtx, url)
+		cancel() // Always cancel the context
+		
+		if err != nil {
+			fmt.Printf("ERROR: Failed to fetch %s: %v\n", url, err)
+			continue
+		}
+
+		fmt.Printf("FETCH META: host=%s status=%d bytes=%d gzip=%t redirects=%d latency=%dms\n", 
+			meta.Host, meta.Status, meta.Bytes, meta.Gzip, meta.Redirects, meta.Duration.Milliseconds())
+
+		// Parse and map based on endpoint type
+		switch endpoint {
+		case "financials":
+			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				// Use the comprehensive mapping for more complete data
+				if snapshots, err := emit.MapComprehensiveFinancialsDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					for _, snapshot := range snapshots {
+						printFundamentalsSnapshot(snapshot)
+					}
+				}
+			}
+		
+		case "profile":
+			if dto, err := scrape.ParseComprehensiveProfile(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				if result, err := emit.MapProfileDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					printProfileResult(result)
+				}
+			}
+		
+		case "news":
+			if articles, stats, err := scrape.ParseNews(body, "https://finance.yahoo.com", time.Now()); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				if protoArticles, err := emit.MapNewsItems(articles, ticker, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					printNewsArticles(protoArticles, stats)
+				}
+			}
+		
+		case "balance-sheet":
+			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				// Balance sheet data is included in comprehensive financials
+				if snapshots, err := emit.MapComprehensiveFinancialsDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					for _, snapshot := range snapshots {
+						printFundamentalsSnapshot(snapshot)
+					}
+				}
+			}
+		
+		case "cash-flow":
+			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				// Cash flow data is included in comprehensive financials
+				if snapshots, err := emit.MapComprehensiveFinancialsDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					for _, snapshot := range snapshots {
+						printFundamentalsSnapshot(snapshot)
+					}
+				}
+			}
+		
+		case "key-statistics":
+			if dto, err := scrape.ParseComprehensiveKeyStatistics(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				if snapshot, err := emit.MapKeyStatisticsDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					printFundamentalsSnapshot(snapshot)
+				}
+			}
+		
+		case "analysis":
+			if dto, err := scrape.ParseAnalysis(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				if snapshot, err := emit.MapAnalysisDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					printFundamentalsSnapshot(snapshot)
+				}
+			}
+		
+		case "analyst-insights":
+			if dto, err := scrape.ParseAnalystInsights(body, ticker, "XNAS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				if snapshot, err := emit.MapAnalystInsightsDTO(dto, runID, mapperConfig.Producer); err != nil {
+					fmt.Printf("MAPPING ERROR: %v\n", err)
+				} else {
+					printFundamentalsSnapshot(snapshot)
+				}
+			}
+		
+		default:
+			fmt.Printf("PROTO MAPPING: endpoint '%s' not yet supported for proto emission\n", endpoint)
+			fmt.Printf("Supported endpoints: financials, balance-sheet, cash-flow, key-statistics, analysis, analyst-insights, profile, news\n")
+		}
+	}
+
+	return nil
+}
+
+// convertToFinancialsDTO converts ComprehensiveFinancialsDTO to simple FinancialsDTO
+func convertToFinancialsDTO(comprehensive *scrape.ComprehensiveFinancialsDTO) *scrape.FinancialsDTO {
+	dto := &scrape.FinancialsDTO{
+		Symbol: comprehensive.Symbol,
+		Market: comprehensive.Market,
+		AsOf:   comprehensive.AsOf,
+		Lines:  []scrape.PeriodLine{},
+	}
+
+	// Use a recent quarter for period (approximate)
+	now := comprehensive.AsOf
+	quarterStart := time.Date(now.Year(), ((now.Month()-1)/3)*3+1, 1, 0, 0, 0, 0, time.UTC)
+	quarterEnd := quarterStart.AddDate(0, 3, -1)
+
+	// Convert current values to period lines
+	if comprehensive.Current.TotalRevenue != nil {
+		dto.Lines = append(dto.Lines, scrape.PeriodLine{
+			PeriodStart: quarterStart,
+			PeriodEnd:   quarterEnd,
+			Key:         "total_revenue",
+			Value:       *comprehensive.Current.TotalRevenue,
+			Currency:    scrape.Currency(comprehensive.Currency),
+		})
+	}
+
+	if comprehensive.Current.OperatingIncome != nil {
+		dto.Lines = append(dto.Lines, scrape.PeriodLine{
+			PeriodStart: quarterStart,
+			PeriodEnd:   quarterEnd,
+			Key:         "operating_income",
+			Value:       *comprehensive.Current.OperatingIncome,
+			Currency:    scrape.Currency(comprehensive.Currency),
+		})
+	}
+
+	if comprehensive.Current.NetIncomeCommonStockholders != nil {
+		dto.Lines = append(dto.Lines, scrape.PeriodLine{
+			PeriodStart: quarterStart,
+			PeriodEnd:   quarterEnd,
+			Key:         "net_income",
+			Value:       *comprehensive.Current.NetIncomeCommonStockholders,
+			Currency:    scrape.Currency(comprehensive.Currency),
+		})
+	}
+
+	if comprehensive.Current.BasicEPS != nil {
+		dto.Lines = append(dto.Lines, scrape.PeriodLine{
+			PeriodStart: quarterStart,
+			PeriodEnd:   quarterEnd,
+			Key:         "eps_basic",
+			Value:       *comprehensive.Current.BasicEPS,
+			Currency:    scrape.Currency(comprehensive.Currency),
+		})
+	}
+
+	return dto
+}
+
+// printFundamentalsSnapshot prints a summary of fundamentals snapshot
+func printFundamentalsSnapshot(snapshot *fundamentalsv1.FundamentalsSnapshot) {
+	fmt.Printf("%s fundamentals: lines=%d currency=%s source=%s ok\n", 
+		snapshot.Security.Symbol, 
+		len(snapshot.Lines),
+		getCurrencyFromLines(snapshot.Lines),
+		snapshot.Source)
+	
+	if len(snapshot.Lines) > 0 {
+		earliest, latest := getTimeBounds(snapshot.Lines)
+		fmt.Printf("Period range: %s to %s\n", 
+			earliest.Format("2006-01-02"), 
+			latest.Format("2006-01-02"))
+	}
+	
+	fmt.Printf("Schema version: %s\n", snapshot.Meta.SchemaVersion)
+	fmt.Printf("Run ID: %s\n", snapshot.Meta.RunId)
+}
+
+// printProfileResult prints a summary of profile mapping result
+func printProfileResult(result *emit.ProfileMappingResult) {
+	fmt.Printf("%s profile: content_type=%s bytes=%d schema=%s\n", 
+		result.Security.Symbol, 
+		result.ContentType,
+		len(result.JSONBytes),
+		result.SchemaFQDN)
+	
+	fmt.Printf("Schema version: %s\n", result.Meta.SchemaVersion)
+	fmt.Printf("Run ID: %s\n", result.Meta.RunId)
+}
+
+// printNewsArticles prints a summary of news articles
+func printNewsArticles(articles []*newsv1.NewsItem, stats *scrape.NewsStats) {
+	if len(articles) == 0 {
+		fmt.Printf("No news articles found\n")
+		return
+	}
+
+	summary := emit.CreateNewsSummary(articles)
+	
+	fmt.Printf("News articles: total=%d unique_sources=%d has_images=%d\n", 
+		summary.TotalArticles,
+		summary.UniqueSources,
+		summary.HasImages)
+	
+	if summary.EarliestTime != nil && summary.LatestTime != nil {
+		fmt.Printf("Time range: %s to %s\n", 
+			summary.EarliestTime.Format("2006-01-02T15:04:05Z"),
+			summary.LatestTime.Format("2006-01-02T15:04:05Z"))
+	}
+	
+	if len(summary.TopSources) > 0 {
+		fmt.Printf("Top sources: %s\n", strings.Join(summary.TopSources, ", "))
+	}
+	
+	if len(summary.RelatedTickers) > 0 {
+		fmt.Printf("Related tickers: %s\n", strings.Join(summary.RelatedTickers, ", "))
+	}
+
+	if len(articles) > 0 {
+		fmt.Printf("Schema version: %s\n", articles[0].Meta.SchemaVersion)
+		fmt.Printf("Run ID: %s\n", articles[0].Meta.RunId)
+		
+		// Print actual ampy-proto messages
+		fmt.Printf("\n--- AMPY-PROTO NEWS MESSAGES ---\n")
+		for i, article := range articles {
+			if i >= 3 { // Limit to first 3 articles for readability
+				fmt.Printf("... and %d more articles\n", len(articles)-3)
+				break
+			}
+			
+			// Convert to JSON for display
+			jsonData, err := json.MarshalIndent(article, "", "  ")
+			if err != nil {
+				fmt.Printf("Error marshaling article %d: %v\n", i+1, err)
+				continue
+			}
+			
+			fmt.Printf("\nArticle %d:\n%s\n", i+1, string(jsonData))
+		}
+	}
+}
+
+// getCurrencyFromLines extracts currency from the first line that has one
+func getCurrencyFromLines(lines []*fundamentalsv1.LineItem) string {
+	for _, line := range lines {
+		if line.CurrencyCode != "" {
+			return line.CurrencyCode
+		}
+	}
+	return "unknown"
+}
+
+// getTimeBounds returns the earliest and latest period bounds
+func getTimeBounds(lines []*fundamentalsv1.LineItem) (time.Time, time.Time) {
+	if len(lines) == 0 {
+		now := time.Now()
+		return now, now
+	}
+	
+	earliest := lines[0].PeriodStart.AsTime()
+	latest := lines[0].PeriodEnd.AsTime()
+	
+	for _, line := range lines {
+		if line.PeriodStart.AsTime().Before(earliest) {
+			earliest = line.PeriodStart.AsTime()
+		}
+		if line.PeriodEnd.AsTime().After(latest) {
+			latest = line.PeriodEnd.AsTime()
+		}
+	}
+	
+	return earliest, latest
 }
 
 // runVersion executes the version command

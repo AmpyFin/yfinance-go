@@ -37,6 +37,10 @@ var (
 	ErrJSONDecode       = &ScrapeError{Type: "json_decode", Message: "failed to decode JSON structure"}
 	ErrMissingFieldBase = &ScrapeError{Type: "missing_field", Message: "required field is missing"}
 	ErrSchemaDriftBase  = &ScrapeError{Type: "schema_drift", Message: "unexpected schema change detected"}
+	
+	// News-specific errors
+	ErrNewsNoArticles   = &ScrapeError{Type: "news_no_articles", Message: "no news articles found"}
+	ErrNewsParse        = &ScrapeError{Type: "news_parse", Message: "failed to parse news HTML"}
 )
 
 // ErrHTTP creates an HTTP status error
