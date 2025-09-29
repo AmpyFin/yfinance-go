@@ -21,15 +21,9 @@ func InspectProtoData() {
 	config.TimeoutMs = 30000
 	client := scrape.NewClient(config, nil)
 	
-	// Create mapper
+	// Create mapper config
 	runID := fmt.Sprintf("inspect_%d", time.Now().Unix())
-	mapperConfig := emit.ScrapeMapperConfig{
-		RunID:    runID,
-		Producer: "yfinance-go-inspector",
-		Source:   "yfinance-go/scrape",
-		TraceID:  "",
-	}
-	mapper := emit.NewScrapeMapper(mapperConfig)
+	producer := "yfinance-go-inspector"
 	
 	fmt.Printf("=== AMPY-PROTO DATA INSPECTION ===\n")
 	fmt.Printf("Run ID: %s\n", runID)
@@ -40,17 +34,17 @@ func InspectProtoData() {
 		fmt.Printf("=" + strings.Repeat("=", len(ticker)+11) + "\n\n")
 		
 		// Analyze financials
-		if err := analyzeFinancials(client, mapper, ticker); err != nil {
+		if err := analyzeFinancials(client, ticker, runID, producer); err != nil {
 			fmt.Printf("❌ Financials error: %v\n\n", err)
 		}
 		
 		// Analyze profile
-		if err := analyzeProfile(client, mapper, ticker); err != nil {
+		if err := analyzeProfile(client, ticker, runID, producer); err != nil {
 			fmt.Printf("❌ Profile error: %v\n\n", err)
 		}
 		
 		// Analyze news
-		if err := analyzeNews(client, mapper, ticker); err != nil {
+		if err := analyzeNews(client, ticker, runID, producer); err != nil {
 			fmt.Printf("❌ News error: %v\n\n", err)
 		}
 		
@@ -58,7 +52,7 @@ func InspectProtoData() {
 	}
 }
 
-func analyzeFinancials(client scrape.Client, mapper *emit.ScrapeMapper, ticker string) error {
+func analyzeFinancials(client scrape.Client, ticker, runID, producer string) error {
 	fmt.Printf("📊 FINANCIALS ANALYSIS\n")
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -83,7 +77,7 @@ func analyzeFinancials(client scrape.Client, mapper *emit.ScrapeMapper, ticker s
 	simpleDTO := convertToFinancialsDTO(dto)
 	
 	// Map to ampy-proto
-	snapshot, err := emit.MapFinancialsDTO(simpleDTO, runID, mapperConfig.Producer)
+	snapshot, err := emit.MapFinancialsDTO(simpleDTO, runID, producer)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}
@@ -158,7 +152,7 @@ func analyzeFinancials(client scrape.Client, mapper *emit.ScrapeMapper, ticker s
 	return nil
 }
 
-func analyzeProfile(client scrape.Client, mapper *emit.ScrapeMapper, ticker string) error {
+func analyzeProfile(client scrape.Client, ticker, runID, producer string) error {
 	fmt.Printf("🏢 PROFILE ANALYSIS\n")
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -180,7 +174,7 @@ func analyzeProfile(client scrape.Client, mapper *emit.ScrapeMapper, ticker stri
 	}
 	
 	// Map to result
-	result, err := emit.MapProfileDTO(dto, runID, mapperConfig.Producer)
+	result, err := emit.MapProfileDTO(dto, runID, producer)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}
@@ -227,7 +221,7 @@ func analyzeProfile(client scrape.Client, mapper *emit.ScrapeMapper, ticker stri
 	return nil
 }
 
-func analyzeNews(client scrape.Client, mapper *emit.ScrapeMapper, ticker string) error {
+func analyzeNews(client scrape.Client, ticker, runID, producer string) error {
 	fmt.Printf("📰 NEWS ANALYSIS\n")
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -249,7 +243,7 @@ func analyzeNews(client scrape.Client, mapper *emit.ScrapeMapper, ticker string)
 	}
 	
 	// Map to ampy-proto
-	protoArticles, err := emit.MapNewsItems(articles, ticker, runID, mapperConfig.Producer)
+	protoArticles, err := emit.MapNewsItems(articles, ticker, runID, producer)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}
