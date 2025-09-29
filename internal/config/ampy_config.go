@@ -22,6 +22,7 @@ type Config struct {
 	Markets       MarketsConfig       `yaml:"markets"`
 	FX            FXConfig            `yaml:"fx"`
 	Bus           BusConfig           `yaml:"bus"`
+	Scrape        ScrapeConfig        `yaml:"scrape"`
 	Observability ObservabilityConfig `yaml:"observability"`
 	Secrets       []SecretConfig      `yaml:"secrets"`
 }
@@ -114,6 +115,35 @@ type BusConfig struct {
 	Publisher       PublisherConfig   `yaml:"publisher"`
 	Retry           RetryConfig       `yaml:"retry"`
 	CircuitBreaker  CircuitBreakerConfig `yaml:"circuit_breaker"`
+}
+
+// ScrapeConfig represents scraping configuration
+type ScrapeConfig struct {
+	Enabled      bool                    `yaml:"enabled"`
+	UserAgent    string                  `yaml:"user_agent"`
+	TimeoutMs    int                     `yaml:"timeout_ms"`
+	QPS          float64                 `yaml:"qps"`
+	Burst        int                     `yaml:"burst"`
+	Retry        ScrapeRetryConfig       `yaml:"retry"`
+	RobotsPolicy string                  `yaml:"robots_policy"`
+	CacheTTLMs   int                     `yaml:"cache_ttl_ms"`
+	Endpoints    ScrapeEndpointConfig    `yaml:"endpoints"`
+}
+
+// ScrapeRetryConfig represents scraping retry configuration
+type ScrapeRetryConfig struct {
+	Attempts   int `yaml:"attempts"`
+	BaseMs     int `yaml:"base_ms"`
+	MaxDelayMs int `yaml:"max_delay_ms"`
+}
+
+// ScrapeEndpointConfig represents endpoint-specific scraping configuration
+type ScrapeEndpointConfig struct {
+	KeyStatistics bool `yaml:"key_statistics"`
+	Financials    bool `yaml:"financials"`
+	Analysis      bool `yaml:"analysis"`
+	Profile       bool `yaml:"profile"`
+	News          bool `yaml:"news"`
 }
 
 // PublisherConfig represents publisher configuration
@@ -485,6 +515,11 @@ func (c *Config) GetFXConfig() *FXConfig {
 	return &c.FX
 }
 
+// GetScrapeConfig converts the configuration to scrape.Config
+func (c *Config) GetScrapeConfig() *ScrapeConfig {
+	return &c.Scrape
+}
+
 // ValidateInterval validates that the interval is allowed
 func (c *Config) ValidateInterval(interval string) error {
 	for _, allowed := range c.Markets.AllowedIntervals {
@@ -593,6 +628,27 @@ func CreateEffectiveConfig(path string) error {
 				"failure_threshold": 0.30,
 				"reset_timeout_ms":  30000,
 				"half_open_probes":  3,
+			},
+		},
+		"scrape": map[string]interface{}{
+			"enabled":       true,
+			"user_agent":    "Mozilla/5.0 (Ampy yfinance-go scraper)",
+			"timeout_ms":    10000,
+			"qps":           0.7,
+			"burst":         1,
+			"retry": map[string]interface{}{
+				"attempts":     4,
+				"base_ms":      300,
+				"max_delay_ms": 4000,
+			},
+			"robots_policy": "enforce",
+			"cache_ttl_ms":  60000,
+			"endpoints": map[string]interface{}{
+				"key_statistics": true,
+				"financials":     true,
+				"analysis":       true,
+				"profile":        true,
+				"news":           true,
 			},
 		},
 		"observability": map[string]interface{}{

@@ -1,0 +1,49 @@
+# Financials Regex Patterns for Yahoo Finance
+# These patterns extract financial data from HTML tables
+
+# Currency extraction
+currency:
+  pattern: 'Currency in ([A-Z]{3})'
+
+# Income Statement patterns
+income_statement:
+  total_revenue: 'Total Revenue</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  cost_of_revenue: 'Cost of Revenue</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  operating_income: 'Operating Income</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  net_income: 'Net Income Common Stockholders</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  basic_eps: 'Basic EPS</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  diluted_eps: 'Diluted EPS[^>]*>Diluted EPS</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  ebitda: 'EBITDA</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  ebit: 'EBIT</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  total_expenses: 'Total Expenses</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  normalized_ebitda: 'Normalized EBITDA</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+
+# Share information patterns
+shares:
+  basic_average_shares: 'Basic Average Shares[^>]*>Basic Average Shares</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  diluted_average_shares: 'Diluted Average Shares[^>]*>Diluted Average Shares</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+
+# Balance Sheet patterns
+balance_sheet:
+  total_assets: 'Total Assets[^>]*>Total Assets</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  total_capitalization: 'Total Capitalization[^>]*>Total Capitalization</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  common_stock_equity: 'Common Stock Equity[^>]*>Common Stock Equity</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  capital_lease_obligations: 'Capital Lease Obligations[^>]*>Capital Lease Obligations</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  net_tangible_assets: 'Net Tangible Assets[^>]*>Net Tangible Assets</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  working_capital: 'Working Capital[^>]*>Working Capital</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  invested_capital: 'Invested Capital[^>]*>Invested Capital</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  tangible_book_value: 'Tangible Book Value[^>]*>Tangible Book Value</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  total_debt: 'Total Debt[^>]*>Total Debt</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  share_issued: 'Share Issued[^>]*>Share Issued</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+
+# Cash Flow patterns
+cash_flow:
+  operating_cash_flow: 'Operating Cash Flow[^>]*>Operating Cash Flow</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  investing_cash_flow: 'Investing Cash Flow[^>]*>Investing Cash Flow</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  financing_cash_flow: 'Financing Cash Flow[^>]*>Financing Cash Flow</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  end_cash_position: 'End Cash Position[^>]*>End Cash Position</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  capital_expenditure: 'Capital Expenditure[^>]*>Capital Expenditure</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  issuance_of_debt: 'Issuance of Debt[^>]*>Issuance of Debt</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  repayment_of_debt: 'Repayment of Debt[^>]*>Repayment of Debt</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  repurchase_of_capital_stock: 'Repurchase of Capital Stock[^>]*>Repurchase of Capital Stock</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'
+  free_cash_flow: 'Free Cash Flow[^>]*>Free Cash Flow</div></div> <div class="column yf-t22klz alt">([^<]+)</div><div class="column yf-t22klz">([^<]+)</div>'

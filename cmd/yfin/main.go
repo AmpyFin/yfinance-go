@@ -18,6 +18,7 @@ import (
 	"github.com/AmpyFin/yfinance-go/internal/httpx"
 	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/AmpyFin/yfinance-go/internal/obsv"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 )
 
 // Version information set via ldflags during build
@@ -83,6 +84,29 @@ type FundamentalsConfig struct {
 	Preview bool
 }
 
+// Scrape command configuration
+type ScrapeConfig struct {
+	Check        bool
+	Ticker       string
+	Endpoint     string
+	Endpoints    string // Comma-separated list of endpoints for preview-json
+	Preview      bool
+	PreviewJSON  bool
+	Force        bool
+}
+
+// ComprehensiveStatsConfig holds configuration for comprehensive statistics command
+type ComprehensiveStatsConfig struct {
+	Ticker  string
+	Preview bool
+}
+
+// ComprehensiveProfileConfig holds configuration for comprehensive profile command
+type ComprehensiveProfileConfig struct {
+	Ticker  string
+	Preview bool
+}
+
 // Config command configuration
 type ConfigConfig struct {
 	PrintEffective bool
@@ -94,6 +118,9 @@ var (
 	pullConfig   PullConfig
 	quoteConfig  QuoteConfig
 	fundConfig   FundamentalsConfig
+	scrapeConfig ScrapeConfig
+	comprehensiveStatsConfig ComprehensiveStatsConfig
+	comprehensiveProfileConfig ComprehensiveProfileConfig
 	configConfig ConfigConfig
 )
 
@@ -145,6 +172,46 @@ Note: This endpoint requires Yahoo Finance paid subscription.
 Examples:
   yfin fundamentals --ticker AAPL --preview`,
 	RunE: runFundamentals,
+}
+
+// scrapeCmd represents the scrape command
+var scrapeCmd = &cobra.Command{
+	Use:   "scrape",
+	Short: "Web scraping operations",
+	Long: `Web scraping operations for Yahoo Finance data.
+This command provides access to scraping functionality when API endpoints are unavailable.
+
+Examples:
+  yfin scrape --check --ticker AAPL --endpoint profile --preview
+  yfin scrape --check --ticker MSFT --endpoint key-statistics --preview
+  yfin scrape --preview-json --ticker AAPL --endpoints key-statistics,financials,analysis,profile`,
+	RunE: runScrape,
+}
+
+// comprehensiveStatsCmd represents the comprehensive statistics command
+var comprehensiveStatsCmd = &cobra.Command{
+	Use:   "comprehensive-stats",
+	Short: "Extract comprehensive key statistics with historical data",
+	Long: `Extract comprehensive key statistics including current values and 5-year historical data.
+This command uses YAML-configured regex patterns to extract all key statistics from Yahoo Finance.
+
+Examples:
+  yfin comprehensive-stats --ticker AAPL
+  yfin comprehensive-stats --ticker MSFT --preview`,
+	RunE: runComprehensiveStats,
+}
+
+// comprehensiveProfileCmd represents the comprehensive profile command
+var comprehensiveProfileCmd = &cobra.Command{
+	Use:   "comprehensive-profile",
+	Short: "Extract comprehensive company profile information",
+	Long: `Extract comprehensive company profile information including company details, 
+key executives, and business summary from Yahoo Finance.
+
+Examples:
+  yfin comprehensive-profile --ticker AAPL
+  yfin comprehensive-profile --ticker MSFT --preview`,
+	RunE: runComprehensiveProfile,
 }
 
 // configCmd represents the config command
@@ -212,6 +279,23 @@ func init() {
 	fundamentalsCmd.Flags().StringVar(&fundConfig.Ticker, "ticker", "", "Stock symbol to fetch (e.g., AAPL)")
 	fundamentalsCmd.Flags().BoolVar(&fundConfig.Preview, "preview", false, "Show preview")
 
+	// Scrape command flags
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.Check, "check", false, "Check scraping connectivity (no parsing)")
+	scrapeCmd.Flags().StringVar(&scrapeConfig.Ticker, "ticker", "", "Stock symbol to scrape (e.g., AAPL)")
+	scrapeCmd.Flags().StringVar(&scrapeConfig.Endpoint, "endpoint", "", "Endpoint to scrape (profile, key-statistics, financials, balance-sheet, cash-flow, analysis, analyst-insights, news)")
+	scrapeCmd.Flags().StringVar(&scrapeConfig.Endpoints, "endpoints", "", "Comma-separated list of endpoints for preview-json (e.g., key-statistics,financials,analysis,profile)")
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.Preview, "preview", false, "Show preview without parsing")
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.PreviewJSON, "preview-json", false, "Preview JSON extraction without emitting proto")
+	scrapeCmd.Flags().BoolVar(&scrapeConfig.Force, "force", false, "Force scraping even if API is available")
+
+	// Comprehensive stats command flags
+	comprehensiveStatsCmd.Flags().StringVar(&comprehensiveStatsConfig.Ticker, "ticker", "", "Stock symbol to analyze (e.g., AAPL)")
+	comprehensiveStatsCmd.Flags().BoolVar(&comprehensiveStatsConfig.Preview, "preview", false, "Show preview of extracted data")
+
+	// Comprehensive profile command flags
+	comprehensiveProfileCmd.Flags().StringVar(&comprehensiveProfileConfig.Ticker, "ticker", "", "Stock symbol to analyze (e.g., AAPL)")
+	comprehensiveProfileCmd.Flags().BoolVar(&comprehensiveProfileConfig.Preview, "preview", false, "Show preview of extracted data")
+
 	// Config command flags
 	configCmd.Flags().BoolVar(&configConfig.PrintEffective, "print-effective", false, "Print effective configuration")
 	configCmd.Flags().BoolVar(&configConfig.JSON, "json", false, "Output in JSON format")
@@ -220,6 +304,9 @@ func init() {
 	rootCmd.AddCommand(pullCmd)
 	rootCmd.AddCommand(quoteCmd)
 	rootCmd.AddCommand(fundamentalsCmd)
+	rootCmd.AddCommand(scrapeCmd)
+	rootCmd.AddCommand(comprehensiveStatsCmd)
+	rootCmd.AddCommand(comprehensiveProfileCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(versionCmd)
 }
@@ -445,6 +532,144 @@ func runFundamentals(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// runScrape executes the scrape command
+func runScrape(cmd *cobra.Command, args []string) error {
+	// Validate flags
+	if err := validateScrapeFlags(); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+
+	// Generate run ID if not provided
+	runID := globalConfig.RunID
+	if runID == "" {
+		runID = fmt.Sprintf("yfin_scrape_%d", time.Now().Unix())
+	}
+
+	// Load configuration
+	loader := config.NewLoader(globalConfig.ConfigFile)
+	cfg, err := loader.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to load configuration: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+
+	// Get scrape configuration
+	scrapeCfg := cfg.GetScrapeConfig()
+	if !scrapeCfg.Enabled {
+		fmt.Fprintf(os.Stderr, "ERROR: Scraping is disabled in configuration\n")
+		os.Exit(ExitConfigError)
+	}
+
+	// Initialize observability
+	ctx := context.Background()
+	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
+	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
+	
+	obsvConfig := &obsv.Config{
+		ServiceName:       "yfinance-go",
+		ServiceVersion:    version,
+		Environment:       cfg.App.Env,
+		CollectorEndpoint: cfg.Observability.Tracing.OTLP.Endpoint,
+		TraceProtocol:     "grpc",
+		SampleRatio:       cfg.Observability.Tracing.OTLP.SampleRatio,
+		LogLevel:          cfg.Observability.Logs.Level,
+		MetricsAddr:       cfg.Observability.Metrics.Prometheus.Addr,
+		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
+		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
+	}
+	
+	if err := obsv.Init(ctx, obsvConfig); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+	defer func() { _ = obsv.Shutdown(ctx) }()
+
+	// Create scrape client
+	scrapeClient, err := createScrapeClient(scrapeCfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to create scrape client: %v\n", err)
+		os.Exit(ExitGeneral)
+	}
+
+	// Execute scrape check
+	if scrapeConfig.Check {
+		return runScrapeCheck(ctx, scrapeClient, scrapeConfig.Ticker, scrapeConfig.Endpoint, runID)
+	}
+
+	// Execute preview-json mode
+	if scrapeConfig.PreviewJSON {
+		return runScrapePreviewJSON(ctx, scrapeClient, scrapeConfig.Ticker, scrapeConfig.Endpoints, runID)
+	}
+
+	fmt.Fprintf(os.Stderr, "ERROR: Either --check or --preview-json mode is required\n")
+	os.Exit(ExitGeneral)
+	return nil
+}
+
+// runComprehensiveStats executes the comprehensive statistics command
+func runComprehensiveStats(cmd *cobra.Command, args []string) error {
+	// Validate flags
+	if comprehensiveStatsConfig.Ticker == "" {
+		return fmt.Errorf("--ticker is required")
+	}
+
+	// Generate run ID if not provided
+	runID := globalConfig.RunID
+	if runID == "" {
+		runID = fmt.Sprintf("yfin_comprehensive_stats_%d", time.Now().Unix())
+	}
+
+	// Load configuration
+	loader := config.NewLoader(globalConfig.ConfigFile)
+	cfg, err := loader.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to load configuration: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+
+	// Get scrape configuration
+	scrapeCfg := cfg.GetScrapeConfig()
+	if !scrapeCfg.Enabled {
+		fmt.Fprintf(os.Stderr, "ERROR: Scraping is disabled in configuration\n")
+		os.Exit(ExitConfigError)
+	}
+
+	// Initialize observability
+	ctx := context.Background()
+	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
+	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
+	
+	obsvConfig := &obsv.Config{
+		ServiceName:       "yfinance-go",
+		ServiceVersion:    version,
+		Environment:       cfg.App.Env,
+		CollectorEndpoint: cfg.Observability.Tracing.OTLP.Endpoint,
+		TraceProtocol:     "grpc",
+		SampleRatio:       cfg.Observability.Tracing.OTLP.SampleRatio,
+		LogLevel:          cfg.Observability.Logs.Level,
+		MetricsAddr:       cfg.Observability.Metrics.Prometheus.Addr,
+		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
+		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
+	}
+	
+	if err := obsv.Init(ctx, obsvConfig); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+	defer func() { _ = obsv.Shutdown(ctx) }()
+
+	// Create scrape client
+	scrapeClient, err := createScrapeClient(scrapeCfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to create scrape client: %v\n", err)
+		os.Exit(ExitGeneral)
+	}
+
+	// Execute comprehensive statistics extraction
+	return runComprehensiveStatsExtraction(ctx, scrapeClient, comprehensiveStatsConfig.Ticker, runID)
+}
+
 // runConfig executes the config command
 func runConfig(cmd *cobra.Command, args []string) error {
 	if !configConfig.PrintEffective {
@@ -582,6 +807,68 @@ func validateFundamentalsFlags() error {
 	if fundConfig.Ticker == "" {
 		return fmt.Errorf("--ticker is required")
 	}
+	return nil
+}
+
+// validateScrapeFlags validates scrape command flags
+func validateScrapeFlags() error {
+	// Check that either --check or --preview-json is specified
+	if !scrapeConfig.Check && !scrapeConfig.PreviewJSON {
+		return fmt.Errorf("either --check or --preview-json flag is required")
+	}
+	
+	// Both modes require ticker
+	if scrapeConfig.Ticker == "" {
+		return fmt.Errorf("--ticker is required")
+	}
+	
+	// Check mode requires endpoint
+	if scrapeConfig.Check {
+		if scrapeConfig.Endpoint == "" {
+			return fmt.Errorf("--endpoint is required for --check mode")
+		}
+		
+		// Validate endpoint
+		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
+		valid := false
+		for _, ep := range validEndpoints {
+			if scrapeConfig.Endpoint == ep {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("--endpoint must be one of: %v", validEndpoints)
+		}
+	}
+	
+	// Preview-json mode requires endpoints
+	if scrapeConfig.PreviewJSON {
+		if scrapeConfig.Endpoints == "" {
+			return fmt.Errorf("--endpoints is required for --preview-json mode")
+		}
+		
+		// Validate endpoints
+		endpointList := strings.Split(scrapeConfig.Endpoints, ",")
+		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
+		for _, ep := range endpointList {
+			ep = strings.TrimSpace(ep)
+			if ep == "" {
+				continue
+			}
+			valid := false
+			for _, validEp := range validEndpoints {
+				if ep == validEp {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return fmt.Errorf("invalid endpoint '%s' in --endpoints", ep)
+			}
+		}
+	}
+	
 	return nil
 }
 
@@ -1108,6 +1395,1215 @@ func isPaidFeatureError(err error) bool {
 	}
 	errStr := err.Error()
 	return strings.Contains(errStr, "paid subscription") || strings.Contains(errStr, "401") || strings.Contains(errStr, "Unauthorized")
+}
+
+// createScrapeClient creates a scrape client with configuration
+func createScrapeClient(cfg *config.ScrapeConfig) (scrape.Client, error) {
+	// Convert config to scrape.Config
+	scrapeCfg := &scrape.Config{
+		Enabled:   cfg.Enabled,
+		UserAgent: cfg.UserAgent,
+		TimeoutMs: cfg.TimeoutMs,
+		QPS:       cfg.QPS,
+		Burst:     cfg.Burst,
+		Retry: scrape.RetryConfig{
+			Attempts:   cfg.Retry.Attempts,
+			BaseMs:     cfg.Retry.BaseMs,
+			MaxDelayMs: cfg.Retry.MaxDelayMs,
+		},
+		RobotsPolicy: cfg.RobotsPolicy,
+		CacheTTLMs:   cfg.CacheTTLMs,
+		Endpoints: scrape.EndpointConfig{
+			KeyStatistics: cfg.Endpoints.KeyStatistics,
+			Financials:    cfg.Endpoints.Financials,
+			Analysis:      cfg.Endpoints.Analysis,
+			Profile:       cfg.Endpoints.Profile,
+			News:          cfg.Endpoints.News,
+		},
+	}
+
+	// Create scrape client
+	return scrape.NewClient(scrapeCfg, nil), nil
+}
+
+// runScrapeCheck runs a scrape connectivity check
+func runScrapeCheck(ctx context.Context, client scrape.Client, ticker, endpoint, runID string) error {
+	// Build URL for the endpoint
+	url := buildScrapeURL(ticker, endpoint)
+	
+	// Fetch the page
+	body, meta, err := client.Fetch(ctx, url)
+	if err != nil {
+		return fmt.Errorf("failed to fetch %s: %v", url, err)
+	}
+
+	// Print results
+	fmt.Printf("SCRAPE CHECK host=%s url=%s status=%d bytes=%d gzip=%t redirects=%d latency_p50≈%dms\n",
+		meta.Host,
+		meta.URL,
+		meta.Status,
+		meta.Bytes,
+		meta.Gzip,
+		meta.Redirects,
+		meta.Duration.Milliseconds())
+
+	// Show the full content (no truncation)
+	fmt.Printf("CONTENT PREVIEW: %s\n", string(body))
+
+	return nil
+}
+
+// runScrapePreviewJSON executes the preview-json mode for testing extractors
+func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, endpoints, runID string) error {
+	if ticker == "" {
+		return fmt.Errorf("ticker is required for preview-json mode")
+	}
+	
+	if endpoints == "" {
+		return fmt.Errorf("endpoints is required for preview-json mode")
+	}
+
+	// Parse endpoints
+	endpointList := strings.Split(endpoints, ",")
+	for i, ep := range endpointList {
+		endpointList[i] = strings.TrimSpace(ep)
+	}
+
+	fmt.Printf("PREVIEW JSON EXTRACTION ticker=%s endpoints=%s\n", ticker, endpoints)
+
+	// Process each endpoint with individual timeouts
+	for _, endpoint := range endpointList {
+		if endpoint == "" {
+			continue
+		}
+
+		fmt.Printf("\n--- %s ---\n", strings.ToUpper(endpoint))
+		
+		// Create a timeout context for each endpoint (15 seconds max)
+		endpointCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		
+		// Build URL and fetch
+		url := buildScrapeURL(ticker, endpoint)
+		body, meta, err := client.Fetch(endpointCtx, url)
+		cancel() // Always cancel the context
+		
+		if err != nil {
+			fmt.Printf("ERROR: Failed to fetch %s: %v\n", url, err)
+			continue
+		}
+
+		fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+			meta.Host, meta.Status, meta.Bytes, meta.Gzip)
+
+		// Parse based on endpoint type
+		switch endpoint {
+		case "key-statistics":
+			if dto, err := scrape.ParseComprehensiveKeyStatistics(body, ticker, "NMS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				printComprehensiveStatisticsSummary(dto)
+			}
+		case "profile":
+			if dto, err := scrape.ParseComprehensiveProfile(body, ticker, "NMS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				printComprehensiveProfileSummary(dto)
+			}
+		case "financials":
+			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "NMS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				printComprehensiveFinancialsSummary(dto)
+			}
+		case "balance-sheet", "cash-flow":
+			// For balance sheet and cash flow, we need to fetch financials page to get currency
+			financialsURL := buildScrapeURL(ticker, "financials")
+			fmt.Printf("FETCHING CURRENCY: %s\n", financialsURL)
+			
+			financialsBody, financialsMeta, err := client.Fetch(ctx, financialsURL)
+			if err != nil {
+				fmt.Printf("CURRENCY FETCH ERROR: %v\n", err)
+				// Continue with original parsing but currency will default to USD
+				if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "NMS"); err != nil {
+					fmt.Printf("PARSE ERROR: %v\n", err)
+				} else {
+					printComprehensiveFinancialsSummary(dto)
+				}
+			} else {
+				fmt.Printf("CURRENCY FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+					financialsMeta.Host, financialsMeta.Status, financialsMeta.Bytes, financialsMeta.Gzip)
+				
+				// Parse the current endpoint (balance-sheet or cash-flow) with currency from financials
+				if dto, err := scrape.ParseComprehensiveFinancialsWithCurrency(body, financialsBody, ticker, "NMS"); err != nil {
+					fmt.Printf("PARSE ERROR: %v\n", err)
+				} else {
+					printComprehensiveFinancialsSummary(dto)
+				}
+			}
+		case "analysis":
+			if dto, err := scrape.ParseAnalysis(body, ticker, "NMS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				printAnalysisSummary(dto)
+			}
+		case "analyst-insights":
+			if dto, err := scrape.ParseAnalystInsights(body, ticker, "NMS"); err != nil {
+				fmt.Printf("PARSE ERROR: %v\n", err)
+			} else {
+				printAnalystInsightsSummary(dto)
+			}
+		default:
+			fmt.Printf("UNSUPPORTED ENDPOINT: %s (only key-statistics, profile, financials, balance-sheet, cash-flow, analysis, and analyst-insights are supported)\n", endpoint)
+		}
+	}
+
+	return nil
+}
+
+// printAnalysisSummary prints a comprehensive summary of analysis data
+func printAnalysisSummary(dto *scrape.ComprehensiveAnalysisDTO) {
+	fmt.Printf("ANALYSIS SUMMARY: symbol=%s\n", dto.Symbol)
+	
+	// Earnings Estimate
+	fmt.Printf("\nEARNINGS ESTIMATE (Currency: %s):\n", dto.EarningsEstimate.Currency)
+	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
+	fmt.Printf("No. of Analysts      ")
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.NoOfAnalysts, dto.EarningsEstimate.NextQtr.NoOfAnalysts, 
+		dto.EarningsEstimate.CurrentYear.NoOfAnalysts, dto.EarningsEstimate.NextYear.NoOfAnalysts, "int")
+	fmt.Printf("Avg. Estimate        ")
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.AvgEstimate, dto.EarningsEstimate.NextQtr.AvgEstimate,
+		dto.EarningsEstimate.CurrentYear.AvgEstimate, dto.EarningsEstimate.NextYear.AvgEstimate, "float")
+	fmt.Printf("Low Estimate         ")
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.LowEstimate, dto.EarningsEstimate.NextQtr.LowEstimate,
+		dto.EarningsEstimate.CurrentYear.LowEstimate, dto.EarningsEstimate.NextYear.LowEstimate, "float")
+	fmt.Printf("High Estimate        ")
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.HighEstimate, dto.EarningsEstimate.NextQtr.HighEstimate,
+		dto.EarningsEstimate.CurrentYear.HighEstimate, dto.EarningsEstimate.NextYear.HighEstimate, "float")
+	fmt.Printf("Year Ago EPS         ")
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.YearAgoEPS, dto.EarningsEstimate.NextQtr.YearAgoEPS,
+		dto.EarningsEstimate.CurrentYear.YearAgoEPS, dto.EarningsEstimate.NextYear.YearAgoEPS, "float")
+
+	// Revenue Estimate
+	fmt.Printf("\nREVENUE ESTIMATE (Currency: %s):\n", dto.RevenueEstimate.Currency)
+	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
+	fmt.Printf("No. of Analysts      ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.NoOfAnalysts, dto.RevenueEstimate.NextQtr.NoOfAnalysts,
+		dto.RevenueEstimate.CurrentYear.NoOfAnalysts, dto.RevenueEstimate.NextYear.NoOfAnalysts, "int")
+	fmt.Printf("Avg. Estimate        ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.AvgEstimate, dto.RevenueEstimate.NextQtr.AvgEstimate,
+		dto.RevenueEstimate.CurrentYear.AvgEstimate, dto.RevenueEstimate.NextYear.AvgEstimate, "string")
+	fmt.Printf("Low Estimate         ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.LowEstimate, dto.RevenueEstimate.NextQtr.LowEstimate,
+		dto.RevenueEstimate.CurrentYear.LowEstimate, dto.RevenueEstimate.NextYear.LowEstimate, "string")
+	fmt.Printf("High Estimate        ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.HighEstimate, dto.RevenueEstimate.NextQtr.HighEstimate,
+		dto.RevenueEstimate.CurrentYear.HighEstimate, dto.RevenueEstimate.NextYear.HighEstimate, "string")
+	fmt.Printf("Year Ago Sales       ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.YearAgoSales, dto.RevenueEstimate.NextQtr.YearAgoSales,
+		dto.RevenueEstimate.CurrentYear.YearAgoSales, dto.RevenueEstimate.NextYear.YearAgoSales, "string")
+	fmt.Printf("Sales Growth         ")
+	printAnalysisRow(dto.RevenueEstimate.CurrentQtr.SalesGrowthYearEst, dto.RevenueEstimate.NextQtr.SalesGrowthYearEst,
+		dto.RevenueEstimate.CurrentYear.SalesGrowthYearEst, dto.RevenueEstimate.NextYear.SalesGrowthYearEst, "string")
+
+	// Earnings History
+	fmt.Printf("\nEARNINGS HISTORY (Currency: %s):\n", dto.EarningsHistory.Currency)
+	if len(dto.EarningsHistory.Data) > 0 {
+		fmt.Printf("Date              EPS Est.    EPS Actual    Difference    Surprise %%\n")
+		for _, entry := range dto.EarningsHistory.Data {
+			fmt.Printf("%-16s  ", entry.Date)
+			if entry.EPSEst != nil {
+				fmt.Printf("%-10.2f  ", *entry.EPSEst)
+			} else {
+				fmt.Printf("%-10s  ", "--")
+			}
+			if entry.EPSActual != nil {
+				fmt.Printf("%-10.2f  ", *entry.EPSActual)
+			} else {
+				fmt.Printf("%-10s  ", "--")
+			}
+			if entry.Difference != nil {
+				fmt.Printf("%-10.2f  ", *entry.Difference)
+			} else {
+				fmt.Printf("%-10s  ", "--")
+			}
+			if entry.SurprisePercent != nil {
+				fmt.Printf("%-10s", *entry.SurprisePercent)
+			} else {
+				fmt.Printf("%-10s", "--")
+			}
+			fmt.Printf("\n")
+		}
+	}
+
+	// EPS Trend
+	fmt.Printf("\nEPS TREND (Currency: %s):\n", dto.EPSTrend.Currency)
+	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
+	fmt.Printf("Current Estimate     ")
+	printAnalysisRow(dto.EPSTrend.CurrentQtr.CurrentEstimate, dto.EPSTrend.NextQtr.CurrentEstimate,
+		dto.EPSTrend.CurrentYear.CurrentEstimate, dto.EPSTrend.NextYear.CurrentEstimate, "float")
+	fmt.Printf("7 Days Ago          ")
+	printAnalysisRow(dto.EPSTrend.CurrentQtr.Days7Ago, dto.EPSTrend.NextQtr.Days7Ago,
+		dto.EPSTrend.CurrentYear.Days7Ago, dto.EPSTrend.NextYear.Days7Ago, "float")
+	fmt.Printf("30 Days Ago         ")
+	printAnalysisRow(dto.EPSTrend.CurrentQtr.Days30Ago, dto.EPSTrend.NextQtr.Days30Ago,
+		dto.EPSTrend.CurrentYear.Days30Ago, dto.EPSTrend.NextYear.Days30Ago, "float")
+	fmt.Printf("60 Days Ago         ")
+	printAnalysisRow(dto.EPSTrend.CurrentQtr.Days60Ago, dto.EPSTrend.NextQtr.Days60Ago,
+		dto.EPSTrend.CurrentYear.Days60Ago, dto.EPSTrend.NextYear.Days60Ago, "float")
+	fmt.Printf("90 Days Ago         ")
+	printAnalysisRow(dto.EPSTrend.CurrentQtr.Days90Ago, dto.EPSTrend.NextQtr.Days90Ago,
+		dto.EPSTrend.CurrentYear.Days90Ago, dto.EPSTrend.NextYear.Days90Ago, "float")
+
+	// EPS Revisions
+	fmt.Printf("\nEPS REVISIONS (Currency: %s):\n", dto.EPSRevisions.Currency)
+	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
+	fmt.Printf("Up Last 7 Days      ")
+	printAnalysisRow(dto.EPSRevisions.CurrentQtr.UpLast7Days, dto.EPSRevisions.NextQtr.UpLast7Days,
+		dto.EPSRevisions.CurrentYear.UpLast7Days, dto.EPSRevisions.NextYear.UpLast7Days, "int")
+	fmt.Printf("Up Last 30 Days     ")
+	printAnalysisRow(dto.EPSRevisions.CurrentQtr.UpLast30Days, dto.EPSRevisions.NextQtr.UpLast30Days,
+		dto.EPSRevisions.CurrentYear.UpLast30Days, dto.EPSRevisions.NextYear.UpLast30Days, "int")
+	fmt.Printf("Down Last 7 Days    ")
+	printAnalysisRow(dto.EPSRevisions.CurrentQtr.DownLast7Days, dto.EPSRevisions.NextQtr.DownLast7Days,
+		dto.EPSRevisions.CurrentYear.DownLast7Days, dto.EPSRevisions.NextYear.DownLast7Days, "int")
+	fmt.Printf("Down Last 30 Days   ")
+	printAnalysisRow(dto.EPSRevisions.CurrentQtr.DownLast30Days, dto.EPSRevisions.NextQtr.DownLast30Days,
+		dto.EPSRevisions.CurrentYear.DownLast30Days, dto.EPSRevisions.NextYear.DownLast30Days, "int")
+
+	// Growth Estimate
+	fmt.Printf("\nGROWTH ESTIMATE:\n")
+	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
+	fmt.Printf("Growth Rate          ")
+	printAnalysisRow(dto.GrowthEstimate.CurrentQtr, dto.GrowthEstimate.NextQtr,
+		dto.GrowthEstimate.CurrentYear, dto.GrowthEstimate.NextYear, "string")
+}
+
+// printAnalysisRow prints a formatted row for analysis tables
+func printAnalysisRow(currentQtr, nextQtr, currentYear, nextYear interface{}, dataType string) {
+	switch dataType {
+	case "int":
+		printAnalysisCell(currentQtr, "int")
+		printAnalysisCell(nextQtr, "int")
+		printAnalysisCell(currentYear, "int")
+		printAnalysisCell(nextYear, "int")
+	case "float":
+		printAnalysisCell(currentQtr, "float")
+		printAnalysisCell(nextQtr, "float")
+		printAnalysisCell(currentYear, "float")
+		printAnalysisCell(nextYear, "float")
+	case "string":
+		printAnalysisCell(currentQtr, "string")
+		printAnalysisCell(nextQtr, "string")
+		printAnalysisCell(currentYear, "string")
+		printAnalysisCell(nextYear, "string")
+	}
+	fmt.Printf("\n")
+}
+
+// printAnalysisCell prints a single cell value with proper formatting
+func printAnalysisCell(value interface{}, dataType string) {
+	switch dataType {
+	case "int":
+		if v, ok := value.(*int); ok && v != nil {
+			fmt.Printf("%-15d", *v)
+		} else {
+			fmt.Printf("%-15s", "--")
+		}
+	case "float":
+		if v, ok := value.(*float64); ok && v != nil {
+			fmt.Printf("%-15.2f", *v)
+		} else {
+			fmt.Printf("%-15s", "--")
+		}
+	case "string":
+		if v, ok := value.(*string); ok && v != nil {
+			fmt.Printf("%-15s", *v)
+		} else {
+			fmt.Printf("%-15s", "--")
+		}
+	}
+}
+
+// printAnalystInsightsSummary prints a comprehensive summary of analyst insights
+func printAnalystInsightsSummary(dto *scrape.AnalystInsightsDTO) {
+	fmt.Printf("ANALYST INSIGHTS: symbol=%s\n", dto.Symbol)
+	
+	// Current Price
+	if dto.CurrentPrice != nil {
+		fmt.Printf("Current Price: %.2f\n", *dto.CurrentPrice)
+	}
+	
+	// Price Targets
+	fmt.Printf("\nPRICE TARGETS:\n")
+	if dto.TargetMeanPrice != nil {
+		fmt.Printf("  Average Target: %.2f\n", *dto.TargetMeanPrice)
+	}
+	if dto.TargetMedianPrice != nil {
+		fmt.Printf("  Median Target: %.2f\n", *dto.TargetMedianPrice)
+	}
+	if dto.TargetHighPrice != nil {
+		fmt.Printf("  High Target: %.2f\n", *dto.TargetHighPrice)
+	}
+	if dto.TargetLowPrice != nil {
+		fmt.Printf("  Low Target: %.2f\n", *dto.TargetLowPrice)
+	}
+	
+	// Analyst Recommendations
+	fmt.Printf("\nANALYST RECOMMENDATIONS:\n")
+	if dto.NumberOfAnalysts != nil {
+		fmt.Printf("  Number of Analysts: %d\n", *dto.NumberOfAnalysts)
+	}
+	if dto.RecommendationMean != nil {
+		fmt.Printf("  Recommendation Score: %.2f\n", *dto.RecommendationMean)
+	}
+	if dto.RecommendationKey != nil {
+		fmt.Printf("  Recommendation: %s\n", *dto.RecommendationKey)
+	}
+	
+	// Calculate upside/downside potential
+	if dto.CurrentPrice != nil && dto.TargetMeanPrice != nil {
+		upside := ((*dto.TargetMeanPrice - *dto.CurrentPrice) / *dto.CurrentPrice) * 100
+		fmt.Printf("\nPOTENTIAL:\n")
+		if upside > 0 {
+			fmt.Printf("  Upside Potential: +%.1f%%\n", upside)
+		} else {
+			fmt.Printf("  Downside Risk: %.1f%%\n", upside)
+		}
+	}
+}
+
+// printKeyStatisticsSummary prints a summary of key statistics
+func printKeyStatisticsSummary(dto *scrape.KeyStatisticsDTO) {
+	fmt.Printf("KEY STATISTICS: ok fields={")
+	fields := []string{}
+	
+	if dto.MarketCap != nil {
+		fields = append(fields, "market_cap")
+	}
+	if dto.EnterpriseValue != nil {
+		fields = append(fields, "enterprise_value")
+	}
+	if dto.ForwardPE != nil {
+		fields = append(fields, "forward_pe")
+	}
+	if dto.TrailingPE != nil {
+		fields = append(fields, "trailing_pe")
+	}
+	if dto.SharesOutstanding != nil {
+		fields = append(fields, "shares_outstanding")
+	}
+	if dto.Beta != nil {
+		fields = append(fields, "beta")
+	}
+	
+	fmt.Printf("%s} currency=%s", strings.Join(fields, ","), dto.Currency)
+	
+	// Show some key numeric values (redacted format)
+	if dto.MarketCap != nil {
+		// Calculate the actual value correctly
+		multiplier := float64(1)
+		for i := 0; i < dto.MarketCap.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.MarketCap.Scaled) / multiplier
+		fmt.Printf(" market_cap=~%.1fB", actualValue/1e9)
+	}
+	if dto.ForwardPE != nil {
+		// Calculate the actual value correctly
+		multiplier := float64(1)
+		for i := 0; i < dto.ForwardPE.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.ForwardPE.Scaled) / multiplier
+		fmt.Printf(" forward_pe=%.2f", actualValue)
+	}
+	if dto.SharesOutstanding != nil {
+		fmt.Printf(" shares=%.1fB", float64(*dto.SharesOutstanding)/1e9)
+	}
+	fmt.Printf("\n")
+}
+
+// printFinancialsSummary prints a summary of financials
+func printFinancialsSummary(dto *scrape.FinancialsDTO) {
+	// Group lines by year
+	years := make(map[int]int)
+	for _, line := range dto.Lines {
+		years[line.PeriodEnd.Year()]++
+	}
+	
+	yearList := make([]int, 0, len(years))
+	for year := range years {
+		yearList = append(yearList, year)
+	}
+	sort.Ints(yearList)
+	
+	// Get currency from first line or default to USD
+	currency := "USD"
+	if len(dto.Lines) > 0 {
+		currency = dto.Lines[0].Currency
+	}
+	fmt.Printf("FINANCIALS: lines=%d currency=%s", len(dto.Lines), currency)
+	
+	if len(yearList) > 0 {
+		fmt.Printf(" periods=[%d..%d]", yearList[0], yearList[len(yearList)-1])
+	}
+	
+	// Show some key financial metrics (redacted format)
+	var revenue, netIncome *scrape.Scaled
+	for _, line := range dto.Lines {
+		if line.Key == "total_revenue" && revenue == nil {
+			revenue = &line.Value
+		}
+		if line.Key == "net_income" && netIncome == nil {
+			netIncome = &line.Value
+		}
+	}
+	
+	if revenue != nil {
+		// Calculate the actual value correctly
+		multiplier := float64(1)
+		for i := 0; i < revenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(revenue.Scaled) / multiplier
+		fmt.Printf(" revenue=~%.1fB", actualValue/1e9)
+	}
+	if netIncome != nil {
+		// Calculate the actual value correctly
+		multiplier := float64(1)
+		for i := 0; i < netIncome.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(netIncome.Scaled) / multiplier
+		fmt.Printf(" net_income=~%.1fB", actualValue/1e9)
+	}
+	fmt.Printf("\n")
+}
+
+
+// printProfileSummary prints a summary of profile
+func printProfileSummary(dto *scrape.ProfileDTO) {
+	employees := "unknown"
+	if dto.Employees != nil {
+		employees = fmt.Sprintf("~%d", *dto.Employees)
+	}
+	
+	fmt.Printf("PROFILE: officers=%d employees=%s industry=\"%s\" sector=\"%s\"\n", 
+		len(dto.Officers), employees, dto.Industry, dto.Sector)
+}
+
+// buildScrapeURL builds the URL for a given ticker and endpoint
+func buildScrapeURL(ticker, endpoint string) string {
+	baseURL := "https://finance.yahoo.com"
+	
+	switch endpoint {
+	case "profile":
+		return fmt.Sprintf("%s/quote/%s/profile", baseURL, ticker)
+	case "key-statistics":
+		return fmt.Sprintf("%s/quote/%s/key-statistics", baseURL, ticker)
+	case "financials":
+		return fmt.Sprintf("%s/quote/%s/financials", baseURL, ticker)
+	case "balance-sheet":
+		return fmt.Sprintf("%s/quote/%s/balance-sheet", baseURL, ticker)
+	case "cash-flow":
+		return fmt.Sprintf("%s/quote/%s/cash-flow", baseURL, ticker)
+	case "analysis":
+		return fmt.Sprintf("%s/quote/%s/analysis", baseURL, ticker)
+	case "analyst-insights":
+		return fmt.Sprintf("%s/quote/%s/analyst-insights", baseURL, ticker)
+	case "news":
+		return fmt.Sprintf("%s/quote/%s/news", baseURL, ticker)
+	default:
+		return fmt.Sprintf("%s/quote/%s", baseURL, ticker)
+	}
+}
+
+// runComprehensiveStatsExtraction executes comprehensive statistics extraction
+func runComprehensiveStatsExtraction(ctx context.Context, client scrape.Client, ticker, runID string) error {
+	if ticker == "" {
+		return fmt.Errorf("ticker is required for comprehensive stats extraction")
+	}
+
+	fmt.Printf("COMPREHENSIVE STATISTICS EXTRACTION ticker=%s\n", ticker)
+
+	// Create a timeout context (30 seconds max)
+	extractionCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build URL for key-statistics endpoint
+	url := buildScrapeURL(ticker, "key-statistics")
+	body, meta, err := client.Fetch(extractionCtx, url)
+	
+	if err != nil {
+		return fmt.Errorf("failed to fetch %s: %w", url, err)
+	}
+
+	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+		meta.Host, meta.Status, meta.Bytes, meta.Gzip)
+
+	// Parse comprehensive statistics
+	comprehensiveDTO, err := scrape.ParseComprehensiveKeyStatistics(body, ticker, "NMS")
+	if err != nil {
+		return fmt.Errorf("failed to parse comprehensive statistics: %w", err)
+	}
+
+	// Print comprehensive statistics summary
+	printComprehensiveStatisticsSummary(comprehensiveDTO)
+
+	return nil
+}
+
+// printComprehensiveStatisticsSummary prints a summary of comprehensive statistics
+func printComprehensiveStatisticsSummary(dto *scrape.ComprehensiveKeyStatisticsDTO) {
+	fmt.Printf("COMPREHENSIVE STATISTICS: symbol=%s currency=%s\n", dto.Symbol, dto.Currency)
+	
+	// Current values
+	fmt.Printf("CURRENT VALUES:\n")
+	if dto.Current.MarketCap != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.MarketCap.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.MarketCap.Scaled) / multiplier
+		fmt.Printf("  Market Cap: %.2fB\n", actualValue/1e9)
+	}
+	if dto.Current.EnterpriseValue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EnterpriseValue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EnterpriseValue.Scaled) / multiplier
+		fmt.Printf("  Enterprise Value: %.2fB\n", actualValue/1e9)
+	}
+	if dto.Current.ForwardPE != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.ForwardPE.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.ForwardPE.Scaled) / multiplier
+		fmt.Printf("  Forward P/E: %.2f\n", actualValue)
+	}
+	if dto.Current.TrailingPE != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TrailingPE.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TrailingPE.Scaled) / multiplier
+		fmt.Printf("  Trailing P/E: %.2f\n", actualValue)
+	}
+	if dto.Current.PEGRatio != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.PEGRatio.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.PEGRatio.Scaled) / multiplier
+		fmt.Printf("  PEG Ratio: %.2f\n", actualValue)
+	}
+	if dto.Current.PriceSales != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.PriceSales.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.PriceSales.Scaled) / multiplier
+		fmt.Printf("  Price/Sales: %.2f\n", actualValue)
+	}
+	if dto.Current.PriceBook != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.PriceBook.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.PriceBook.Scaled) / multiplier
+		fmt.Printf("  Price/Book: %.2f\n", actualValue)
+	}
+	if dto.Current.EnterpriseValueRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EnterpriseValueRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EnterpriseValueRevenue.Scaled) / multiplier
+		fmt.Printf("  Enterprise Value/Revenue: %.2f\n", actualValue)
+	}
+	if dto.Current.EnterpriseValueEBITDA != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EnterpriseValueEBITDA.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EnterpriseValueEBITDA.Scaled) / multiplier
+		fmt.Printf("  Enterprise Value/EBITDA: %.2f\n", actualValue)
+	}
+
+	// Additional statistics
+	fmt.Printf("ADDITIONAL STATISTICS:\n")
+	if dto.Additional.Beta != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Additional.Beta.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Additional.Beta.Scaled) / multiplier
+		fmt.Printf("  Beta: %.2f\n", actualValue)
+	}
+	if dto.Additional.SharesOutstanding != nil {
+		fmt.Printf("  Shares Outstanding: %.2fB\n", float64(*dto.Additional.SharesOutstanding)/1e9)
+	}
+	if dto.Additional.ProfitMargin != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Additional.ProfitMargin.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Additional.ProfitMargin.Scaled) / multiplier
+		fmt.Printf("  Profit Margin: %.2f%%\n", actualValue)
+	}
+	if dto.Additional.OperatingMargin != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Additional.OperatingMargin.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Additional.OperatingMargin.Scaled) / multiplier
+		fmt.Printf("  Operating Margin: %.2f%%\n", actualValue)
+	}
+	if dto.Additional.ReturnOnAssets != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Additional.ReturnOnAssets.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Additional.ReturnOnAssets.Scaled) / multiplier
+		fmt.Printf("  Return on Assets: %.2f%%\n", actualValue)
+	}
+	if dto.Additional.ReturnOnEquity != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Additional.ReturnOnEquity.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Additional.ReturnOnEquity.Scaled) / multiplier
+		fmt.Printf("  Return on Equity: %.2f%%\n", actualValue)
+	}
+	
+	// Historical values
+	if len(dto.Historical) > 0 {
+		fmt.Printf("HISTORICAL VALUES:\n")
+		for _, quarter := range dto.Historical {
+			fmt.Printf("  %s:\n", quarter.Date)
+			if quarter.MarketCap != nil {
+				multiplier := float64(1)
+				for i := 0; i < quarter.MarketCap.Scale; i++ {
+					multiplier *= 10
+				}
+				actualValue := float64(quarter.MarketCap.Scaled) / multiplier
+				fmt.Printf("    Market Cap: %.2fB\n", actualValue/1e9)
+			}
+			if quarter.ForwardPE != nil {
+				multiplier := float64(1)
+				for i := 0; i < quarter.ForwardPE.Scale; i++ {
+					multiplier *= 10
+				}
+				actualValue := float64(quarter.ForwardPE.Scaled) / multiplier
+				fmt.Printf("    Forward P/E: %.2f\n", actualValue)
+			}
+			if quarter.TrailingPE != nil {
+				multiplier := float64(1)
+				for i := 0; i < quarter.TrailingPE.Scale; i++ {
+					multiplier *= 10
+				}
+				actualValue := float64(quarter.TrailingPE.Scaled) / multiplier
+				fmt.Printf("    Trailing P/E: %.2f\n", actualValue)
+			}
+		}
+	}
+}
+
+// runComprehensiveProfile executes the comprehensive profile command
+func runComprehensiveProfile(cmd *cobra.Command, args []string) error {
+	// Validate flags
+	if comprehensiveProfileConfig.Ticker == "" {
+		return fmt.Errorf("--ticker is required")
+	}
+
+	// Generate run ID if not provided
+	runID := globalConfig.RunID
+	if runID == "" {
+		runID = fmt.Sprintf("yfin_comprehensive_profile_%d", time.Now().Unix())
+	}
+
+	// Load configuration
+	loader := config.NewLoader(globalConfig.ConfigFile)
+	cfg, err := loader.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to load configuration: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+
+	// Get scrape configuration
+	scrapeCfg := cfg.GetScrapeConfig()
+	if !scrapeCfg.Enabled {
+		fmt.Fprintf(os.Stderr, "ERROR: Scraping is disabled in configuration\n")
+		os.Exit(ExitConfigError)
+	}
+
+	// Initialize observability
+	ctx := context.Background()
+	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
+	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
+	
+	obsvConfig := &obsv.Config{
+		ServiceName:       "yfinance-go",
+		ServiceVersion:    version,
+		Environment:       cfg.App.Env,
+		CollectorEndpoint: cfg.Observability.Tracing.OTLP.Endpoint,
+		TraceProtocol:     "grpc",
+		SampleRatio:       cfg.Observability.Tracing.OTLP.SampleRatio,
+		LogLevel:          cfg.Observability.Logs.Level,
+		MetricsAddr:       cfg.Observability.Metrics.Prometheus.Addr,
+		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
+		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
+	}
+	
+	if err := obsv.Init(ctx, obsvConfig); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+		os.Exit(ExitConfigError)
+	}
+	defer func() { _ = obsv.Shutdown(ctx) }()
+
+	// Create scrape client
+	scrapeClient, err := createScrapeClient(scrapeCfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to create scrape client: %v\n", err)
+		os.Exit(ExitGeneral)
+	}
+
+	// Execute comprehensive profile extraction
+	return runComprehensiveProfileExtraction(ctx, scrapeClient, comprehensiveProfileConfig.Ticker, runID)
+}
+
+// runComprehensiveProfileExtraction executes comprehensive profile extraction
+func runComprehensiveProfileExtraction(ctx context.Context, client scrape.Client, ticker, runID string) error {
+	if ticker == "" {
+		return fmt.Errorf("ticker is required for comprehensive profile extraction")
+	}
+
+	fmt.Printf("COMPREHENSIVE PROFILE EXTRACTION ticker=%s\n", ticker)
+
+	// Create a timeout context (30 seconds max)
+	extractionCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Build URL for profile endpoint
+	url := buildScrapeURL(ticker, "profile")
+	body, meta, err := client.Fetch(extractionCtx, url)
+	
+	if err != nil {
+		return fmt.Errorf("failed to fetch %s: %w", url, err)
+	}
+
+	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+		meta.Host, meta.Status, meta.Bytes, meta.Gzip)
+
+	// Parse comprehensive profile
+	comprehensiveDTO, err := scrape.ParseComprehensiveProfile(body, ticker, "NMS")
+	if err != nil {
+		return fmt.Errorf("failed to parse comprehensive profile: %w", err)
+	}
+
+	// Print comprehensive profile summary
+	printComprehensiveProfileSummary(comprehensiveDTO)
+
+	return nil
+}
+
+// printComprehensiveProfileSummary prints a summary of comprehensive profile
+func printComprehensiveProfileSummary(dto *scrape.ComprehensiveProfileDTO) {
+	fmt.Printf("COMPREHENSIVE PROFILE: symbol=%s\n", dto.Symbol)
+	
+	// Company Information
+	fmt.Printf("COMPANY INFORMATION:\n")
+	if dto.CompanyName != "" {
+		fmt.Printf("  Company Name: %s\n", dto.CompanyName)
+	}
+	if dto.ShortName != "" {
+		fmt.Printf("  Short Name: %s\n", dto.ShortName)
+	}
+	if dto.Address1 != "" {
+		fmt.Printf("  Address: %s\n", dto.Address1)
+	}
+	if dto.City != "" && dto.State != "" {
+		fmt.Printf("  City, State: %s, %s\n", dto.City, dto.State)
+	}
+	if dto.Zip != "" {
+		fmt.Printf("  ZIP: %s\n", dto.Zip)
+	}
+	if dto.Country != "" {
+		fmt.Printf("  Country: %s\n", dto.Country)
+	}
+	if dto.Phone != "" {
+		fmt.Printf("  Phone: %s\n", dto.Phone)
+	}
+	if dto.Website != "" {
+		fmt.Printf("  Website: %s\n", dto.Website)
+	}
+	if dto.Industry != "" {
+		fmt.Printf("  Industry: %s\n", dto.Industry)
+	}
+	if dto.Sector != "" {
+		fmt.Printf("  Sector: %s\n", dto.Sector)
+	}
+	if dto.FullTimeEmployees != nil {
+		fmt.Printf("  Full Time Employees: %d\n", *dto.FullTimeEmployees)
+	}
+	if dto.BusinessSummary != "" {
+		// Truncate business summary if too long
+		summary := dto.BusinessSummary
+		if len(summary) > 200 {
+			summary = summary[:200] + "..."
+		}
+		fmt.Printf("  Business Summary: %s\n", summary)
+	}
+
+	// Key Executives
+	if len(dto.Executives) > 0 {
+		fmt.Printf("KEY EXECUTIVES:\n")
+		for i, exec := range dto.Executives {
+			if i >= 5 { // Limit to top 5 executives
+				break
+			}
+			fmt.Printf("  %d. %s", i+1, exec.Name)
+			if exec.Title != "" {
+				fmt.Printf(" - %s", exec.Title)
+			}
+			if exec.YearBorn != nil {
+				fmt.Printf(" (Born: %d)", *exec.YearBorn)
+			}
+			if exec.TotalPay != nil {
+				fmt.Printf(" - Total Pay: $%.2fM", float64(*exec.TotalPay)/1e6)
+			}
+			fmt.Printf("\n")
+		}
+	}
+
+	// Additional Information
+	fmt.Printf("ADDITIONAL INFORMATION:\n")
+	if dto.MaxAge != nil {
+		fmt.Printf("  Max Age: %d\n", *dto.MaxAge)
+	}
+	if dto.AuditRisk != nil {
+		fmt.Printf("  Audit Risk: %d\n", *dto.AuditRisk)
+	}
+	if dto.BoardRisk != nil {
+		fmt.Printf("  Board Risk: %d\n", *dto.BoardRisk)
+	}
+	if dto.CompensationRisk != nil {
+		fmt.Printf("  Compensation Risk: %d\n", *dto.CompensationRisk)
+	}
+	if dto.ShareHolderRightsRisk != nil {
+		fmt.Printf("  Share Holder Rights Risk: %d\n", *dto.ShareHolderRightsRisk)
+	}
+	if dto.OverallRisk != nil {
+		fmt.Printf("  Overall Risk: %d\n", *dto.OverallRisk)
+	}
+}
+
+// printComprehensiveFinancialsSummary prints a summary of comprehensive financials
+func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO) {
+	fmt.Printf("COMPREHENSIVE FINANCIALS: symbol=%s currency=%s\n", dto.Symbol, dto.Currency)
+	
+	// Current values
+	fmt.Printf("CURRENT VALUES:\n")
+	if dto.Current.TotalRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TotalRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TotalRevenue.Scaled) / multiplier
+		fmt.Printf("  Total Revenue: %.0f\n", actualValue)
+	}
+	if dto.Current.CostOfRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.CostOfRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.CostOfRevenue.Scaled) / multiplier
+		fmt.Printf("  Cost of Revenue: %.0f\n", actualValue)
+	}
+	if dto.Current.GrossProfit != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.GrossProfit.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.GrossProfit.Scaled) / multiplier
+		fmt.Printf("  Gross Profit: %.0f\n", actualValue)
+	}
+	if dto.Current.OperatingIncome != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.OperatingIncome.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.OperatingIncome.Scaled) / multiplier
+		fmt.Printf("  Operating Income: %.0f\n", actualValue)
+	}
+	if dto.Current.NetIncomeCommonStockholders != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.NetIncomeCommonStockholders.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.NetIncomeCommonStockholders.Scaled) / multiplier
+		fmt.Printf("  Net Income: %.0f\n", actualValue)
+	}
+	if dto.Current.BasicEPS != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.BasicEPS.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.BasicEPS.Scaled) / multiplier
+		fmt.Printf("  Basic EPS: %.2f %s\n", actualValue, dto.Currency)
+	}
+	if dto.Current.DilutedEPS != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.DilutedEPS.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.DilutedEPS.Scaled) / multiplier
+		fmt.Printf("  Diluted EPS: %.2f %s\n", actualValue, dto.Currency)
+	}
+	if dto.Current.BasicAverageShares != nil {
+		fmt.Printf("  Basic Average Shares: %d\n", *dto.Current.BasicAverageShares)
+	}
+	if dto.Current.DilutedAverageShares != nil {
+		fmt.Printf("  Diluted Average Shares: %d\n", *dto.Current.DilutedAverageShares)
+	}
+	if dto.Current.TotalExpenses != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TotalExpenses.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TotalExpenses.Scaled) / multiplier
+		fmt.Printf("  Total Expenses: %.0f\n", actualValue)
+	}
+	if dto.Current.EBIT != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EBIT.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EBIT.Scaled) / multiplier
+		fmt.Printf("  EBIT: %.0f\n", actualValue)
+	}
+	if dto.Current.EBITDA != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EBITDA.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EBITDA.Scaled) / multiplier
+		fmt.Printf("  EBITDA: %.0f\n", actualValue)
+	}
+	if dto.Current.NormalizedEBITDA != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.NormalizedEBITDA.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.NormalizedEBITDA.Scaled) / multiplier
+		fmt.Printf("  Normalized EBITDA: %.0f\n", actualValue)
+	}
+	
+	// Balance Sheet values
+	fmt.Printf("\nBALANCE SHEET:\n")
+	if dto.Current.TotalAssets != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TotalAssets.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TotalAssets.Scaled) / multiplier
+		fmt.Printf("  Total Assets: %.0f\n", actualValue)
+	}
+	if dto.Current.TotalCapitalization != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TotalCapitalization.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TotalCapitalization.Scaled) / multiplier
+		fmt.Printf("  Total Capitalization: %.0f\n", actualValue)
+	}
+	if dto.Current.CommonStockEquity != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.CommonStockEquity.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.CommonStockEquity.Scaled) / multiplier
+		fmt.Printf("  Common Stock Equity: %.0f\n", actualValue)
+	}
+	if dto.Current.CapitalLeaseObligations != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.CapitalLeaseObligations.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.CapitalLeaseObligations.Scaled) / multiplier
+		fmt.Printf("  Capital Lease Obligations: %.0f\n", actualValue)
+	}
+	if dto.Current.NetTangibleAssets != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.NetTangibleAssets.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.NetTangibleAssets.Scaled) / multiplier
+		fmt.Printf("  Net Tangible Assets: %.0f\n", actualValue)
+	}
+	if dto.Current.WorkingCapital != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.WorkingCapital.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.WorkingCapital.Scaled) / multiplier
+		fmt.Printf("  Working Capital: %.0f\n", actualValue)
+	}
+	if dto.Current.InvestedCapital != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.InvestedCapital.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.InvestedCapital.Scaled) / multiplier
+		fmt.Printf("  Invested Capital: %.0f\n", actualValue)
+	}
+	if dto.Current.TangibleBookValue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TangibleBookValue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TangibleBookValue.Scaled) / multiplier
+		fmt.Printf("  Tangible Book Value: %.0f\n", actualValue)
+	}
+	if dto.Current.TotalDebt != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.TotalDebt.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.TotalDebt.Scaled) / multiplier
+		fmt.Printf("  Total Debt: %.0f\n", actualValue)
+	}
+	if dto.Current.ShareIssued != nil {
+		fmt.Printf("  Share Issued: %d\n", *dto.Current.ShareIssued)
+	}
+	
+	// Cash Flow values
+	fmt.Printf("\nCASH FLOW:\n")
+	if dto.Current.OperatingCashFlow != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.OperatingCashFlow.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.OperatingCashFlow.Scaled) / multiplier
+		fmt.Printf("  Operating Cash Flow: %.0f\n", actualValue)
+	}
+	if dto.Current.InvestingCashFlow != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.InvestingCashFlow.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.InvestingCashFlow.Scaled) / multiplier
+		fmt.Printf("  Investing Cash Flow: %.0f\n", actualValue)
+	}
+	if dto.Current.FinancingCashFlow != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.FinancingCashFlow.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.FinancingCashFlow.Scaled) / multiplier
+		fmt.Printf("  Financing Cash Flow: %.0f\n", actualValue)
+	}
+	if dto.Current.EndCashPosition != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.EndCashPosition.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.EndCashPosition.Scaled) / multiplier
+		fmt.Printf("  End Cash Position: %.0f\n", actualValue)
+	}
+	if dto.Current.CapitalExpenditure != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.CapitalExpenditure.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.CapitalExpenditure.Scaled) / multiplier
+		fmt.Printf("  Capital Expenditure: %.0f\n", actualValue)
+	}
+	if dto.Current.IssuanceOfDebt != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.IssuanceOfDebt.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.IssuanceOfDebt.Scaled) / multiplier
+		fmt.Printf("  Issuance of Debt: %.0f\n", actualValue)
+	}
+	if dto.Current.RepaymentOfDebt != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.RepaymentOfDebt.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.RepaymentOfDebt.Scaled) / multiplier
+		fmt.Printf("  Repayment of Debt: %.0f\n", actualValue)
+	}
+	if dto.Current.RepurchaseOfCapitalStock != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.RepurchaseOfCapitalStock.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.RepurchaseOfCapitalStock.Scaled) / multiplier
+		fmt.Printf("  Repurchase of Capital Stock: %.0f\n", actualValue)
+	}
+	if dto.Current.FreeCashFlow != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Current.FreeCashFlow.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Current.FreeCashFlow.Scaled) / multiplier
+		fmt.Printf("  Free Cash Flow: %.0f\n", actualValue)
+	}
+	
+	// Historical values
+	fmt.Printf("HISTORICAL VALUES:\n")
+	if dto.Historical.Q2_2025.TotalRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Historical.Q2_2025.TotalRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Historical.Q2_2025.TotalRevenue.Scaled) / multiplier
+		fmt.Printf("  Q2 2025 Revenue: %.0f\n", actualValue)
+	}
+	if dto.Historical.Q1_2025.TotalRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Historical.Q1_2025.TotalRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Historical.Q1_2025.TotalRevenue.Scaled) / multiplier
+		fmt.Printf("  Q1 2025 Revenue: %.0f\n", actualValue)
+	}
+	if dto.Historical.Q4_2024.TotalRevenue != nil {
+		multiplier := float64(1)
+		for i := 0; i < dto.Historical.Q4_2024.TotalRevenue.Scale; i++ {
+			multiplier *= 10
+		}
+		actualValue := float64(dto.Historical.Q4_2024.TotalRevenue.Scaled) / multiplier
+		fmt.Printf("  Q4 2024 Revenue: %.0f\n", actualValue)
+	}
+	
+	fmt.Printf("EXTRACTED: %d fields\n", countFinancialsFields(dto))
+}
+
+// countFinancialsFields counts the number of extracted fields in financials data
+func countFinancialsFields(dto *scrape.ComprehensiveFinancialsDTO) int {
+	count := 0
+	
+	// Count current fields
+	if dto.Current.TotalRevenue != nil { count++ }
+	if dto.Current.CostOfRevenue != nil { count++ }
+	if dto.Current.GrossProfit != nil { count++ }
+	if dto.Current.OperatingIncome != nil { count++ }
+	if dto.Current.NetIncomeCommonStockholders != nil { count++ }
+	if dto.Current.BasicEPS != nil { count++ }
+	if dto.Current.DilutedEPS != nil { count++ }
+	if dto.Current.EBITDA != nil { count++ }
+	
+	// Count historical fields
+	if dto.Historical.Q2_2025.TotalRevenue != nil { count++ }
+	if dto.Historical.Q1_2025.TotalRevenue != nil { count++ }
+	if dto.Historical.Q4_2024.TotalRevenue != nil { count++ }
+	
+	return count
 }
 
 // runVersion executes the version command

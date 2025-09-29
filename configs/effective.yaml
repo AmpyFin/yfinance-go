@@ -85,6 +85,25 @@ bus:
     reset_timeout_ms: 30000
     half_open_probes: 3
 
+scrape:
+  enabled: true
+  user_agent: "Mozilla/5.0 (Ampy yfinance-go scraper)"
+  timeout_ms: 15000
+  qps: 3.0
+  burst: 5
+  retry:
+    attempts: 4
+    base_ms: 300
+    max_delay_ms: 4000
+  robots_policy: "enforce"
+  cache_ttl_ms: 60000
+  endpoints:
+    key_statistics: true
+    financials: true
+    analysis: true
+    profile: true
+    news: true
+
 observability:
   logs:
     level: "info"                     # info | debug | warn | error

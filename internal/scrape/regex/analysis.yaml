@@ -1,0 +1,39 @@
+# Analysis Regex Patterns for Yahoo Finance
+# These patterns extract data from the HTML tables on analysis pages
+
+# Earnings Estimate patterns
+earnings_estimate:
+  section_pattern: 'data-testid="earningsEstimate".*?</section>'
+  currency_pattern: 'Currency in ([A-Z]{3})'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td> <td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td> </tr>'
+
+# Revenue Estimate patterns
+revenue_estimate:
+  section_pattern: 'data-testid="revenueEstimate".*?</section>'
+  currency_pattern: 'Currency in ([A-Z]{3})'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td> <td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td> </tr>'
+
+# Earnings History patterns
+earnings_history:
+  section_pattern: 'data-testid="earningsHistory".*?</section>'
+  currency_pattern: 'Currency in ([A-Z]{3})'
+  header_pattern: '<th class="yf-17yshpm">([^<]+)</th>'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td>(.*?)</tr>'
+  table_cell_pattern: '<td class="yf-17yshpm">([^<]*)</td>'
+
+# EPS Trend patterns
+eps_trend:
+  section_pattern: 'data-testid="epsTrend".*?</section>'
+  currency_pattern: 'Currency in ([A-Z]{3})'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td> <td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td> </tr>'
+
+# EPS Revisions patterns
+eps_revisions:
+  section_pattern: 'data-testid="epsRevisions".*?</section>'
+  currency_pattern: 'Currency in ([A-Z]{3})'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td> <td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td> </tr>'
+
+# Growth Estimate patterns
+growth_estimate:
+  section_pattern: 'data-testid="growthEstimate".*?</section>'
+  table_row_pattern: '<tr class="yf-17yshpm"><td class="yf-17yshpm">([^<]+)</td> <td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td><td class="yf-17yshpm">([^<]*)</td> </tr>'

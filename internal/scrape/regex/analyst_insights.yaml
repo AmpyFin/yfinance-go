@@ -1,0 +1,17 @@
+# Analyst Insights Regex Patterns for Yahoo Finance
+# These patterns extract analyst insights data from embedded JSON in HTML
+
+# Combined financial data pattern (primary approach)
+financial_data:
+  combined_pattern: '"financialData":\{[^}]*"currentPrice":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"targetMeanPrice":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"targetMedianPrice":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"targetHighPrice":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"targetLowPrice":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"recommendationMean":\{[^}]*"raw":([^,]+)[^}]*\}[^}]*"recommendationKey":"([^"]+)"[^}]*"numberOfAnalystOpinions":\{[^}]*"raw":([^,]+)'
+
+# Individual field patterns (fallback approach)
+individual_fields:
+  current_price: 'currentPrice\\":\{\\\"raw\\\":([^,}]+)'
+  target_mean_price: 'targetMeanPrice\\":\{\\\"raw\\\":([^,}]+)'
+  target_median_price: 'targetMedianPrice\\":\{\\\"raw\\\":([^,}]+)'
+  target_high_price: 'targetHighPrice\\":\{\\\"raw\\\":([^,}]+)'
+  target_low_price: 'targetLowPrice\\":\{\\\"raw\\\":([^,}]+)'
+  recommendation_mean: 'recommendationMean\\":\{\\\"raw\\\":([^,}]+)'
+  recommendation_key: 'recommendationKey\\":\\\"([^"\\]+)\\\"'
+  number_of_analysts: 'numberOfAnalystOpinions\\":\{\\\"raw\\\":([^,}]+)'

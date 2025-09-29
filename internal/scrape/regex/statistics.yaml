@@ -1,0 +1,90 @@
+# Statistics Regex Patterns for Yahoo Finance
+# These patterns extract key statistics data from HTML tables
+# Made dynamic to avoid hardcoded dates that break when new quarters are released
+
+# Current values (column 1 in the table)
+current:
+  market_cap: "Market Cap</td>.*?<td[^>]*>([^<]+)</td>"
+  enterprise_value: "Enterprise Value</td>.*?<td[^>]*>([^<]+)</td>"
+  trailing_pe: "Trailing P/E</td>.*?<td[^>]*>([^<]+)</td>"
+  forward_pe: "Forward P/E</td>.*?<td[^>]*>([^<]+)</td>"
+  peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>([^<]+)</td>"
+  price_sales: "Price/Sales</td>.*?<td[^>]*>([^<]+)</td>"
+  price_book: "Price/Book</td>.*?<td[^>]*>([^<]+)</td>"
+  enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>([^<]+)</td>"
+  enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>([^<]+)</td>"
+
+# Historical values - Dynamic column patterns (columns 2-6 in the table)
+# These patterns will work regardless of specific dates
+historical_columns:
+  # Column 2 (most recent quarter)
+  column_2:
+    market_cap: "Market Cap</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value: "Enterprise Value</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    trailing_pe: "Trailing P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    forward_pe: "Forward P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_sales: "Price/Sales</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_book: "Price/Book</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+
+  # Column 3 (second most recent quarter)
+  column_3:
+    market_cap: "Market Cap</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value: "Enterprise Value</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    trailing_pe: "Trailing P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    forward_pe: "Forward P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_sales: "Price/Sales</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_book: "Price/Book</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+
+  # Column 4 (third quarter back)
+  column_4:
+    market_cap: "Market Cap</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value: "Enterprise Value</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    trailing_pe: "Trailing P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    forward_pe: "Forward P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_sales: "Price/Sales</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_book: "Price/Book</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+
+  # Column 5 (fourth quarter back)
+  column_5:
+    market_cap: "Market Cap</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value: "Enterprise Value</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    trailing_pe: "Trailing P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    forward_pe: "Forward P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_sales: "Price/Sales</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_book: "Price/Book</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+
+  # Column 6 (oldest quarter)
+  column_6:
+    market_cap: "Market Cap</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value: "Enterprise Value</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    trailing_pe: "Trailing P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    forward_pe: "Forward P/E</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    peg_ratio: "PEG Ratio \\(5yr expected\\)</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_sales: "Price/Sales</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    price_book: "Price/Book</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_revenue: "Enterprise Value/Revenue</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+    enterprise_value_ebitda: "Enterprise Value/EBITDA</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>[^<]+</td>.*?<td[^>]*>([^<]+)</td>"
+
+# Additional statistics patterns (from other sections of the page)
+additional:
+  beta: "Beta \\(5Y Monthly\\)</td>.*?<td[^>]*>([^<]+)</td>"
+  shares_outstanding: "Shares Outstanding.*?</td>.*?<td[^>]*>([^<]+)</td>"
+  profit_margin: "Profit Margin.*?</td>.*?<td[^>]*>([^<]+)</td>"
+  operating_margin: "Operating Margin.*?</td>.*?<td[^>]*>([^<]+)</td>"
+  return_on_assets: "Return on Assets.*?</td>.*?<td[^>]*>([^<]+)</td>"
+  return_on_equity: "Return on Equity.*?</td>.*?<td[^>]*>([^<]+)</td>"
+
+# Date extraction pattern - dynamically extract column headers
+date_headers: '<th[^>]*>([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})</th>'
