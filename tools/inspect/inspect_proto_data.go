@@ -31,7 +31,7 @@ func InspectProtoData() {
 	
 	for _, ticker := range tickers {
 		fmt.Printf("🔍 ANALYZING %s\n", ticker)
-		fmt.Printf("=" + strings.Repeat("=", len(ticker)+11) + "\n\n")
+		fmt.Printf("%s\n\n", "=" + strings.Repeat("=", len(ticker)+11))
 		
 		// Analyze financials
 		if err := analyzeFinancials(client, ticker, runID, producer); err != nil {
@@ -48,7 +48,7 @@ func InspectProtoData() {
 			fmt.Printf("❌ News error: %v\n\n", err)
 		}
 		
-		fmt.Printf("\n" + strings.Repeat("-", 80) + "\n\n")
+		fmt.Printf("\n%s\n\n", strings.Repeat("-", 80))
 	}
 }
 

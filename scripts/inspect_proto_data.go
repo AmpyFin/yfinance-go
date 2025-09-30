@@ -1,4 +1,4 @@
-package inspect
+package main
 
 import (
 	"context"
@@ -37,7 +37,7 @@ func InspectProtoData() {
 	
 	for _, ticker := range tickers {
 		fmt.Printf("🔍 ANALYZING %s\n", ticker)
-		fmt.Printf("=" + strings.Repeat("=", len(ticker)+11) + "\n\n")
+		fmt.Printf("%s\n\n", "=" + strings.Repeat("=", len(ticker)+11))
 		
 		// Analyze financials
 		if err := analyzeFinancials(client, mapper, ticker); err != nil {
@@ -54,7 +54,7 @@ func InspectProtoData() {
 			fmt.Printf("❌ News error: %v\n\n", err)
 		}
 		
-		fmt.Printf("\n" + strings.Repeat("-", 80) + "\n\n")
+		fmt.Printf("\n%s\n\n", strings.Repeat("-", 80))
 	}
 }
 
@@ -82,8 +82,14 @@ func analyzeFinancials(client scrape.Client, mapper *emit.ScrapeMapper, ticker s
 	// Convert to simple DTO for mapping
 	simpleDTO := convertToFinancialsDTO(dto)
 	
+	// Create mapper
+	financialsMapper := emit.NewScrapeMapper(emit.ScrapeMapperConfig{
+		Source:   "yfinance-go/scrape",
+		Producer: "yfinance-go-inspector",
+	})
+	
 	// Map to ampy-proto
-	snapshot, err := emit.MapFinancialsDTO(simpleDTO, runID, mapperConfig.Producer)
+	snapshot, err := financialsMapper.MapFinancials(context.Background(), simpleDTO)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}
@@ -179,17 +185,22 @@ func analyzeProfile(client scrape.Client, mapper *emit.ScrapeMapper, ticker stri
 		return fmt.Errorf("parse failed: %w", err)
 	}
 	
+	// Create mapper
+	profileMapper := emit.NewScrapeMapper(emit.ScrapeMapperConfig{
+		Source:   "yfinance-go/scrape",
+		Producer: "yfinance-go-inspector",
+	})
+	
 	// Map to result
-	result, err := emit.MapProfileDTO(dto, runID, mapperConfig.Producer)
+	result, err := profileMapper.MapProfile(context.Background(), dto)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}
 	
 	// Display results
-	fmt.Printf("🏢 Security: %s (MIC: %s)\n", result.Security.Symbol, result.Security.Mic)
-	fmt.Printf("📄 Content Type: %s\n", result.ContentType)
-	fmt.Printf("🔗 Schema: %s\n", result.SchemaFQDN)
-	fmt.Printf("📊 JSON Size: %d bytes\n", len(result.JSONBytes))
+	fmt.Printf("📊 JSON Size: %d bytes\n", len(result))
+	fmt.Printf("📄 Content Type: application/json\n")
+	fmt.Printf("🔗 Schema: ampy.profile.v1\n")
 	
 	// Display underlying DTO data
 	fmt.Printf("\n🔍 UNDERLYING PROFILE DATA:\n")
@@ -217,7 +228,7 @@ func analyzeProfile(client scrape.Client, mapper *emit.ScrapeMapper, ticker stri
 	
 	// Display JSON payload (truncated)
 	fmt.Printf("\n📄 JSON PAYLOAD (first 500 chars):\n")
-	jsonStr := string(result.JSONBytes)
+	jsonStr := string(result)
 	if len(jsonStr) > 500 {
 		jsonStr = jsonStr[:500] + "..."
 	}
@@ -248,8 +259,14 @@ func analyzeNews(client scrape.Client, mapper *emit.ScrapeMapper, ticker string)
 		return fmt.Errorf("parse failed: %w", err)
 	}
 	
+	// Create mapper
+	newsMapper := emit.NewScrapeMapper(emit.ScrapeMapperConfig{
+		Source:   "yfinance-go/scrape",
+		Producer: "yfinance-go-inspector",
+	})
+	
 	// Map to ampy-proto
-	protoArticles, err := emit.MapNewsItems(articles, ticker, runID, mapperConfig.Producer)
+	protoArticles, err := newsMapper.MapNews(context.Background(), articles, ticker)
 	if err != nil {
 		return fmt.Errorf("mapping failed: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/AmpyFin/yfinance-go/internal/config"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNewOrchestrator(t *testing.T) {
@@ -142,6 +143,9 @@ func TestOrchestratorShortRun(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping orchestrator integration test in short mode")
 	}
+	
+	// Clear any existing metrics to avoid duplicate registration
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 	
 	// Create a temporary universe file with a single ticker
 	tempDir := t.TempDir()

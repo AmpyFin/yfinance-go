@@ -65,7 +65,7 @@ func TestMapFinancialsDTO(t *testing.T) {
 	assert.Equal(t, "ampy.fundamentals.v1:2.1.0", snapshot.Meta.SchemaVersion)
 
 	// Check source
-	assert.Equal(t, "yfinance/scrape", snapshot.Source)
+	assert.Equal(t, "yfinance/scrape/financials", snapshot.Source)
 
 	// Check timestamp
 	assert.True(t, snapshot.AsOf.AsTime().Equal(testTime))

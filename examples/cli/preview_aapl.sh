@@ -9,9 +9,12 @@ echo "=== yfinance-go CLI Preview Examples for AAPL ==="
 echo "================================================="
 
 # Configuration
-CONFIG_FILE="configs/example.dev.yaml"
+CONFIG_FILE="../../configs/effective.yaml"
 TICKER="AAPL"
 RUN_ID="cli-preview-$(date +%s)"
+
+# Set the path to the yfin binary
+YFIN_CMD="../../yfin"
 
 # Check if config file exists
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -37,7 +40,7 @@ run_command() {
 
 # Example 1: Basic Key Statistics Preview
 run_command "Basic Key Statistics Preview" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -45,7 +48,7 @@ run_command "Basic Key Statistics Preview" \
 
 # Example 2: Multiple Endpoints JSON Preview
 run_command "Multiple Endpoints JSON Preview" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoints key-statistics,financials,analysis,profile \
@@ -53,7 +56,7 @@ run_command "Multiple Endpoints JSON Preview" \
 
 # Example 3: News Articles Preview
 run_command "News Articles Preview" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint news \
@@ -61,7 +64,7 @@ run_command "News Articles Preview" \
 
 # Example 4: Proto Summary Preview
 run_command "Proto Summary Preview" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoints key-statistics,financials,analysis \
@@ -69,7 +72,7 @@ run_command "Proto Summary Preview" \
 
 # Example 5: Endpoint Health Check
 run_command "Endpoint Health Check" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -81,7 +84,7 @@ echo "--- Fallback Strategy Examples ---"
 
 # Test API-only mode (may fail for some endpoints)
 run_command "API-Only Mode Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint quote \
@@ -90,7 +93,7 @@ run_command "API-Only Mode Test" \
 
 # Test scrape-only mode
 run_command "Scrape-Only Mode Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -99,7 +102,7 @@ run_command "Scrape-Only Mode Test" \
 
 # Test automatic fallback
 run_command "Automatic Fallback Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -112,7 +115,7 @@ echo "--- Performance and Rate Limiting Examples ---"
 
 # Conservative rate limiting
 run_command "Conservative Rate Limiting" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -122,7 +125,7 @@ run_command "Conservative Rate Limiting" \
 
 # With session rotation
 run_command "With Session Rotation" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -135,7 +138,7 @@ echo "--- Debug and Troubleshooting Examples ---"
 
 # Debug mode
 run_command "Debug Mode" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -144,7 +147,7 @@ run_command "Debug Mode" \
 
 # Dry run mode
 run_command "Dry Run Mode" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -156,13 +159,13 @@ echo "--- Configuration Examples ---"
 
 # Print effective configuration
 run_command "Print Effective Configuration" \
-    yfin config \
+    $YFIN_CMD config \
     ${CONFIG_FILE:+--file "$CONFIG_FILE"} \
     --print-effective
 
 # Validate configuration
 run_command "Validate Configuration" \
-    yfin config \
+    $YFIN_CMD config \
     ${CONFIG_FILE:+--file "$CONFIG_FILE"} \
     --validate
 
@@ -173,7 +176,7 @@ echo "--- Comprehensive Data Collection ---"
 # Collect all available data types
 ENDPOINTS="key-statistics,financials,analysis,profile,news"
 run_command "All Endpoints Preview" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoints "$ENDPOINTS" \
@@ -185,7 +188,7 @@ echo "--- Error Handling Examples ---"
 
 # Test with invalid ticker (should fail gracefully)
 run_command "Invalid Ticker Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "INVALID_TICKER_12345" \
     --endpoint key-statistics \
@@ -193,7 +196,7 @@ run_command "Invalid Ticker Test" \
 
 # Test with very short timeout (should timeout)
 run_command "Timeout Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
     --endpoint key-statistics \
@@ -206,7 +209,7 @@ echo "--- International Ticker Examples ---"
 
 # Test Hong Kong stock
 run_command "Hong Kong Stock (0700.HK)" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "0700.HK" \
     --endpoint key-statistics \
@@ -214,7 +217,7 @@ run_command "Hong Kong Stock (0700.HK)" \
 
 # Test European stock
 run_command "European Stock (SAP)" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "SAP" \
     --endpoint key-statistics \

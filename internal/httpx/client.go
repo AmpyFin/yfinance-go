@@ -287,7 +287,10 @@ func (c *Client) calculateBackoff(attempt int) time.Duration {
 	exponentialDelay := baseDelay * time.Duration(math.Pow(2, float64(attempt)))
 	
 	// Add jitter
-	jitter := time.Duration(rand.Intn(c.config.BackoffJitterMs)) * time.Millisecond
+	var jitter time.Duration
+	if c.config.BackoffJitterMs > 0 {
+		jitter = time.Duration(rand.Intn(c.config.BackoffJitterMs)) * time.Millisecond
+	}
 	
 	// Cap at max delay
 	totalDelay := exponentialDelay + jitter
