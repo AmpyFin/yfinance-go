@@ -1,0 +1,82 @@
+# Soak Test Universe - Diverse ticker set for comprehensive testing
+# Core US Large Cap
+AAPL
+MSFT
+TSM
+BABA
+TSLA
+NVDA
+GOOGL
+AMZN
+META
+NFLX
+
+# US Mid/Small Cap
+ROKU
+PLTR
+RBLX
+COIN
+SNOW
+DDOG
+CRWD
+ZM
+SHOP
+SQ
+
+# International - Europe
+ASML
+SAP
+NESN.SW
+MC.PA
+RMS.PA
+ADYEN.AS
+SPOT
+
+# International - Asia Pacific
+005930.KS
+000001.SS
+0700.HK
+9988.HK
+6758.T
+7203.T
+2330.TW
+
+# ADRs and Non-USD
+NIO
+LI
+XPEV
+PDD
+JD
+TME
+BILI
+
+# Crypto-related
+MSTR
+RIOT
+MARA
+HOOD
+
+# REITs and Utilities
+SPG
+PLD
+AMT
+NEE
+SO
+DUK
+
+# Healthcare and Biotech
+JNJ
+PFE
+UNH
+ABBV
+MRNA
+BNTX
+NVAX
+
+# Financial Services
+JPM
+BAC
+GS
+V
+MA
+PYPL

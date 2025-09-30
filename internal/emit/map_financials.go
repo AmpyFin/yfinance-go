@@ -58,7 +58,7 @@ func MapFinancialsDTO(dto *scrape.FinancialsDTO, runID, producer string) (*funda
 	return &fundamentalsv1.FundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
-		Source:   "yfinance/scrape",
+		Source:   "yfinance/scrape/financials",
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil
@@ -92,7 +92,7 @@ func MapComprehensiveFinancialsDTO(dto *scrape.ComprehensiveFinancialsDTO, runID
 		currentSnapshot := &fundamentalsv1.FundamentalsSnapshot{
 			Security: security,
 			Lines:    currentLines,
-			Source:   "yfinance/scrape",
+			Source:   "yfinance/scrape/comprehensive-financials",
 			AsOf:     timestamppb.New(dto.AsOf),
 			Meta:     meta,
 		}
@@ -576,7 +576,7 @@ func MapKeyStatisticsDTO(dto *scrape.ComprehensiveKeyStatisticsDTO, runID, produ
 	return &fundamentalsv1.FundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
-		Source:   "yfinance/scrape",
+		Source:   "yfinance/scrape/key-statistics",
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil
@@ -706,7 +706,7 @@ func MapAnalysisDTO(dto *scrape.ComprehensiveAnalysisDTO, runID, producer string
 	return &fundamentalsv1.FundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
-		Source:   "yfinance/scrape",
+		Source:   "yfinance/scrape/analysis",
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil
@@ -834,7 +834,151 @@ func MapAnalystInsightsDTO(dto *scrape.AnalystInsightsDTO, runID, producer strin
 	return &fundamentalsv1.FundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
-		Source:   "yfinance/scrape",
+		Source:   "yfinance/scrape/analyst-insights",
+		AsOf:     timestamppb.New(dto.AsOf),
+		Meta:     meta,
+	}, nil
+}
+
+// MapBalanceSheetDTO converts ComprehensiveFinancialsDTO to ampy.fundamentals.v1.FundamentalsSnapshot for balance sheet data
+func MapBalanceSheetDTO(dto *scrape.ComprehensiveFinancialsDTO, runID, producer string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	if dto == nil {
+		return nil, fmt.Errorf("ComprehensiveFinancialsDTO cannot be nil")
+	}
+
+	// Create security
+	security := &commonv1.SecurityId{
+		Symbol: dto.Symbol,
+		Mic:    normalizeMIC(dto.Market),
+	}
+
+	// Create metadata
+	meta := &commonv1.Meta{
+		RunId:         runID,
+		Source:        "yfinance-go/scrape",
+		Producer:      producer,
+		SchemaVersion: "ampy.fundamentals.v1:2.1.0",
+	}
+
+	// Use current time as period (balance sheet data is point-in-time)
+	now := dto.AsOf
+	periodStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	periodEnd := periodStart.Add(24 * time.Hour)
+
+	var lines []*fundamentalsv1.LineItem
+
+	// Map balance sheet line items
+	if dto.Current.TotalAssets != nil {
+		line := createLineItem("total_assets", dto.Current.TotalAssets, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.TotalDebt != nil {
+		line := createLineItem("total_debt", dto.Current.TotalDebt, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.CommonStockEquity != nil {
+		line := createLineItem("shareholders_equity", dto.Current.CommonStockEquity, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.WorkingCapital != nil {
+		line := createLineItem("working_capital", dto.Current.WorkingCapital, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.TangibleBookValue != nil {
+		line := createLineItem("tangible_book_value", dto.Current.TangibleBookValue, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	return &fundamentalsv1.FundamentalsSnapshot{
+		Security: security,
+		Lines:    lines,
+		Source:   "yfinance/scrape/balance-sheet",
+		AsOf:     timestamppb.New(dto.AsOf),
+		Meta:     meta,
+	}, nil
+}
+
+// MapCashFlowDTO converts ComprehensiveFinancialsDTO to ampy.fundamentals.v1.FundamentalsSnapshot for cash flow data
+func MapCashFlowDTO(dto *scrape.ComprehensiveFinancialsDTO, runID, producer string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	if dto == nil {
+		return nil, fmt.Errorf("ComprehensiveFinancialsDTO cannot be nil")
+	}
+
+	// Create security
+	security := &commonv1.SecurityId{
+		Symbol: dto.Symbol,
+		Mic:    normalizeMIC(dto.Market),
+	}
+
+	// Create metadata
+	meta := &commonv1.Meta{
+		RunId:         runID,
+		Source:        "yfinance-go/scrape",
+		Producer:      producer,
+		SchemaVersion: "ampy.fundamentals.v1:2.1.0",
+	}
+
+	// Use current time as period (cash flow data is point-in-time)
+	now := dto.AsOf
+	periodStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	periodEnd := periodStart.Add(24 * time.Hour)
+
+	var lines []*fundamentalsv1.LineItem
+
+	// Map cash flow line items
+	if dto.Current.OperatingCashFlow != nil {
+		line := createLineItem("operating_cash_flow", dto.Current.OperatingCashFlow, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.InvestingCashFlow != nil {
+		line := createLineItem("investing_cash_flow", dto.Current.InvestingCashFlow, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.FinancingCashFlow != nil {
+		line := createLineItem("financing_cash_flow", dto.Current.FinancingCashFlow, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.FreeCashFlow != nil {
+		line := createLineItem("free_cash_flow", dto.Current.FreeCashFlow, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.Current.CapitalExpenditure != nil {
+		line := createLineItem("capital_expenditure", dto.Current.CapitalExpenditure, dto.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	return &fundamentalsv1.FundamentalsSnapshot{
+		Security: security,
+		Lines:    lines,
+		Source:   "yfinance/scrape/cash-flow",
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil

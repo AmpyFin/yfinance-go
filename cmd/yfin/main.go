@@ -19,6 +19,7 @@ import (
 	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/AmpyFin/yfinance-go/internal/obsv"
 	"github.com/AmpyFin/yfinance-go/internal/scrape"
+	"github.com/AmpyFin/yfinance-go/internal/soak"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
 	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 )
@@ -117,6 +118,23 @@ type ConfigConfig struct {
 	JSON           bool
 }
 
+// Soak command configuration
+type SoakConfig struct {
+	UniverseFile  string
+	Endpoints     string
+	Fallback      string
+	Duration      time.Duration
+	Concurrency   int
+	QPS           float64
+	Preview       bool
+	Publish       bool
+	Env           string
+	TopicPrefix   string
+	ProbeInterval time.Duration
+	FailureRate   float64
+	MemoryCheck   bool
+}
+
 var (
 	globalConfig GlobalConfig
 	pullConfig   PullConfig
@@ -126,6 +144,7 @@ var (
 	comprehensiveStatsConfig ComprehensiveStatsConfig
 	comprehensiveProfileConfig ComprehensiveProfileConfig
 	configConfig ConfigConfig
+	soakConfig   SoakConfig
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -241,6 +260,30 @@ var versionCmd = &cobra.Command{
 	RunE:  runVersion,
 }
 
+// soakCmd represents the soak test command
+var soakCmd = &cobra.Command{
+	Use:   "soak",
+	Short: "Run comprehensive soak tests for stability and robustness",
+	Long: `Run production-like soak tests across a diverse ticker universe to validate:
+- Stability and throughput under sustained load
+- Backoff and retry behavior under rate limiting
+- Robots.txt compliance and session rotation
+- API vs scrape correctness validation
+- Memory and goroutine leak detection
+- End-to-end pipeline robustness
+
+Examples:
+  # Short smoke test (10 minutes)
+  yfin soak --universe-file testdata/universe/soak.txt --endpoints key-statistics,financials,analysis,profile,news --fallback auto --duration 10m --concurrency 8 --qps 5 --preview
+
+  # Full soak test (2 hours)
+  yfin soak --universe-file testdata/universe/soak.txt --endpoints key-statistics,financials,analysis,profile,news --fallback auto --duration 2h --concurrency 12 --qps 5 --preview
+
+  # With publishing enabled
+  yfin soak --universe-file testdata/universe/soak.txt --endpoints news --fallback auto --duration 30m --concurrency 8 --qps 3 --publish --env dev --topic-prefix ampy.dev`,
+	RunE: runSoak,
+}
+
 func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVar(&globalConfig.ConfigFile, "config", "", "ampy-config file (optional)")
@@ -308,6 +351,22 @@ func init() {
 	configCmd.Flags().BoolVar(&configConfig.PrintEffective, "print-effective", false, "Print effective configuration")
 	configCmd.Flags().BoolVar(&configConfig.JSON, "json", false, "Output in JSON format")
 
+	// Soak command flags
+	soakCmd.Flags().StringVar(&soakConfig.UniverseFile, "universe-file", "", "File containing list of tickers to test (required)")
+	soakCmd.Flags().StringVar(&soakConfig.Endpoints, "endpoints", "key-statistics,financials,analysis,profile,news", "Comma-separated list of endpoints to test")
+	soakCmd.Flags().StringVar(&soakConfig.Fallback, "fallback", "auto", "Fallback strategy: auto, api-only, scrape-only")
+	soakCmd.Flags().DurationVar(&soakConfig.Duration, "duration", 2*time.Hour, "Duration to run soak test")
+	soakCmd.Flags().IntVar(&soakConfig.Concurrency, "concurrency", 12, "Number of concurrent workers")
+	soakCmd.Flags().Float64Var(&soakConfig.QPS, "qps", 5.0, "Target queries per second")
+	soakCmd.Flags().BoolVar(&soakConfig.Preview, "preview", false, "Enable preview mode")
+	soakCmd.Flags().BoolVar(&soakConfig.Publish, "publish", false, "Enable publishing to bus")
+	soakCmd.Flags().StringVar(&soakConfig.Env, "env", "dev", "Environment for publishing")
+	soakCmd.Flags().StringVar(&soakConfig.TopicPrefix, "topic-prefix", "ampy.dev", "Topic prefix for publishing")
+	soakCmd.Flags().DurationVar(&soakConfig.ProbeInterval, "probe-interval", 1*time.Hour, "Interval for correctness probes")
+	soakCmd.Flags().Float64Var(&soakConfig.FailureRate, "failure-rate", 0.1, "Simulated failure rate for testing (0.0-1.0)")
+	soakCmd.Flags().BoolVar(&soakConfig.MemoryCheck, "memory-check", true, "Enable memory and goroutine leak detection")
+	soakCmd.MarkFlagRequired("universe-file")
+
 	// Add subcommands
 	rootCmd.AddCommand(pullCmd)
 	rootCmd.AddCommand(quoteCmd)
@@ -316,6 +375,7 @@ func init() {
 	rootCmd.AddCommand(comprehensiveStatsCmd)
 	rootCmd.AddCommand(comprehensiveProfileCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(soakCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 
@@ -3082,6 +3142,46 @@ func getTimeBounds(lines []*fundamentalsv1.LineItem) (time.Time, time.Time) {
 	}
 	
 	return earliest, latest
+}
+
+// runSoak executes the soak test command
+func runSoak(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+	
+	// Load configuration
+	loader := config.NewLoader(globalConfig.ConfigFile)
+	cfg, err := loader.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	
+	// Initialize soak test orchestrator
+	orchestrator, err := soak.NewOrchestrator(cfg, &soak.SoakConfig{
+		UniverseFile:  soakConfig.UniverseFile,
+		Endpoints:     soakConfig.Endpoints,
+		Fallback:      soakConfig.Fallback,
+		Duration:      soakConfig.Duration,
+		Concurrency:   soakConfig.Concurrency,
+		QPS:           soakConfig.QPS,
+		Preview:       soakConfig.Preview,
+		Publish:       soakConfig.Publish,
+		Env:           soakConfig.Env,
+		TopicPrefix:   soakConfig.TopicPrefix,
+		ProbeInterval: soakConfig.ProbeInterval,
+		FailureRate:   soakConfig.FailureRate,
+		MemoryCheck:   soakConfig.MemoryCheck,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create soak orchestrator: %w", err)
+	}
+	defer orchestrator.Close()
+	
+	// Run soak test
+	if err := orchestrator.Run(ctx); err != nil {
+		return fmt.Errorf("soak test failed: %w", err)
+	}
+	
+	return nil
 }
 
 // runVersion executes the version command

@@ -6,14 +6,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AmpyFin/yfinance-go/internal/emit"
 	"github.com/AmpyFin/yfinance-go/internal/httpx"
 	"github.com/AmpyFin/yfinance-go/internal/norm"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"github.com/AmpyFin/yfinance-go/internal/yahoo"
+	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
+	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 )
 
 // Client provides a high-level interface for fetching Yahoo Finance data
 type Client struct {
 	yahooClient *yahoo.Client
+	scrapeClient scrape.Client
 }
 
 // NewClient creates a new Yahoo Finance client with default configuration
@@ -21,9 +26,11 @@ func NewClient() *Client {
 	config := httpx.DefaultConfig()
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, "")
+	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
 		yahooClient: yahooClient,
+		scrapeClient: scrapeClient,
 	}
 }
 
@@ -31,9 +38,11 @@ func NewClient() *Client {
 func NewClientWithConfig(config *httpx.Config) *Client {
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, config.BaseURL)
+	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
 		yahooClient: yahooClient,
+		scrapeClient: scrapeClient,
 	}
 }
 
@@ -42,9 +51,11 @@ func NewClientWithSessionRotation() *Client {
 	config := httpx.SessionRotationConfig()
 	httpClient := httpx.NewClient(config)
 	yahooClient := yahoo.NewClient(httpClient, config.BaseURL)
+	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
 		yahooClient: yahooClient,
+		scrapeClient: scrapeClient,
 	}
 }
 
@@ -221,6 +232,178 @@ func (c *Client) FetchMarketData(ctx context.Context, symbol string, runID strin
 
 	// Normalize market data
 	return norm.NormalizeMarketData(meta, runID)
+}
+
+// Scraping Functions - Return AMPY-PROTO Data
+
+// ScrapeFinancials fetches financials data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeFinancials(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/financials", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch financials: %w", err)
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse financials: %w", err)
+	}
+
+	snapshots, err := emit.MapComprehensiveFinancialsDTO(dto, runID, "yfinance-go")
+	if err != nil {
+		return nil, fmt.Errorf("failed to map financials: %w", err)
+	}
+
+	if len(snapshots) == 0 {
+		return nil, fmt.Errorf("no financials data found")
+	}
+
+	return snapshots[0], nil
+}
+
+// ScrapeBalanceSheet fetches balance sheet data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeBalanceSheet(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/balance-sheet", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch balance sheet: %w", err)
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse balance sheet: %w", err)
+	}
+
+	return emit.MapBalanceSheetDTO(dto, runID, "yfinance-go")
+}
+
+// ScrapeCashFlow fetches cash flow data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeCashFlow(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/cash-flow", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch cash flow: %w", err)
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse cash flow: %w", err)
+	}
+
+	return emit.MapCashFlowDTO(dto, runID, "yfinance-go")
+}
+
+// ScrapeKeyStatistics fetches key statistics data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeKeyStatistics(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/key-statistics", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch key statistics: %w", err)
+	}
+
+	dto, err := scrape.ParseComprehensiveKeyStatistics(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse key statistics: %w", err)
+	}
+
+	return emit.MapKeyStatisticsDTO(dto, runID, "yfinance-go")
+}
+
+// ScrapeAnalysis fetches analysis data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeAnalysis(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/analysis", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch analysis: %w", err)
+	}
+
+	dto, err := scrape.ParseAnalysis(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse analysis: %w", err)
+	}
+
+	return emit.MapAnalysisDTO(dto, runID, "yfinance-go")
+}
+
+// ScrapeAnalystInsights fetches analyst insights data and returns ampy-proto FundamentalsSnapshot
+func (c *Client) ScrapeAnalystInsights(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/analyst-insights", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch analyst insights: %w", err)
+	}
+
+	dto, err := scrape.ParseAnalystInsights(body, symbol, "XNAS")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse analyst insights: %w", err)
+	}
+
+	return emit.MapAnalystInsightsDTO(dto, runID, "yfinance-go")
+}
+
+// ScrapeNews fetches news data and returns ampy-proto NewsItem slice
+func (c *Client) ScrapeNews(ctx context.Context, symbol string, runID string) ([]*newsv1.NewsItem, error) {
+	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/news", symbol)
+	body, _, err := c.scrapeClient.Fetch(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch news: %w", err)
+	}
+
+	articles, _, err := scrape.ParseNews(body, "https://finance.yahoo.com", time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse news: %w", err)
+	}
+
+	protoArticles, err := emit.MapNewsItems(articles, symbol, runID, "yfinance-go")
+	if err != nil {
+		return nil, fmt.Errorf("failed to map news: %w", err)
+	}
+
+	return protoArticles, nil
+}
+
+// ScrapeAllFundamentals fetches all fundamentals data and returns multiple ampy-proto FundamentalsSnapshot messages
+func (c *Client) ScrapeAllFundamentals(ctx context.Context, symbol string, runID string) ([]*fundamentalsv1.FundamentalsSnapshot, error) {
+	var snapshots []*fundamentalsv1.FundamentalsSnapshot
+
+	// Fetch all fundamentals data types
+	financials, err := c.ScrapeFinancials(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape financials: %w", err)
+	}
+	snapshots = append(snapshots, financials)
+
+	balanceSheet, err := c.ScrapeBalanceSheet(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape balance sheet: %w", err)
+	}
+	snapshots = append(snapshots, balanceSheet)
+
+	cashFlow, err := c.ScrapeCashFlow(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape cash flow: %w", err)
+	}
+	snapshots = append(snapshots, cashFlow)
+
+	keyStats, err := c.ScrapeKeyStatistics(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape key statistics: %w", err)
+	}
+	snapshots = append(snapshots, keyStats)
+
+	analysis, err := c.ScrapeAnalysis(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape analysis: %w", err)
+	}
+	snapshots = append(snapshots, analysis)
+
+	analystInsights, err := c.ScrapeAnalystInsights(ctx, symbol, runID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scrape analyst insights: %w", err)
+	}
+	snapshots = append(snapshots, analystInsights)
+
+	return snapshots, nil
 }
 
 // isAuthenticationError checks if an error indicates authentication is required

@@ -1,6 +1,6 @@
 module github.com/AmpyFin/yfinance-go
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/AmpyFin/ampy-bus v1.1.0
@@ -13,6 +13,8 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
+	go.uber.org/zap v1.27.0
+	golang.org/x/time v0.13.0
 	google.golang.org/protobuf v1.36.8
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -46,6 +48,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect

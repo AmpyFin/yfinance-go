@@ -162,6 +162,53 @@ fundamentals, err := client.FetchFundamentalsQuarterly(ctx, "AAPL", runID)
 
 ---
 
+## 🕸️ Scrape Fallback System
+
+When Yahoo Finance API endpoints are unavailable, rate-limited, or require paid subscriptions, yfinance-go automatically falls back to web scraping with full data consistency guarantees.
+
+### Key Features
+- **Automatic Fallback**: Seamlessly switches between API and scraping
+- **Data Consistency**: Identical output formats regardless of source
+- **Production Safety**: Respects robots.txt, implements proper rate limiting
+- **Comprehensive Coverage**: Access data not available through APIs
+
+### Supported Scrape Endpoints
+- **Key Statistics**: P/E ratios, market cap, financial metrics
+- **Financials**: Income statements, balance sheets, cash flow
+- **Analysis**: Analyst recommendations and price targets
+- **Profile**: Company information, executives, business summary
+- **News**: Recent news articles and press releases
+
+### Quick Scrape Examples
+
+```go
+// Scrape key statistics (not available through free API)
+keyStats, err := client.ScrapeKeyStatistics(ctx, "AAPL", runID)
+
+// Scrape financial statements
+financials, err := client.ScrapeFinancials(ctx, "AAPL", runID)
+
+// Scrape news articles
+news, err := client.ScrapeNews(ctx, "AAPL", runID)
+```
+
+### CLI Scraping
+
+```bash
+# Scrape key statistics with preview
+yfin scrape --ticker AAPL --endpoint key-statistics --preview
+
+# Multiple endpoints with JSON output
+yfin scrape --ticker AAPL --endpoints key-statistics,financials,news --preview-json
+
+# Soak testing for production validation
+yfin soak --universe-file universe.txt --duration 2h --qps 5 --preview
+```
+
+📖 **[Complete Scrape Documentation →](docs/scrape/overview.md)**
+
+---
+
 ## 📝 Usage Examples
 
 ### Example 1: Fetch Daily Bars for Multiple Symbols
@@ -329,6 +376,35 @@ func main() {
 
 ---
 
+## 📚 Documentation
+
+### Core Documentation
+- **[Installation Guide](docs/install.md)** - Setup and installation instructions
+- **[Usage Guide](docs/usage.md)** - Comprehensive usage examples and patterns
+- **[API Reference](https://godoc.org/github.com/AmpyFin/yfinance-go)** - Complete API documentation
+
+### Scrape Fallback System
+- **[Scrape Overview](docs/scrape/overview.md)** - Architecture and data flow
+- **[Configuration Guide](docs/scrape/config.md)** - All configuration options and best practices
+- **[CLI Usage](docs/scrape/cli.md)** - Command-line interface examples
+- **[Troubleshooting](docs/scrape/troubleshooting.md)** - Common issues and solutions
+
+### Operations & Monitoring
+- **[Observability Guide](docs/observability.md)** - Metrics, logging, and monitoring
+- **[Soak Testing Guide](docs/soak-testing.md)** - Load testing and validation
+
+### Operator Runbooks
+- **[Scrape Fallback Runbook](runbooks/scrape-fallback.md)** - Operational procedures
+- **[Incident Response Playbook](runbooks/incident-playbook.md)** - Emergency response procedures
+
+### Examples & Code Samples
+- **[Library Examples](examples/library/)** - Go code examples and patterns
+- **[CLI Examples](examples/cli/)** - Ready-to-run shell scripts
+- **[API Usage Example](examples/api_usage.go)** - Basic API usage
+- **[Historical Data Example](examples/historical_data_example.go)** - Time series data
+
+---
+
 ## 🖥️ CLI Usage
 
 The `yfin` CLI tool provides command-line access to all functionality:
@@ -357,15 +433,39 @@ yfin pull --universe-file symbols.txt --start 2024-01-01 --end 2024-12-31 --publ
 # Get current quote
 yfin quote --tickers AAPL --preview --config configs/effective.yaml
 
-# Get company information (via quote command)
-yfin quote --tickers AAPL --preview --config configs/effective.yaml
-
 # Get fundamentals (requires paid subscription)
 yfin fundamentals --ticker AAPL --preview --config configs/effective.yaml
 ```
 
+### Scraping Commands
+
+```bash
+# Scrape key statistics (not available through free API)
+yfin scrape --ticker AAPL --endpoint key-statistics --preview --config configs/effective.yaml
+
+# Multiple endpoints with JSON preview
+yfin scrape --ticker AAPL --endpoints key-statistics,financials,analysis --preview-json --config configs/effective.yaml
+
+# News articles preview
+yfin scrape --ticker AAPL --endpoint news --preview-news --config configs/effective.yaml
+
+# Health check for endpoints
+yfin scrape --ticker AAPL --endpoint key-statistics --check --config configs/effective.yaml
+```
+
+### Soak Testing Commands
+
+```bash
+# Quick smoke test (10 minutes)
+yfin soak --universe-file testdata/universe/soak.txt --endpoints key-statistics,news --duration 10m --concurrency 8 --qps 5 --preview --config configs/effective.yaml
+
+# Full production soak test (2 hours)
+yfin soak --universe-file testdata/universe/soak.txt --endpoints key-statistics,financials,analysis,profile,news --duration 2h --concurrency 12 --qps 5 --preview --config configs/effective.yaml
+```
+
 ### CLI Options
 
+#### Core Options
 - `--ticker` - Single symbol to fetch
 - `--universe-file` - File containing list of symbols
 - `--start`, `--end` - Date range (UTC)
@@ -375,6 +475,24 @@ yfin fundamentals --ticker AAPL --preview --config configs/effective.yaml
 - `--preview` - Show data preview without publishing
 - `--concurrency` - Number of concurrent requests
 - `--qps` - Requests per second limit
+
+#### Scraping Options
+- `--endpoint` - Single endpoint to scrape
+- `--endpoints` - Comma-separated list of endpoints
+- `--fallback` - Fallback strategy (auto, api-only, scrape-only)
+- `--preview-json` - JSON preview of multiple endpoints
+- `--preview-news` - Preview news articles
+- `--preview-proto` - Preview proto summaries
+- `--check` - Validate endpoint accessibility
+- `--force` - Override robots.txt (testing only)
+
+#### Soak Testing Options
+- `--duration` - Test duration (e.g., 2h, 30m)
+- `--memory-check` - Enable memory leak detection
+- `--probe-interval` - Correctness probe interval
+- `--failure-rate` - Simulated failure rate for testing
+
+📖 **[Complete CLI Documentation →](docs/scrape/cli.md)**
 
 ---
 
@@ -402,14 +520,22 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 - **Market Data** - 52-week ranges, market state, trading hours
 - **Multi-Currency Support** - Automatic currency conversion with FX providers
 
-### ❌ Not Supported (Requires Paid Subscription)
+### ❌ API Limitations (Available via Scraping)
 
-- **Financial Statements** - Income statement, balance sheet, cash flow
-- **Analyst Recommendations** - Price targets, ratings
-- **Key Statistics** - P/E ratios, market cap, etc.
+These data types require paid Yahoo Finance subscriptions through the API, but are **available through the scrape fallback system**:
+
+- **Financial Statements** - Income statement, balance sheet, cash flow ✅ *Available via scraping*
+- **Analyst Recommendations** - Price targets, ratings ✅ *Available via scraping*
+- **Key Statistics** - P/E ratios, market cap, financial metrics ✅ *Available via scraping*
+- **Company Profiles** - Business summary, executives, sector info ✅ *Available via scraping*
+- **News Articles** - Recent news and press releases ✅ *Available via scraping*
+
+### ❌ Not Supported
+
 - **Options Data** - Options chains and pricing
-- **Insider Trading** - Insider transactions
+- **Insider Trading** - Insider transactions  
 - **Institutional Holdings** - Major shareholders
+- **Level 2 Market Data** - Order book, bid/ask depth
 
 ### 🌍 Supported Markets
 
@@ -428,7 +554,9 @@ Provide a **reliable, consistent, and fast** Yahoo Finance client in Go that spe
 - **Circuit Breakers** - Automatic failure detection and recovery
 - **Retry Logic** - Exponential backoff with jitter
 - **Session Rotation** - Prevents IP blocking and rate limits
+- **Scrape Fallback** - Automatic API→scrape fallback with robots.txt compliance
 - **Observability** - Comprehensive metrics, logs, and tracing
+- **Soak Testing** - Built-in load testing and robustness validation
 
 ### 💰 Financial Accuracy
 - **High Precision Decimals** - Scaled decimal arithmetic for exact calculations
@@ -541,6 +669,36 @@ observability:
 
 ---
 
+## 🚀 Quick Start Examples
+
+### Run CLI Examples
+
+```bash
+# Make scripts executable
+chmod +x examples/cli/*.sh
+
+# Run AAPL preview examples
+./examples/cli/preview_aapl.sh
+
+# Run soak testing examples  
+./examples/cli/soak_smoke.sh
+
+# Run batch processing examples
+./examples/cli/batch_processing.sh
+```
+
+### Build Library Examples
+
+```bash
+# Build and run library examples
+go build -o examples/library/scrape_fallback examples/library/scrape_fallback.go
+./examples/library/scrape_fallback
+```
+
+📖 **[All Examples →](examples/)**
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
@@ -593,7 +751,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/AmpyFin/yfinance-go/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/AmpyFin/yfinance-go/discussions)
-- **Documentation**: [GoDoc](https://godoc.org/github.com/AmpyFin/yfinance-go)
+- **Documentation**: [Complete Documentation](docs/)
+- **API Reference**: [GoDoc](https://godoc.org/github.com/AmpyFin/yfinance-go)
+
+### Getting Help
+
+1. **Check Documentation**: Start with [docs/](docs/) for comprehensive guides
+2. **Review Examples**: See [examples/](examples/) for code samples
+3. **Search Issues**: Check existing [GitHub Issues](https://github.com/AmpyFin/yfinance-go/issues)
+4. **Troubleshooting**: See [docs/scrape/troubleshooting.md](docs/scrape/troubleshooting.md)
+5. **Runbooks**: For operational issues, see [runbooks/](runbooks/)
 
 ---
 

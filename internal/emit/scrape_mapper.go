@@ -62,7 +62,7 @@ func (m *ScrapeMapper) MapFinancials(ctx context.Context, dto *scrape.Financials
 	return &fundamentalsv1.FundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
-		Source:   m.config.Source,
+		Source:   m.config.Source + "/financials",
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil
