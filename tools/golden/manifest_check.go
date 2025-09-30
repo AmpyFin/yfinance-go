@@ -11,9 +11,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	yfinanceGoSource = "yfinance-go"
+)
+
 // Manifest represents the structure of MANIFEST.yaml
 type Manifest struct {
-	Version int `yaml:"version"`
+	Version int            `yaml:"version"`
 	Items   []ManifestItem `yaml:"items"`
 }
 
@@ -57,16 +61,16 @@ type BarBatch struct {
 }
 
 type Quote struct {
-	Security   Security `json:"security"`
-	Type       string   `json:"type"`
+	Security   Security      `json:"security"`
+	Type       string        `json:"type"`
 	Bid        ScaledDecimal `json:"bid"`
-	BidSize    int      `json:"bid_size"`
+	BidSize    int           `json:"bid_size"`
 	Ask        ScaledDecimal `json:"ask"`
-	AskSize    int      `json:"ask_size"`
-	Venue      string   `json:"venue"`
-	EventTime  string   `json:"event_time"`
-	IngestTime string   `json:"ingest_time"`
-	Meta       Meta     `json:"meta"`
+	AskSize    int           `json:"ask_size"`
+	Venue      string        `json:"venue"`
+	EventTime  string        `json:"event_time"`
+	IngestTime string        `json:"ingest_time"`
+	Meta       Meta          `json:"meta"`
 }
 
 type FundamentalLine struct {
@@ -78,11 +82,11 @@ type FundamentalLine struct {
 }
 
 type FundamentalSnapshot struct {
-	Security Security           `json:"security"`
-	Lines    []FundamentalLine  `json:"lines"`
-	Source   string             `json:"source"`
-	AsOf     string             `json:"as_of"`
-	Meta     Meta               `json:"meta"`
+	Security Security          `json:"security"`
+	Lines    []FundamentalLine `json:"lines"`
+	Source   string            `json:"source"`
+	AsOf     string            `json:"as_of"`
+	Meta     Meta              `json:"meta"`
 }
 
 type Meta struct {
@@ -99,7 +103,7 @@ func main() {
 	}
 
 	manifestPath := os.Args[1]
-	
+
 	// Load manifest
 	manifest, err := loadManifest(manifestPath)
 	if err != nil {
@@ -139,7 +143,7 @@ func loadManifest(path string) (*Manifest, error) {
 
 func validateItem(item ManifestItem) bool {
 	fmt.Printf("Validating %s...\n", item.Path)
-	
+
 	// Check if file exists
 	if _, err := os.Stat(item.Path); os.IsNotExist(err) {
 		fmt.Printf("  ERROR: File does not exist\n")
@@ -227,7 +231,7 @@ func validateBarBatch(path string) bool {
 	}
 
 	// Validate meta
-	if batch.Meta.Source != "yfinance-go" {
+	if batch.Meta.Source != yfinanceGoSource {
 		fmt.Printf("  ERROR: Invalid meta.source: %s\n", batch.Meta.Source)
 		return false
 	}
@@ -269,7 +273,7 @@ func validateQuote(path string) bool {
 	}
 
 	// Validate meta
-	if quote.Meta.Source != "yfinance-go" {
+	if quote.Meta.Source != yfinanceGoSource {
 		fmt.Printf("  ERROR: Invalid meta.source: %s\n", quote.Meta.Source)
 		return false
 	}
@@ -302,7 +306,7 @@ func validateFundamentalSnapshot(path string) bool {
 	}
 
 	// Validate meta
-	if snapshot.Meta.Source != "yfinance-go" {
+	if snapshot.Meta.Source != yfinanceGoSource {
 		fmt.Printf("  ERROR: Invalid meta.source: %s\n", snapshot.Meta.Source)
 		return false
 	}
@@ -324,12 +328,12 @@ func validateDailyBarTime(bar Bar) bool {
 	if err != nil {
 		return false
 	}
-	
+
 	end, err := time.Parse(time.RFC3339, bar.End)
 	if err != nil {
 		return false
 	}
-	
+
 	eventTime, err := time.Parse(time.RFC3339, bar.EventTime)
 	if err != nil {
 		return false
@@ -342,15 +346,15 @@ func validateDailyBarTime(bar Bar) bool {
 	if start.Hour() != 0 || start.Minute() != 0 || start.Second() != 0 {
 		return false
 	}
-	
+
 	if end.Hour() != 0 || end.Minute() != 0 || end.Second() != 0 {
 		return false
 	}
-	
+
 	if !eventTime.Equal(end) {
 		return false
 	}
-	
+
 	// end should be start + 24 hours
 	expectedEnd := start.Add(24 * time.Hour)
 	return end.Equal(expectedEnd)

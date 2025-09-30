@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -224,7 +224,7 @@ func TestRecommendedScale(t *testing.T) {
 	assert.Equal(t, 0, scale)
 
 	// Test unknown currency (should default to 2)
-	scale, err = RecommendedScale("XYZ")
+	scale, _ = RecommendedScale("XYZ")
 	assert.Equal(t, 2, scale) // Should return default even on error
 }
 
@@ -289,7 +289,7 @@ func TestConvertScale(t *testing.T) {
 
 func TestDefaultScaledDecimalConfig(t *testing.T) {
 	config := DefaultScaledDecimalConfig()
-	
+
 	assert.Equal(t, 2, config.DefaultScale)
 	assert.Equal(t, 6, config.PercentScale)
 	assert.False(t, config.AllowNegativeScale)

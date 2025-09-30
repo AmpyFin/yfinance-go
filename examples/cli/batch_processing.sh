@@ -9,9 +9,10 @@ echo "=== yfinance-go Batch Processing Examples ==="
 echo "============================================="
 
 # Configuration
-CONFIG_FILE="configs/example.dev.yaml"
+CONFIG_FILE="../../configs/effective.yaml"
 OUTPUT_DIR="./batch_output"
 LOG_DIR="./batch_logs"
+YFIN_CMD="../../yfin"
 
 # Create output directories
 mkdir -p "$OUTPUT_DIR" "$LOG_DIR"
@@ -73,14 +74,13 @@ SMALL_UNIVERSE="$OUTPUT_DIR/small_universe.txt"
 create_universe_file "$SMALL_UNIVERSE" "Small Test Universe" \
     "AAPL" "MSFT" "GOOGL" "AMZN" "TSLA"
 
-run_batch_command "Small Universe Key Statistics" \
-    yfin scrape \
+run_batch_command "Small Universe Daily Bars" \
+    $YFIN_CMD pull \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$SMALL_UNIVERSE" \
-    --endpoint key-statistics \
-    --fallback auto \
-    --qps 1.0 \
-    --concurrency 3 \
+    --start 2024-01-01 \
+    --end 2024-01-31 \
+    --adjusted split_dividend \
     --preview
 
 # Example 2: Large Universe Processing with Rate Limiting
@@ -93,7 +93,7 @@ create_universe_file "$LARGE_UNIVERSE" "Large Test Universe" \
     "PYPL" "INTC" "CSCO" "PEP" "KO" "WMT" "HD" "DIS" "VZ" "T"
 
 run_batch_command "Large Universe Conservative Processing" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$LARGE_UNIVERSE" \
     --endpoint key-statistics \
@@ -114,7 +114,7 @@ create_universe_file "$MULTI_ENDPOINT_UNIVERSE" "Multi-Endpoint Universe" \
 ENDPOINTS="key-statistics,financials,analysis,profile"
 
 run_batch_command "Multi-Endpoint Batch Processing" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$MULTI_ENDPOINT_UNIVERSE" \
     --endpoints "$ENDPOINTS" \
@@ -132,7 +132,7 @@ create_universe_file "$INTERNATIONAL_UNIVERSE" "International Universe" \
     "AAPL" "MSFT" "0700.HK" "BABA" "TSM" "ASML" "SAP" "NESN.SW" "005930.KS" "7203.T"
 
 run_batch_command "International Universe Processing" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$INTERNATIONAL_UNIVERSE" \
     --endpoint key-statistics \
@@ -161,7 +161,7 @@ for sector_file in "$TECH_UNIVERSE" "$HEALTHCARE_UNIVERSE"; do
     sector_name=$(basename "$sector_file" .txt | sed 's/_/ /g' | sed 's/\b\w/\U&/g')
     
     run_batch_command "$sector_name Sector Processing" \
-        yfin scrape \
+        $YFIN_CMD scrape \
         ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
         --universe-file "$sector_file" \
         --endpoint key-statistics \
@@ -181,7 +181,7 @@ create_universe_file "$ERROR_TEST_UNIVERSE" "Error Testing Universe" \
     "AAPL" "INVALID_TICKER_1" "MSFT" "INVALID_TICKER_2" "GOOGL"
 
 run_batch_command "Error Handling Test" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$ERROR_TEST_UNIVERSE" \
     --endpoint key-statistics \
@@ -200,7 +200,7 @@ create_universe_file "$NEWS_UNIVERSE" "News Universe" \
     "AAPL" "TSLA" "GME" "AMC" "NVDA"  # Stocks that typically have lots of news
 
 run_batch_command "News Batch Processing" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$NEWS_UNIVERSE" \
     --endpoint news \
@@ -231,7 +231,7 @@ process_ticker() {
     local output_file="$output_dir/${ticker}_results.json"
     local log_file="$output_dir/${ticker}_process.log"
     
-    if yfin scrape \
+    if $YFIN_CMD scrape \
         ${config_file:+--config "$config_file"} \
         --ticker "$ticker" \
         --endpoint key-statistics \
@@ -287,7 +287,7 @@ EXPORT_DIR="$OUTPUT_DIR/exported_data"
 mkdir -p "$EXPORT_DIR"
 
 run_batch_command "Batch Processing with Export" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$EXPORT_UNIVERSE" \
     --endpoint key-statistics \
@@ -362,7 +362,7 @@ MONITOR_PID=$!
 
 # Run batch processing
 run_batch_command "Monitored Batch Processing" \
-    yfin scrape \
+    $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --universe-file "$MONITOR_UNIVERSE" \
     --endpoint key-statistics \

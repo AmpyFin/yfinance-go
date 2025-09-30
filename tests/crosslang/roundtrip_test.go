@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/AmpyFin/yfinance-go/internal/emit"
 	"github.com/AmpyFin/yfinance-go/internal/norm"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -27,13 +27,13 @@ func TestCrossLanguageRoundTripBars(t *testing.T) {
 			scale:    2,
 		},
 		{
-			name:     "EUR adjusted bars", 
+			name:     "EUR adjusted bars",
 			currency: "EUR",
 			scale:    2,
 		},
 		{
 			name:     "JPY adjusted bars",
-			currency: "JPY", 
+			currency: "JPY",
 			scale:    2,
 		},
 	}
@@ -42,7 +42,7 @@ func TestCrossLanguageRoundTripBars(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create test bar batch with scale 2
 			barBatch := createTestBarBatch(tc.currency, tc.scale)
-			
+
 			// Emit to protobuf
 			protobufData, err := emit.EmitBarBatch(barBatch)
 			require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestCrossLanguageRoundTripBars(t *testing.T) {
 			// Write protobuf to file for Python to read
 			outputDir := "_rt"
 			_ = os.MkdirAll(outputDir, 0755)
-			
+
 			pbFile := filepath.Join(outputDir, "bars_"+tc.currency+".pb")
 			err = os.WriteFile(pbFile, protobufBytes, 0644)
 			require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestCrossLanguageRoundTripBars(t *testing.T) {
 func TestCrossLanguageRoundTripQuotes(t *testing.T) {
 	// Create test quote
 	quote := createTestQuote()
-	
+
 	// Emit to protobuf
 	protobufData, err := emit.EmitQuote(quote)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestCrossLanguageRoundTripQuotes(t *testing.T) {
 	// Write protobuf to file
 	outputDir := "_rt"
 	_ = os.MkdirAll(outputDir, 0755)
-	
+
 	pbFile := filepath.Join(outputDir, "quote.pb")
 	err = os.WriteFile(pbFile, protobufBytes, 0644)
 	require.NoError(t, err)
@@ -108,7 +108,7 @@ func TestCrossLanguageRoundTripQuotes(t *testing.T) {
 func TestCrossLanguageRoundTripFundamentals(t *testing.T) {
 	// Create test fundamentals
 	fundamentals := createTestFundamentals()
-	
+
 	// Emit to protobuf
 	protobufData, err := emit.EmitFundamentals(fundamentals)
 	require.NoError(t, err)
@@ -120,7 +120,7 @@ func TestCrossLanguageRoundTripFundamentals(t *testing.T) {
 	// Write protobuf to file
 	outputDir := "_rt"
 	_ = os.MkdirAll(outputDir, 0755)
-	
+
 	pbFile := filepath.Join(outputDir, "fundamentals.pb")
 	err = os.WriteFile(pbFile, protobufBytes, 0644)
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestCrossLanguageNumericPrecision(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create bar with specific price
 			barBatch := createTestBarBatchWithPrice(tc.price, tc.scale)
-			
+
 			// Emit to protobuf
 			protobufData, err := emit.EmitBarBatch(barBatch)
 			require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestCrossLanguageNumericPrecision(t *testing.T) {
 			// Write protobuf to file
 			outputDir := "_rt"
 			_ = os.MkdirAll(outputDir, 0755)
-			
+
 			pbFile := filepath.Join(outputDir, "precision_"+tc.name+".pb")
 			err = os.WriteFile(pbFile, protobufBytes, 0644)
 			require.NoError(t, err)
@@ -216,25 +216,25 @@ func createTestBarBatch(currency string, scale int) *norm.NormalizedBarBatch {
 		},
 		Bars: []norm.NormalizedBar{
 			{
-				Open:   norm.ScaledDecimal{Scaled: 15000, Scale: scale},
-				High:   norm.ScaledDecimal{Scaled: 15100, Scale: scale},
-				Low:    norm.ScaledDecimal{Scaled: 14900, Scale: scale},
-				Close:  norm.ScaledDecimal{Scaled: 15050, Scale: scale},
-				Volume: 1000000,
-				Start:  now.Add(-24 * time.Hour),
-				End:    now,
-				EventTime: now,
-				IngestTime: now,
-				AsOf: now,
-				CurrencyCode: currency,
-				Adjusted: true,
+				Open:               norm.ScaledDecimal{Scaled: 15000, Scale: scale},
+				High:               norm.ScaledDecimal{Scaled: 15100, Scale: scale},
+				Low:                norm.ScaledDecimal{Scaled: 14900, Scale: scale},
+				Close:              norm.ScaledDecimal{Scaled: 15050, Scale: scale},
+				Volume:             1000000,
+				Start:              now.Add(-24 * time.Hour),
+				End:                now,
+				EventTime:          now,
+				IngestTime:         now,
+				AsOf:               now,
+				CurrencyCode:       currency,
+				Adjusted:           true,
 				AdjustmentPolicyID: "split_dividend",
 			},
 		},
 		Meta: norm.Meta{
-			RunID: "crosslang_test",
-			Source: "yfinance-go",
-			Producer: "test",
+			RunID:         "crosslang_test",
+			Source:        "yfinance-go",
+			Producer:      "test",
 			SchemaVersion: "ampy.bars.v1:1.0.0",
 		},
 	}
@@ -254,25 +254,25 @@ func createTestBarBatchWithPrice(price float64, scale int) *norm.NormalizedBarBa
 		},
 		Bars: []norm.NormalizedBar{
 			{
-				Open:   norm.ScaledDecimal{Scaled: scaled, Scale: scale},
-				High:   norm.ScaledDecimal{Scaled: scaled + 100, Scale: scale},
-				Low:    norm.ScaledDecimal{Scaled: scaled - 100, Scale: scale},
-				Close:  norm.ScaledDecimal{Scaled: scaled, Scale: scale},
-				Volume: 1000,
-				Start:  now.Add(-24 * time.Hour),
-				End:    now,
-				EventTime: now,
-				IngestTime: now,
-				AsOf: now,
-				CurrencyCode: "USD",
-				Adjusted: false,
+				Open:               norm.ScaledDecimal{Scaled: scaled, Scale: scale},
+				High:               norm.ScaledDecimal{Scaled: scaled + 100, Scale: scale},
+				Low:                norm.ScaledDecimal{Scaled: scaled - 100, Scale: scale},
+				Close:              norm.ScaledDecimal{Scaled: scaled, Scale: scale},
+				Volume:             1000,
+				Start:              now.Add(-24 * time.Hour),
+				End:                now,
+				EventTime:          now,
+				IngestTime:         now,
+				AsOf:               now,
+				CurrencyCode:       "USD",
+				Adjusted:           false,
 				AdjustmentPolicyID: "raw",
 			},
 		},
 		Meta: norm.Meta{
-			RunID: "precision_test",
-			Source: "yfinance-go",
-			Producer: "test",
+			RunID:         "precision_test",
+			Source:        "yfinance-go",
+			Producer:      "test",
 			SchemaVersion: "ampy.bars.v1:1.0.0",
 		},
 	}
@@ -287,18 +287,18 @@ func createTestQuote() *norm.NormalizedQuote {
 			Symbol: "MSFT",
 			MIC:    "XNAS",
 		},
-		Bid:     &norm.ScaledDecimal{Scaled: 42750, Scale: 2},
-		Ask:     &norm.ScaledDecimal{Scaled: 42753, Scale: 2},
-		BidSize: &bidSize,
-		AskSize: &askSize,
-		EventTime: now,
-		IngestTime: now,
-		Venue: "XNMS",
+		Bid:          &norm.ScaledDecimal{Scaled: 42750, Scale: 2},
+		Ask:          &norm.ScaledDecimal{Scaled: 42753, Scale: 2},
+		BidSize:      &bidSize,
+		AskSize:      &askSize,
+		EventTime:    now,
+		IngestTime:   now,
+		Venue:        "XNMS",
 		CurrencyCode: "USD",
 		Meta: norm.Meta{
-			RunID: "crosslang_test",
-			Source: "yfinance-go",
-			Producer: "test",
+			RunID:         "crosslang_test",
+			Source:        "yfinance-go",
+			Producer:      "test",
 			SchemaVersion: "ampy.ticks.v1:1.0.0",
 		},
 	}
@@ -330,9 +330,9 @@ func createTestFundamentals() *norm.NormalizedFundamentalsSnapshot {
 		Source: "yfinance",
 		AsOf:   now,
 		Meta: norm.Meta{
-			RunID: "crosslang_test",
-			Source: "yfinance-go",
-			Producer: "test",
+			RunID:         "crosslang_test",
+			Source:        "yfinance-go",
+			Producer:      "test",
 			SchemaVersion: "ampy.fundamentals.v1:1.0.0",
 		},
 	}
@@ -362,7 +362,7 @@ func createBarMetadata(barBatch *norm.NormalizedBarBatch) map[string]interface{}
 				"scaled": bar.Close.Scaled,
 				"scale":  bar.Close.Scale,
 			},
-			"volume": bar.Volume,
+			"volume":   bar.Volume,
 			"currency": bar.CurrencyCode,
 		},
 		"run_id": barBatch.Meta.RunID,
@@ -386,7 +386,7 @@ func createQuoteMetadata(quote *norm.NormalizedQuote) map[string]interface{} {
 			},
 			"bid_size": quote.BidSize,
 			"ask_size": quote.AskSize,
-			"venue": quote.Venue,
+			"venue":    quote.Venue,
 		},
 		"run_id": quote.Meta.RunID,
 	}
@@ -410,9 +410,9 @@ func createFundamentalsMetadata(fundamentals *norm.NormalizedFundamentalsSnapsho
 			"symbol": fundamentals.Security.Symbol,
 			"mic":    fundamentals.Security.MIC,
 		},
-		"lines": lines,
+		"lines":  lines,
 		"source": fundamentals.Source,
-		"as_of": fundamentals.AsOf.Unix(),
+		"as_of":  fundamentals.AsOf.Unix(),
 		"meta": map[string]interface{}{
 			"run_id": fundamentals.Meta.RunID,
 		},
@@ -430,11 +430,11 @@ func runPythonRoundTripTest(t *testing.T, testType, identifier string) {
 	// Run Python test
 	cmd := exec.Command("python3", pythonScript, testType, identifier)
 	cmd.Dir = "."
-	
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Python round-trip test failed: %v\nOutput: %s", err, string(output))
 	}
-	
+
 	t.Logf("Python round-trip test passed for %s/%s", testType, identifier)
 }

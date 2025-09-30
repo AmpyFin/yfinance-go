@@ -10,11 +10,11 @@ import (
 
 func TestNormalizeFundamentalsValidation(t *testing.T) {
 	tests := []struct {
-		name          string
-		fundamentals  *yahoo.Fundamentals
-		symbol        string
-		runID         string
-		wantErr       bool
+		name         string
+		fundamentals *yahoo.Fundamentals
+		symbol       string
+		runID        string
+		wantErr      bool
 	}{
 		{
 			name: "valid fundamentals",
@@ -45,11 +45,11 @@ func TestNormalizeFundamentalsValidation(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:          "nil fundamentals",
-			fundamentals:  nil,
-			symbol:        "AAPL",
-			runID:         "test_run",
-			wantErr:       true,
+			name:         "nil fundamentals",
+			fundamentals: nil,
+			symbol:       "AAPL",
+			runID:        "test_run",
+			wantErr:      true,
 		},
 		{
 			name: "empty fundamentals",

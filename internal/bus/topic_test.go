@@ -9,43 +9,43 @@ import (
 
 func TestTopicBuilder_BuildBarsTopic(t *testing.T) {
 	builder := NewTopicBuilder("prod", "ampy")
-	
+
 	key := &Key{
 		Symbol: "AAPL",
 		MIC:    "XNAS",
 	}
-	
+
 	topic := builder.BuildBarsTopic(key, "v1")
 	assert.Equal(t, "ampy.prod.bars.v1.XNAS.AAPL", topic)
 }
 
 func TestTopicBuilder_BuildQuotesTopic(t *testing.T) {
 	builder := NewTopicBuilder("dev", "ampy")
-	
+
 	key := &Key{
 		Symbol: "MSFT",
 		MIC:    "XNAS",
 	}
-	
+
 	topic := builder.BuildQuotesTopic(key, "v1")
 	assert.Equal(t, "ampy.dev.ticks.v1.XNAS.MSFT", topic)
 }
 
 func TestTopicBuilder_BuildFundamentalsTopic(t *testing.T) {
 	builder := NewTopicBuilder("staging", "ampy")
-	
+
 	key := &Key{
 		Symbol: "GOOGL",
 		MIC:    "XNAS",
 	}
-	
+
 	topic := builder.BuildFundamentalsTopic(key, "v1")
 	assert.Equal(t, "ampy.staging.fundamentals.v1.GOOGL", topic)
 }
 
 func TestTopicBuilder_BuildSubtopic(t *testing.T) {
 	builder := NewTopicBuilder("prod", "ampy")
-	
+
 	tests := []struct {
 		name     string
 		key      *Key
@@ -68,7 +68,7 @@ func TestTopicBuilder_BuildSubtopic(t *testing.T) {
 			expected: "AAPL",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			subtopic := builder.buildSubtopic(tt.key)
@@ -119,7 +119,7 @@ func TestValidateTopic(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateTopic(tt.topic)
@@ -134,10 +134,10 @@ func TestValidateTopic(t *testing.T) {
 
 func TestParseTopic(t *testing.T) {
 	tests := []struct {
-		name        string
-		topic       string
-		expected    *TopicComponents
-		wantError   bool
+		name      string
+		topic     string
+		expected  *TopicComponents
+		wantError bool
 	}{
 		{
 			name:  "valid bars topic",
@@ -170,7 +170,7 @@ func TestParseTopic(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			components, err := ParseTopic(tt.topic)
@@ -188,9 +188,9 @@ func TestParseTopic(t *testing.T) {
 
 func TestTopicComponents_String(t *testing.T) {
 	tests := []struct {
-		name     string
+		name       string
 		components *TopicComponents
-		expected string
+		expected   string
 	}{
 		{
 			name: "with subtopic",
@@ -214,7 +214,7 @@ func TestTopicComponents_String(t *testing.T) {
 			expected: "ampy.dev.fundamentals.v1",
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := tt.components.String()

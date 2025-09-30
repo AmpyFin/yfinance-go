@@ -12,11 +12,11 @@ func TestBackoffPolicy_CalculateDelay(t *testing.T) {
 
 	// Test first few attempts
 	delays := policy.CalculateDelays(5)
-	
+
 	// Verify delays are increasing
 	for i := 1; i < len(delays); i++ {
 		if delays[i] <= delays[i-1] {
-			t.Errorf("Delay should increase with attempts: attempt %d = %v, attempt %d = %v", 
+			t.Errorf("Delay should increase with attempts: attempt %d = %v, attempt %d = %v",
 				i-1, delays[i-1], i, delays[i])
 		}
 	}
@@ -34,11 +34,11 @@ func TestBackoffPolicy_CalculateDelay(t *testing.T) {
 
 func TestBackoffPolicy_CalculateDelayWithRetryAfter(t *testing.T) {
 	policy := scrape.DefaultBackoffPolicy()
-	
+
 	// Test with reasonable Retry-After
 	retryAfter := 2 * time.Second
 	delay := policy.CalculateDelayWithRetryAfter(0, retryAfter)
-	
+
 	// Should be close to retry-after with some jitter
 	if delay < retryAfter/2 || delay > retryAfter*2 {
 		t.Errorf("Delay %v should be close to retry-after %v", delay, retryAfter)
@@ -48,7 +48,7 @@ func TestBackoffPolicy_CalculateDelayWithRetryAfter(t *testing.T) {
 	longRetryAfter := 1 * time.Hour
 	delay = policy.CalculateDelayWithRetryAfter(0, longRetryAfter)
 	normalDelay := policy.CalculateDelay(0)
-	
+
 	// Should be similar to normal delay
 	if delay < normalDelay/2 || delay > normalDelay*2 {
 		t.Errorf("Delay %v should be similar to normal delay %v for long retry-after", delay, normalDelay)

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
 	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -19,13 +19,13 @@ func MapNewsItems(items []scrape.NewsItem, symbol string, runID, producer string
 	}
 
 	articles := make([]*newsv1.NewsItem, 0, len(items))
-	
+
 	for i, item := range items {
 		article, err := mapSingleNewsItem(&item, symbol, runID, producer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to map news item %d (%s): %w", i, item.Title, err)
 		}
-		
+
 		if article != nil { // Skip nil articles (filtered out)
 			articles = append(articles, article)
 		}
@@ -44,7 +44,7 @@ func mapSingleNewsItem(item *scrape.NewsItem, symbol, runID, producer string) (*
 	if item.Title == "" {
 		return nil, fmt.Errorf("news title cannot be empty")
 	}
-	
+
 	if item.URL == "" {
 		return nil, fmt.Errorf("news URL cannot be empty")
 	}
@@ -64,12 +64,12 @@ func mapSingleNewsItem(item *scrape.NewsItem, symbol, runID, producer string) (*
 		// Validate timestamp is not in the future
 		now := time.Now().UTC()
 		pubTime := item.PublishedAt.UTC()
-		
+
 		if pubTime.After(now.Add(5 * time.Minute)) { // Allow 5 minute clock skew
 			// Log warning and clamp to now
 			pubTime = now
 		}
-		
+
 		publishedAt = timestamppb.New(pubTime)
 	}
 
@@ -139,38 +139,38 @@ func normalizeNewsURL(rawURL string) (string, error) {
 func removeTrackingParams(u *url.URL) *url.URL {
 	// List of tracking parameters to remove
 	trackingParams := map[string]bool{
-		"utm_source":    true,
-		"utm_medium":    true,
-		"utm_campaign":  true,
-		"utm_term":      true,
-		"utm_content":   true,
-		"fbclid":        true,
-		"gclid":         true,
-		"msclkid":       true,
-		"mc_cid":        true,
-		"mc_eid":        true,
-		"_ga":           true,
-		"_gid":          true,
-		"ref":           true,
-		"referer":       true,
-		"referrer":      true,
-		"source":        true,
+		"utm_source":   true,
+		"utm_medium":   true,
+		"utm_campaign": true,
+		"utm_term":     true,
+		"utm_content":  true,
+		"fbclid":       true,
+		"gclid":        true,
+		"msclkid":      true,
+		"mc_cid":       true,
+		"mc_eid":       true,
+		"_ga":          true,
+		"_gid":         true,
+		"ref":          true,
+		"referer":      true,
+		"referrer":     true,
+		"source":       true,
 	}
 
 	// Create new URL to avoid modifying original
 	cleanURL := *u
-	
+
 	// Filter query parameters
 	if u.RawQuery != "" {
 		values := u.Query()
 		cleanValues := url.Values{}
-		
+
 		for key, vals := range values {
 			if !trackingParams[strings.ToLower(key)] {
 				cleanValues[key] = vals
 			}
 		}
-		
+
 		cleanURL.RawQuery = cleanValues.Encode()
 	}
 
@@ -193,37 +193,37 @@ func cleanNewsSource(source string) string {
 
 	// Normalize common source names
 	sourceMappings := map[string]string{
-		"yahoo finance":        "Yahoo Finance",
-		"yahoo! finance":       "Yahoo Finance",
-		"yahoo":                "Yahoo Finance",
-		"bloomberg":            "Bloomberg",
-		"bloomberg.com":        "Bloomberg",
-		"reuters":              "Reuters",
-		"reuters.com":          "Reuters",
-		"marketwatch":          "MarketWatch",
-		"marketwatch.com":      "MarketWatch",
-		"cnbc":                 "CNBC",
-		"cnbc.com":             "CNBC",
-		"cnn business":         "CNN Business",
-		"cnn":                  "CNN Business",
-		"fox business":         "Fox Business",
-		"foxbusiness":          "Fox Business",
-		"wall street journal":  "Wall Street Journal",
-		"wsj":                  "Wall Street Journal",
-		"wsj.com":              "Wall Street Journal",
-		"financial times":      "Financial Times",
-		"ft.com":               "Financial Times",
-		"investing.com":        "Investing.com",
-		"seeking alpha":        "Seeking Alpha",
-		"seekingalpha":         "Seeking Alpha",
-		"seekingalpha.com":     "Seeking Alpha",
-		"barron's":             "Barron's",
-		"barrons":              "Barron's",
-		"barrons.com":          "Barron's",
-		"thestreet":            "TheStreet",
-		"thestreet.com":        "TheStreet",
-		"motley fool":          "The Motley Fool",
-		"fool.com":             "The Motley Fool",
+		"yahoo finance":       "Yahoo Finance",
+		"yahoo! finance":      "Yahoo Finance",
+		"yahoo":               "Yahoo Finance",
+		"bloomberg":           "Bloomberg",
+		"bloomberg.com":       "Bloomberg",
+		"reuters":             "Reuters",
+		"reuters.com":         "Reuters",
+		"marketwatch":         "MarketWatch",
+		"marketwatch.com":     "MarketWatch",
+		"cnbc":                "CNBC",
+		"cnbc.com":            "CNBC",
+		"cnn business":        "CNN Business",
+		"cnn":                 "CNN Business",
+		"fox business":        "Fox Business",
+		"foxbusiness":         "Fox Business",
+		"wall street journal": "Wall Street Journal",
+		"wsj":                 "Wall Street Journal",
+		"wsj.com":             "Wall Street Journal",
+		"financial times":     "Financial Times",
+		"ft.com":              "Financial Times",
+		"investing.com":       "Investing.com",
+		"seeking alpha":       "Seeking Alpha",
+		"seekingalpha":        "Seeking Alpha",
+		"seekingalpha.com":    "Seeking Alpha",
+		"barron's":            "Barron's",
+		"barrons":             "Barron's",
+		"barrons.com":         "Barron's",
+		"thestreet":           "TheStreet",
+		"thestreet.com":       "TheStreet",
+		"motley fool":         "The Motley Fool",
+		"fool.com":            "The Motley Fool",
 	}
 
 	lowerSource := strings.ToLower(cleaned)
@@ -253,12 +253,12 @@ func cleanRelatedTickers(tickers []string) []string {
 
 	for _, ticker := range tickers {
 		cleanTicker := strings.TrimSpace(strings.ToUpper(ticker))
-		
+
 		// Basic validation
 		if cleanTicker == "" {
 			continue
 		}
-		
+
 		// Remove duplicates
 		if seen[cleanTicker] {
 			continue
@@ -282,9 +282,9 @@ func isValidTicker(ticker string) bool {
 
 	// Allow alphanumeric characters, dots, and hyphens
 	for _, char := range ticker {
-		if !((char >= 'A' && char <= 'Z') || 
-			 (char >= '0' && char <= '9') || 
-			 char == '.' || char == '-') {
+		if !((char >= 'A' && char <= 'Z') ||
+			(char >= '0' && char <= '9') ||
+			char == '.' || char == '-') {
 			return false
 		}
 	}
@@ -294,15 +294,15 @@ func isValidTicker(ticker string) bool {
 
 // NewsSummary provides a concise summary of news data for preview
 type NewsSummary struct {
-	TotalArticles    int       `json:"total_articles"`
-	UniqueArticles   int       `json:"unique_articles"`
-	UniqueSources    int       `json:"unique_sources"`
+	TotalArticles    int        `json:"total_articles"`
+	UniqueArticles   int        `json:"unique_articles"`
+	UniqueSources    int        `json:"unique_sources"`
 	EarliestTime     *time.Time `json:"earliest_time,omitempty"`
 	LatestTime       *time.Time `json:"latest_time,omitempty"`
-	TopSources       []string  `json:"top_sources"`
-	RelatedTickers   []string  `json:"related_tickers"`
-	HasImages        int       `json:"has_images"`
-	AverageURLLength int       `json:"average_url_length"`
+	TopSources       []string   `json:"top_sources"`
+	RelatedTickers   []string   `json:"related_tickers"`
+	HasImages        int        `json:"has_images"`
+	AverageURLLength int        `json:"average_url_length"`
 }
 
 // CreateNewsSummary creates a summary of news articles for preview
@@ -330,10 +330,10 @@ func CreateNewsSummary(articles []*newsv1.NewsItem) *NewsSummary {
 			sources[article.Source]++
 		}
 
-	// Collect tickers
-	for _, ticker := range article.Tickers {
-		tickers[ticker] = true
-	}
+		// Collect tickers
+		for _, ticker := range article.Tickers {
+			tickers[ticker] = true
+		}
 
 		// Track URL lengths
 		urlLengths += len(article.Url)
@@ -368,7 +368,7 @@ func CreateNewsSummary(articles []*newsv1.NewsItem) *NewsSummary {
 	for source, count := range sources {
 		sortedSources = append(sortedSources, sourceCount{source, count})
 	}
-	
+
 	// Simple bubble sort by count (descending)
 	for i := 0; i < len(sortedSources)-1; i++ {
 		for j := i + 1; j < len(sortedSources); j++ {

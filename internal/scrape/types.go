@@ -14,28 +14,28 @@ type FetchMeta struct {
 	Gzip         bool          `json:"gzip"`
 	Redirects    int           `json:"redirects"`
 	Duration     time.Duration `json:"duration"`
-	FromCache    bool          `json:"from_cache"`    // reserved for optional HTML in-run cache
+	FromCache    bool          `json:"from_cache"` // reserved for optional HTML in-run cache
 	RobotsPolicy string        `json:"robots_policy"`
 }
 
 // Config represents the scraping configuration
 type Config struct {
-	Enabled       bool          `yaml:"enabled"`
-	UserAgent     string        `yaml:"user_agent"`
-	TimeoutMs     int           `yaml:"timeout_ms"`
-	QPS           float64       `yaml:"qps"`
-	Burst         int           `yaml:"burst"`
-	Retry         RetryConfig   `yaml:"retry"`
-	RobotsPolicy  string        `yaml:"robots_policy"`
-	CacheTTLMs    int           `yaml:"cache_ttl_ms"`
-	Endpoints     EndpointConfig `yaml:"endpoints"`
+	Enabled      bool           `yaml:"enabled"`
+	UserAgent    string         `yaml:"user_agent"`
+	TimeoutMs    int            `yaml:"timeout_ms"`
+	QPS          float64        `yaml:"qps"`
+	Burst        int            `yaml:"burst"`
+	Retry        RetryConfig    `yaml:"retry"`
+	RobotsPolicy string         `yaml:"robots_policy"`
+	CacheTTLMs   int            `yaml:"cache_ttl_ms"`
+	Endpoints    EndpointConfig `yaml:"endpoints"`
 }
 
 // RetryConfig represents retry configuration
 type RetryConfig struct {
-	Attempts    int `yaml:"attempts"`
-	BaseMs      int `yaml:"base_ms"`
-	MaxDelayMs  int `yaml:"max_delay_ms"`
+	Attempts   int `yaml:"attempts"`
+	BaseMs     int `yaml:"base_ms"`
+	MaxDelayMs int `yaml:"max_delay_ms"`
 }
 
 // EndpointConfig represents endpoint-specific configuration
@@ -83,9 +83,9 @@ const (
 
 // IsValidRobotsPolicy checks if a robots policy is valid
 func IsValidRobotsPolicy(policy string) bool {
-	return policy == string(RobotsEnforce) || 
-		   policy == string(RobotsWarn) || 
-		   policy == string(RobotsIgnore)
+	return policy == string(RobotsEnforce) ||
+		policy == string(RobotsWarn) ||
+		policy == string(RobotsIgnore)
 }
 
 // RobotsRule represents a robots.txt rule
@@ -128,16 +128,16 @@ func DefaultBackoffPolicyConfig() *BackoffPolicyConfig {
 
 // RateLimitConfig represents rate limiting configuration
 type RateLimitConfig struct {
-	QPS           float64
-	Burst         int
+	QPS            float64
+	Burst          int
 	PerHostWorkers int
 }
 
 // DefaultRateLimitConfig returns a sensible default rate limit configuration
 func DefaultRateLimitConfig() *RateLimitConfig {
 	return &RateLimitConfig{
-		QPS:           0.7,
-		Burst:         1,
+		QPS:            0.7,
+		Burst:          1,
 		PerHostWorkers: 4,
 	}
 }
@@ -145,9 +145,9 @@ func DefaultRateLimitConfig() *RateLimitConfig {
 // NewsItem represents a single news article extracted from Yahoo Finance
 type NewsItem struct {
 	Title          string     `json:"title"`
-	URL            string     `json:"url"`             // absolute; normalized
+	URL            string     `json:"url"` // absolute; normalized
 	Source         string     `json:"source"`
-	PublishedAt    *time.Time `json:"published_at"`    // UTC if resolvable
+	PublishedAt    *time.Time `json:"published_at"` // UTC if resolvable
 	ImageURL       string     `json:"image_url"`
 	RelatedTickers []string   `json:"related_tickers"`
 }

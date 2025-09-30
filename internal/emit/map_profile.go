@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 )
 
 // ProfileMappingResult represents the result of profile mapping
 type ProfileMappingResult struct {
-	JSONBytes    []byte                 // JSON fallback when proto schema not available
-	Security     *commonv1.SecurityId   // Security identifier
-	Meta         *commonv1.Meta         // Metadata
-	ContentType  string                 // "application/json" for JSON fallback
-	SchemaFQDN   string                 // Schema fully qualified domain name
+	JSONBytes   []byte               // JSON fallback when proto schema not available
+	Security    *commonv1.SecurityId // Security identifier
+	Meta        *commonv1.Meta       // Metadata
+	ContentType string               // "application/json" for JSON fallback
+	SchemaFQDN  string               // Schema fully qualified domain name
 }
 
 // MapProfileDTO converts ProfileDTO to JSON bytes (fallback since reference schema may not be available)
@@ -57,11 +57,11 @@ func MapProfileDTO(dto *scrape.ComprehensiveProfileDTO, runID, producer string) 
 
 // NormalizedProfile represents a normalized company profile structure
 type NormalizedProfile struct {
-	Security    SecurityInfo    `json:"security"`
-	Company     CompanyInfo     `json:"company"`
-	Executives  []ExecutiveInfo `json:"executives,omitempty"`
-	Governance  GovernanceInfo  `json:"governance,omitempty"`
-	AsOf        string          `json:"as_of"`
+	Security   SecurityInfo    `json:"security"`
+	Company    CompanyInfo     `json:"company"`
+	Executives []ExecutiveInfo `json:"executives,omitempty"`
+	Governance GovernanceInfo  `json:"governance,omitempty"`
+	AsOf       string          `json:"as_of"`
 }
 
 // SecurityInfo represents security identification
@@ -94,10 +94,10 @@ type Address struct {
 
 // ExecutiveInfo represents executive information
 type ExecutiveInfo struct {
-	Name             string                  `json:"name,omitempty"`
-	Title            string                  `json:"title,omitempty"`
-	Age              *int                    `json:"age,omitempty"`
-	Compensation     *CompensationInfo       `json:"compensation,omitempty"`
+	Name         string            `json:"name,omitempty"`
+	Title        string            `json:"title,omitempty"`
+	Age          *int              `json:"age,omitempty"`
+	Compensation *CompensationInfo `json:"compensation,omitempty"`
 }
 
 // CompensationInfo represents executive compensation
@@ -171,28 +171,28 @@ func normalizeProfileData(dto *scrape.ComprehensiveProfileDTO) *NormalizedProfil
 			// Convert compensation
 			if exec.TotalPay != nil || exec.ExercisedValue != nil || exec.UnexercisedValue != nil {
 				comp := &CompensationInfo{}
-				
+
 				if exec.TotalPay != nil {
 					comp.TotalPay = &MonetaryAmount{
 						Amount:   *exec.TotalPay,
 						Currency: "USD", // Assume USD for executive compensation
 					}
 				}
-				
+
 				if exec.ExercisedValue != nil {
 					comp.ExercisedValue = &MonetaryAmount{
 						Amount:   *exec.ExercisedValue,
 						Currency: "USD",
 					}
 				}
-				
+
 				if exec.UnexercisedValue != nil {
 					comp.UnexercisedValue = &MonetaryAmount{
 						Amount:   *exec.UnexercisedValue,
 						Currency: "USD",
 					}
 				}
-				
+
 				execInfo.Compensation = comp
 			}
 
@@ -203,7 +203,7 @@ func normalizeProfileData(dto *scrape.ComprehensiveProfileDTO) *NormalizedProfil
 	// Convert governance information
 	if dto.AuditRisk != nil || dto.BoardRisk != nil || dto.CompensationRisk != nil ||
 		dto.ShareHolderRightsRisk != nil || dto.OverallRisk != nil || dto.GovernanceEpochDate != nil {
-		
+
 		profile.Governance = GovernanceInfo{
 			AuditRisk:             dto.AuditRisk,
 			BoardRisk:             dto.BoardRisk,
@@ -223,7 +223,7 @@ func cleanString(s string) string {
 	if cleaned == "" {
 		return ""
 	}
-	
+
 	// Replace multiple consecutive whitespaces with single space
 	words := strings.Fields(cleaned)
 	return strings.Join(words, " ")
@@ -259,14 +259,14 @@ func ValidateProfileData(profile *NormalizedProfile) error {
 
 // ProfileSummary provides a concise summary of profile data for preview
 type ProfileSummary struct {
-	Symbol        string `json:"symbol"`
-	CompanyName   string `json:"company_name"`
-	Industry      string `json:"industry"`
-	Sector        string `json:"sector"`
-	Employees     *int64 `json:"employees,omitempty"`
-	ExecutiveCount int   `json:"executive_count"`
-	HasGovernance bool   `json:"has_governance"`
-	JSONSizeBytes int    `json:"json_size_bytes"`
+	Symbol         string `json:"symbol"`
+	CompanyName    string `json:"company_name"`
+	Industry       string `json:"industry"`
+	Sector         string `json:"sector"`
+	Employees      *int64 `json:"employees,omitempty"`
+	ExecutiveCount int    `json:"executive_count"`
+	HasGovernance  bool   `json:"has_governance"`
+	JSONSizeBytes  int    `json:"json_size_bytes"`
 }
 
 // CreateProfileSummary creates a summary of profile data for preview

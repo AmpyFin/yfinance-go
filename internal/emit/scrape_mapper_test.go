@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -200,7 +200,7 @@ func TestMapProfileDTO(t *testing.T) {
 func TestMapNewsItems(t *testing.T) {
 	// Test data
 	publishedTime := time.Date(2024, 12, 31, 15, 30, 0, 0, time.UTC)
-	
+
 	items := []scrape.NewsItem{
 		{
 			Title:          "Apple Reports Record Q4 Earnings",

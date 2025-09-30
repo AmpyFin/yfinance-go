@@ -5,8 +5,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 )
 
 // ScaledDecimalConfig holds configuration for decimal conversion
@@ -144,18 +144,18 @@ func convertScale(v *scrape.Scaled, targetScale int) (*scrape.Scaled, error) {
 		// Increasing scale (more precision)
 		scaleDiff := targetScale - v.Scale
 		multiplier := int64(math.Pow10(scaleDiff))
-		
+
 		// Check for overflow
 		if v.Scaled > math.MaxInt64/multiplier {
 			return nil, fmt.Errorf("scale conversion would overflow: %d * 10^%d", v.Scaled, scaleDiff)
 		}
-		
+
 		newScaled = v.Scaled * multiplier
 	} else {
 		// Decreasing scale (less precision)
 		scaleDiff := v.Scale - targetScale
 		divisor := int64(math.Pow10(scaleDiff))
-		
+
 		// Round to nearest
 		newScaled = (v.Scaled + divisor/2) / divisor
 		if v.Scaled < 0 {
@@ -265,10 +265,10 @@ func validateCurrencyCode(code string) error {
 
 // CurrencyInfo provides information about a currency
 type CurrencyInfo struct {
-	Code        string `json:"code"`
-	Name        string `json:"name"`
-	Symbol      string `json:"symbol,omitempty"`
-	MinorUnits  int    `json:"minor_units"` // Number of minor units (e.g., 2 for USD cents)
+	Code       string `json:"code"`
+	Name       string `json:"name"`
+	Symbol     string `json:"symbol,omitempty"`
+	MinorUnits int    `json:"minor_units"` // Number of minor units (e.g., 2 for USD cents)
 }
 
 // GetCurrencyInfo returns information about a currency code

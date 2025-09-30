@@ -42,28 +42,28 @@ func IsRetryableError(err error) bool {
 // ExecuteWithRetry executes a function with retry logic
 func (rp *RetryPolicy) ExecuteWithRetry(ctx context.Context, fn func() error) error {
 	var lastErr error
-	
+
 	for attempt := 0; attempt < rp.config.Attempts; attempt++ {
 		err := fn()
 		if err == nil {
 			return nil
 		}
-		
+
 		lastErr = err
-		
+
 		// Check if error is retryable
 		if !IsRetryableError(err) {
 			return err
 		}
-		
+
 		// Don't sleep on the last attempt
 		if attempt == rp.config.Attempts-1 {
 			break
 		}
-		
+
 		// Calculate delay with exponential backoff and jitter
 		delay := rp.calculateDelay(attempt)
-		
+
 		// Wait with context cancellation support
 		select {
 		case <-ctx.Done():
@@ -72,7 +72,7 @@ func (rp *RetryPolicy) ExecuteWithRetry(ctx context.Context, fn func() error) er
 			// Continue to next attempt
 		}
 	}
-	
+
 	return fmt.Errorf("failed after %d attempts: %w", rp.config.Attempts, lastErr)
 }
 
@@ -80,30 +80,30 @@ func (rp *RetryPolicy) ExecuteWithRetry(ctx context.Context, fn func() error) er
 func (rp *RetryPolicy) calculateDelay(attempt int) time.Duration {
 	// Exponential backoff: base * 2^attempt
 	delay := float64(rp.config.BaseMs) * math.Pow(2, float64(attempt))
-	
+
 	// Cap at max delay
 	if delay > float64(rp.config.MaxDelayMs) {
 		delay = float64(rp.config.MaxDelayMs)
 	}
-	
+
 	// Add jitter (±25%)
 	jitter := delay * 0.25 * (rand.Float64() - 0.5)
 	delay += jitter
-	
+
 	// Ensure minimum delay
 	if delay < 0 {
 		delay = 1
 	}
-	
+
 	return time.Duration(delay) * time.Millisecond
 }
 
 // CircuitBreaker implements circuit breaker pattern
 type CircuitBreaker struct {
-	config         *CircuitBreakerConfig
-	state          CircuitBreakerState
-	failureCount   int
-	successCount   int
+	config          *CircuitBreakerConfig
+	state           CircuitBreakerState
+	failureCount    int
+	successCount    int
 	lastFailureTime time.Time
 	nextAttemptTime time.Time
 }
@@ -131,20 +131,20 @@ func (cb *CircuitBreaker) Execute(ctx context.Context, fn func() error) error {
 	if !cb.canExecute() {
 		return fmt.Errorf("circuit breaker is open")
 	}
-	
+
 	// Execute the function
 	err := fn()
-	
+
 	// Update circuit breaker state based on result
 	cb.recordResult(err)
-	
+
 	return err
 }
 
 // canExecute checks if the circuit breaker allows execution
 func (cb *CircuitBreaker) canExecute() bool {
 	now := time.Now()
-	
+
 	switch cb.state {
 	case CircuitBreakerClosed:
 		return true
@@ -167,11 +167,11 @@ func (cb *CircuitBreaker) canExecute() bool {
 // recordResult records the result of an execution
 func (cb *CircuitBreaker) recordResult(err error) {
 	now := time.Now()
-	
+
 	if err != nil {
 		cb.failureCount++
 		cb.lastFailureTime = now
-		
+
 		// Check if we should open the circuit
 		if cb.shouldOpenCircuit() {
 			cb.state = CircuitBreakerOpen
@@ -179,12 +179,12 @@ func (cb *CircuitBreaker) recordResult(err error) {
 		}
 	} else {
 		cb.successCount++
-		
+
 		// Reset failure count on success
 		if cb.state == CircuitBreakerClosed {
 			cb.failureCount = 0
 		}
-		
+
 		// Check if we should close the circuit (half-open -> closed)
 		if cb.state == CircuitBreakerHalfOpen && cb.successCount >= cb.config.HalfOpenProbes {
 			cb.state = CircuitBreakerClosed
@@ -199,7 +199,7 @@ func (cb *CircuitBreaker) shouldOpenCircuit() bool {
 	if cb.failureCount < cb.config.Window {
 		return false
 	}
-	
+
 	// Calculate failure rate
 	failureRate := float64(cb.failureCount) / float64(cb.config.Window)
 	return failureRate >= cb.config.FailureThreshold
@@ -213,9 +213,9 @@ func (cb *CircuitBreaker) GetState() CircuitBreakerState {
 // GetStats returns statistics about the circuit breaker
 func (cb *CircuitBreaker) GetStats() CircuitBreakerStats {
 	return CircuitBreakerStats{
-		State:        cb.state,
-		FailureCount: cb.failureCount,
-		SuccessCount: cb.successCount,
+		State:           cb.state,
+		FailureCount:    cb.failureCount,
+		SuccessCount:    cb.successCount,
 		LastFailureTime: cb.lastFailureTime,
 		NextAttemptTime: cb.nextAttemptTime,
 	}

@@ -7,11 +7,11 @@ import (
 
 func TestRoundHalfUp(t *testing.T) {
 	tests := []struct {
-		name       string
-		value      *big.Int
-		fromScale  int
-		toScale    int
-		expected   *big.Int
+		name      string
+		value     *big.Int
+		fromScale int
+		toScale   int
+		expected  *big.Int
 	}{
 		{
 			name:      "no rounding needed - scale up",
@@ -76,12 +76,12 @@ func TestRoundHalfUp(t *testing.T) {
 
 func TestMultiplyAndRound(t *testing.T) {
 	tests := []struct {
-		name         string
-		value        ScaledDecimal
-		rate         ScaledDecimal
-		targetScale  int
-		expected     ScaledDecimal
-		expectError  bool
+		name        string
+		value       ScaledDecimal
+		rate        ScaledDecimal
+		targetScale int
+		expected    ScaledDecimal
+		expectError bool
 	}{
 		{
 			name: "simple multiplication",

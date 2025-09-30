@@ -113,7 +113,7 @@ func TestToUTCDayBoundaries(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			start, end, eventTime := ToUTCDayBoundaries(tt.timestamp)
-			
+
 			if !start.Equal(tt.wantStart) {
 				t.Errorf("ToUTCDayBoundaries() start = %v, want %v", start, tt.wantStart)
 			}

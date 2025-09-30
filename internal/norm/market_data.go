@@ -28,19 +28,19 @@ func NormalizeMarketData(meta *yahoo.ChartMeta, runID string) (*NormalizedMarket
 
 	// Create normalized market data
 	marketData := &NormalizedMarketData{
-		Security:               security,
-		RegularMarketPrice:     ToScaledDecimalPtr(meta.RegularMarketPrice, meta.Currency),
-		RegularMarketHigh:      ToScaledDecimalPtr(meta.RegularMarketDayHigh, meta.Currency),
-		RegularMarketLow:       ToScaledDecimalPtr(meta.RegularMarketDayLow, meta.Currency),
-		RegularMarketVolume:    meta.RegularMarketVolume,
-		FiftyTwoWeekHigh:       ToScaledDecimalPtr(meta.FiftyTwoWeekHigh, meta.Currency),
-		FiftyTwoWeekLow:        ToScaledDecimalPtr(meta.FiftyTwoWeekLow, meta.Currency),
-		PreviousClose:          ToScaledDecimalPtr(meta.PreviousClose, meta.Currency),
-		ChartPreviousClose:     ToScaledDecimalPtr(meta.ChartPreviousClose, meta.Currency),
-		RegularMarketTime:      regularMarketTime,
-		HasPrePostMarketData:   meta.HasPrePostMarketData,
-		EventTime:              time.Now().UTC(),
-		IngestTime:             time.Now().UTC(),
+		Security:             security,
+		RegularMarketPrice:   ToScaledDecimalPtr(meta.RegularMarketPrice, meta.Currency),
+		RegularMarketHigh:    ToScaledDecimalPtr(meta.RegularMarketDayHigh, meta.Currency),
+		RegularMarketLow:     ToScaledDecimalPtr(meta.RegularMarketDayLow, meta.Currency),
+		RegularMarketVolume:  meta.RegularMarketVolume,
+		FiftyTwoWeekHigh:     ToScaledDecimalPtr(meta.FiftyTwoWeekHigh, meta.Currency),
+		FiftyTwoWeekLow:      ToScaledDecimalPtr(meta.FiftyTwoWeekLow, meta.Currency),
+		PreviousClose:        ToScaledDecimalPtr(meta.PreviousClose, meta.Currency),
+		ChartPreviousClose:   ToScaledDecimalPtr(meta.ChartPreviousClose, meta.Currency),
+		RegularMarketTime:    regularMarketTime,
+		HasPrePostMarketData: meta.HasPrePostMarketData,
+		EventTime:            time.Now().UTC(),
+		IngestTime:           time.Now().UTC(),
 		Meta: Meta{
 			RunID:         runID,
 			Source:        "yahoo",
@@ -57,7 +57,7 @@ func ToScaledDecimalPtr(value *float64, currency string) *ScaledDecimal {
 	if value == nil {
 		return nil
 	}
-	
+
 	scaled, _ := ToScaledDecimalWithCurrency(*value, currency)
 	return &scaled
 }

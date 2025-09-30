@@ -43,8 +43,8 @@ run_command "Basic Key Statistics Preview" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
-    --preview
+    --endpoints key-statistics \
+    --preview-json
 
 # Example 2: Multiple Endpoints JSON Preview
 run_command "Multiple Endpoints JSON Preview" \
@@ -59,7 +59,7 @@ run_command "News Articles Preview" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint news \
+    --endpoints news \
     --preview-news
 
 # Example 4: Proto Summary Preview
@@ -75,7 +75,7 @@ run_command "Endpoint Health Check" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --check
 
 # Example 6: Fallback Strategy Testing
@@ -87,27 +87,27 @@ run_command "API-Only Mode Test" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint quote \
+    --endpoints quote \
     --fallback api-only \
-    --preview
+    --preview-json
 
 # Test scrape-only mode
 run_command "Scrape-Only Mode Test" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --fallback scrape-only \
-    --preview
+    --preview-json
 
 # Test automatic fallback
 run_command "Automatic Fallback Test" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --fallback auto \
-    --preview
+    --preview-json
 
 # Example 7: Rate Limiting and Performance Testing
 echo ""
@@ -118,19 +118,19 @@ run_command "Conservative Rate Limiting" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --qps 0.5 \
     --timeout 60s \
-    --preview
+    --preview-json
 
 # With session rotation
 run_command "With Session Rotation" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --sessions 5 \
-    --preview
+    --preview-json
 
 # Example 8: Debug and Troubleshooting
 echo ""
@@ -141,17 +141,17 @@ run_command "Debug Mode" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --log-level debug \
-    --preview
+    --preview-json
 
 # Dry run mode
 run_command "Dry Run Mode" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
-    --dry-run
+    --endpoints key-statistics \
+    --preview-json
 
 # Example 9: Configuration Testing
 echo ""
@@ -191,17 +191,17 @@ run_command "Invalid Ticker Test" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "INVALID_TICKER_12345" \
-    --endpoint key-statistics \
-    --preview
+    --endpoints key-statistics \
+    --preview-json
 
 # Test with very short timeout (should timeout)
 run_command "Timeout Test" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "$TICKER" \
-    --endpoint key-statistics \
+    --endpoints key-statistics \
     --timeout 1s \
-    --preview
+    --preview-json
 
 # Example 12: International Ticker Testing
 echo ""
@@ -212,16 +212,16 @@ run_command "Hong Kong Stock (0700.HK)" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "0700.HK" \
-    --endpoint key-statistics \
-    --preview
+    --endpoints key-statistics \
+    --preview-json
 
 # Test European stock
 run_command "European Stock (SAP)" \
     $YFIN_CMD scrape \
     ${CONFIG_FILE:+--config "$CONFIG_FILE"} \
     --ticker "SAP" \
-    --endpoint key-statistics \
-    --preview
+    --endpoints key-statistics \
+    --preview-json
 
 # Summary
 echo ""

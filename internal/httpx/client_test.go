@@ -80,7 +80,7 @@ func TestClientCircuitBreaker(t *testing.T) {
 	if err == nil {
 		t.Error("Request 1 should have failed")
 	}
-	
+
 	// Check circuit is still closed (1 failure, threshold is 2)
 	if client.circuitBreaker.State() != StateClosed {
 		t.Errorf("Expected circuit to be closed after 1 failure, got state %v", client.circuitBreaker.State())
@@ -91,7 +91,7 @@ func TestClientCircuitBreaker(t *testing.T) {
 	if err == nil {
 		t.Error("Request 2 should have failed")
 	}
-	
+
 	// Check circuit is now open (2 failures, threshold is 2)
 	if client.circuitBreaker.State() != StateOpen {
 		t.Errorf("Expected circuit to be open after 2 failures, got state %v", client.circuitBreaker.State())
@@ -125,7 +125,7 @@ func TestClientCircuitBreaker(t *testing.T) {
 	if err == nil {
 		t.Error("Request should still fail (server still returns 500)")
 	}
-	
+
 	// After failure in half-open state, circuit should be open again
 	if client.circuitBreaker.State() != StateOpen {
 		t.Errorf("Expected circuit to be open again after failure in half-open state, got state %v", client.circuitBreaker.State())
@@ -162,10 +162,10 @@ func TestRateLimiter(t *testing.T) {
 
 func TestErrorTypes(t *testing.T) {
 	tests := []struct {
-		name     string
-		err      error
+		name      string
+		err       error
 		retryable bool
-		fatal    bool
+		fatal     bool
 	}{
 		{
 			name:      "429 error",

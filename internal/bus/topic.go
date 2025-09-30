@@ -52,18 +52,18 @@ func ValidateTopic(topic string) error {
 	if topic == "" {
 		return fmt.Errorf("topic cannot be empty")
 	}
-	
+
 	parts := strings.Split(topic, ".")
 	if len(parts) < 4 {
 		return fmt.Errorf("topic must have at least 4 parts: prefix.env.domain.version.subtopic")
 	}
-	
+
 	// Validate environment
 	env := parts[1]
 	if env == "" {
 		return fmt.Errorf("environment cannot be empty")
 	}
-	
+
 	// Validate domain
 	domain := parts[2]
 	validDomains := map[string]bool{
@@ -80,17 +80,17 @@ func ValidateTopic(topic string) error {
 		"dlq":          true,
 		"control":      true,
 	}
-	
+
 	if !validDomains[domain] {
 		return fmt.Errorf("invalid domain: %s", domain)
 	}
-	
+
 	// Validate version
 	version := parts[3]
 	if !strings.HasPrefix(version, "v") {
 		return fmt.Errorf("version must start with 'v': %s", version)
 	}
-	
+
 	return nil
 }
 
@@ -99,17 +99,17 @@ func ParseTopic(topic string) (*TopicComponents, error) {
 	if err := ValidateTopic(topic); err != nil {
 		return nil, err
 	}
-	
+
 	parts := strings.Split(topic, ".")
-	
+
 	components := &TopicComponents{
-		Prefix:    parts[0],
-		Env:       parts[1],
-		Domain:    parts[2],
-		Version:   parts[3],
-		Subtopic:  strings.Join(parts[4:], "."),
+		Prefix:   parts[0],
+		Env:      parts[1],
+		Domain:   parts[2],
+		Version:  parts[3],
+		Subtopic: strings.Join(parts[4:], "."),
 	}
-	
+
 	return components, nil
 }
 

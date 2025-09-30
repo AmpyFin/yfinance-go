@@ -36,14 +36,14 @@ func (l *Logger) LogRequest(url, host string, status, attempt int, duration time
 		Source:    "yfinance-go/scrape",
 		Message:   "scrape request",
 		Fields: map[string]interface{}{
-			"url":        url,
-			"host":       host,
-			"status":     status,
-			"attempt":    attempt,
+			"url":         url,
+			"host":        host,
+			"status":      status,
+			"attempt":     attempt,
 			"duration_ms": duration.Milliseconds(),
-			"bytes":      bytes,
-			"gzip":       gzip,
-			"redirects":  redirects,
+			"bytes":       bytes,
+			"gzip":        gzip,
+			"redirects":   redirects,
 		},
 	}
 
@@ -83,9 +83,9 @@ func (l *Logger) LogBackoff(url, host string, delay time.Duration) {
 		Source:    "yfinance-go/scrape",
 		Message:   "scrape backoff",
 		Fields: map[string]interface{}{
-			"url":         url,
-			"host":        host,
-			"sleep_ms":    delay.Milliseconds(),
+			"url":      url,
+			"host":     host,
+			"sleep_ms": delay.Milliseconds(),
 		},
 	}
 
@@ -155,15 +155,15 @@ func (l *Logger) LogConfig(config *Config) {
 		Source:    "yfinance-go/scrape",
 		Message:   "scrape configuration",
 		Fields: map[string]interface{}{
-			"enabled":       config.Enabled,
-			"user_agent":    config.UserAgent,
-			"timeout_ms":    config.TimeoutMs,
-			"qps":           config.QPS,
-			"burst":         config.Burst,
-			"robots_policy": config.RobotsPolicy,
+			"enabled":        config.Enabled,
+			"user_agent":     config.UserAgent,
+			"timeout_ms":     config.TimeoutMs,
+			"qps":            config.QPS,
+			"burst":          config.Burst,
+			"robots_policy":  config.RobotsPolicy,
 			"retry_attempts": config.Retry.Attempts,
-			"retry_base_ms": config.Retry.BaseMs,
-			"retry_max_ms":  config.Retry.MaxDelayMs,
+			"retry_base_ms":  config.Retry.BaseMs,
+			"retry_max_ms":   config.Retry.MaxDelayMs,
 		},
 	}
 

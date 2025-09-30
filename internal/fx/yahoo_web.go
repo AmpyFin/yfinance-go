@@ -115,8 +115,8 @@ func (p *YahooWebProvider) fetchSingleRate(ctx context.Context, base, target str
 
 	// Parse JSON response
 	var yahooResp YahooChartResponse
-	if err := json.Unmarshal(body, &yahooResp); err != nil {
-		return norm.ScaledDecimal{}, fmt.Errorf("failed to parse JSON response: %w", err)
+	if unmarshalErr := json.Unmarshal(body, &yahooResp); unmarshalErr != nil {
+		return norm.ScaledDecimal{}, fmt.Errorf("failed to parse JSON response: %w", unmarshalErr)
 	}
 
 	// Extract rate from response
@@ -178,19 +178,19 @@ type YahooChartResult struct {
 }
 
 type YahooChartMeta struct {
-	RegularMarketPrice    *float64 `json:"regularMarketPrice"`
-	PreviousClose         *float64 `json:"previousClose"`
-	ChartPreviousClose    *float64 `json:"chartPreviousClose"`
-	Currency              string   `json:"currency"`
-	ExchangeName          string   `json:"exchangeName"`
-	InstrumentType        string   `json:"instrumentType"`
-	FirstTradeDate        *int64   `json:"firstTradeDate"`
-	Timezone              string   `json:"timezone"`
-	ExchangeTimezone      string   `json:"exchangeTimezone"`
-	GMTOffset             int      `json:"gmtoffset"`
-	LastUpdateTime        *int64   `json:"lastUpdateTime"`
-	RegularMarketTime     *int64   `json:"regularMarketTime"`
-	HasPrePostMarketData  bool     `json:"hasPrePostMarketData"`
+	RegularMarketPrice   *float64 `json:"regularMarketPrice"`
+	PreviousClose        *float64 `json:"previousClose"`
+	ChartPreviousClose   *float64 `json:"chartPreviousClose"`
+	Currency             string   `json:"currency"`
+	ExchangeName         string   `json:"exchangeName"`
+	InstrumentType       string   `json:"instrumentType"`
+	FirstTradeDate       *int64   `json:"firstTradeDate"`
+	Timezone             string   `json:"timezone"`
+	ExchangeTimezone     string   `json:"exchangeTimezone"`
+	GMTOffset            int      `json:"gmtoffset"`
+	LastUpdateTime       *int64   `json:"lastUpdateTime"`
+	RegularMarketTime    *int64   `json:"regularMarketTime"`
+	HasPrePostMarketData bool     `json:"hasPrePostMarketData"`
 }
 
 type YahooChartError struct {

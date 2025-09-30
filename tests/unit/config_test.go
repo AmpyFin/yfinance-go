@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/AmpyFin/yfinance-go/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/AmpyFin/yfinance-go/internal/config"
 )
 
 func TestConfigDefaults(t *testing.T) {
@@ -15,12 +15,12 @@ func TestConfigDefaults(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Test that defaults are sensible
 	assert.NotEmpty(t, cfg.Yahoo.BaseURL)
 	assert.Greater(t, cfg.Yahoo.TimeoutMs, 0)
@@ -36,16 +36,16 @@ func TestConfigValidation(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Test valid config - validation happens during Load()
 	// So if Load() succeeded, validation passed
 	assert.NoError(t, err)
-	
+
 	// Test invalid configurations
 	tests := []struct {
 		name      string
@@ -136,7 +136,7 @@ func TestConfigValidation(t *testing.T) {
 			// Create a copy of the config
 			testCfg := *cfg
 			tt.modify(&testCfg)
-			
+
 			// For this test, we'll just check that the modification worked
 			// In a real scenario, you'd need to save the config and reload it
 			// This is a simplified test that just verifies the config can be modified
@@ -157,16 +157,16 @@ func TestConfigPrecedence(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Test precedence: explicit values > defaults
 	cfg.RateLimit.PerHostQPS = 5.0
 	cfg.RateLimit.PerHostBurst = 10
-	
+
 	assert.Equal(t, 5.0, cfg.RateLimit.PerHostQPS)
 	assert.Equal(t, 10, cfg.RateLimit.PerHostBurst)
 }
@@ -177,19 +177,19 @@ func TestConfigRedaction(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Add some sensitive data
 	cfg.Yahoo.UserAgent = "sensitive-user-agent"
-	
+
 	// Test that redaction works
 	effectiveConfig, err := loader.GetEffectiveConfig()
 	require.NoError(t, err)
-	
+
 	// Check that the config was loaded
 	assert.NotNil(t, effectiveConfig)
 }
@@ -202,7 +202,7 @@ func TestConfigEnvironmentInterpolation(t *testing.T) {
 		os.Unsetenv("TEST_BASE_URL")
 		os.Unsetenv("TEST_QPS")
 	}()
-	
+
 	// Create a config file with environment variable references
 	configContent := `
 yahoo:
@@ -261,17 +261,17 @@ observability:
       sample_ratio: 0.05
 secrets: []
 `
-	
+
 	testConfigPath := "test_env_config.yaml"
 	err := os.WriteFile(testConfigPath, []byte(configContent), 0644)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	assert.Equal(t, "https://test.example.com", cfg.Yahoo.BaseURL)
 	assert.Equal(t, 10.0, cfg.RateLimit.PerHostQPS)
 }
@@ -282,26 +282,26 @@ func TestConfigValidationMethods(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Test interval validation
 	err = cfg.ValidateInterval("1d")
 	assert.NoError(t, err)
-	
+
 	err = cfg.ValidateInterval("1h")
 	assert.Error(t, err)
-	
+
 	// Test adjustment policy validation
 	err = cfg.ValidateAdjustmentPolicy("raw")
 	assert.NoError(t, err)
-	
+
 	err = cfg.ValidateAdjustmentPolicy("split_dividend")
 	assert.NoError(t, err)
-	
+
 	err = cfg.ValidateAdjustmentPolicy("invalid")
 	assert.Error(t, err)
 }
@@ -312,22 +312,22 @@ func TestConfigConversion(t *testing.T) {
 	err := config.CreateEffectiveConfig(testConfigPath)
 	require.NoError(t, err)
 	defer os.Remove(testConfigPath)
-	
+
 	// Load the config
 	loader := config.NewLoader(testConfigPath)
 	cfg, err := loader.Load()
 	require.NoError(t, err)
-	
+
 	// Test HTTP config conversion
 	httpConfig := cfg.GetHTTPConfig()
 	assert.NotNil(t, httpConfig)
 	assert.Equal(t, cfg.Yahoo.BaseURL, httpConfig.BaseURL)
 	assert.Equal(t, cfg.RateLimit.PerHostQPS, httpConfig.QPS)
-	
+
 	// Test bus config conversion
 	busConfig := cfg.GetBusConfig()
 	assert.NotNil(t, busConfig)
-	
+
 	// Test FX config conversion
 	fxConfig := cfg.GetFXConfig()
 	assert.NotNil(t, fxConfig)

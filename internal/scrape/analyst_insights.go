@@ -2,27 +2,28 @@ package scrape
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // AnalystInsightsDTO represents analyst insights data from Yahoo Finance
 type AnalystInsightsDTO struct {
-	Symbol   string    `json:"symbol"`
-	Market   string    `json:"market"`
-	AsOf     time.Time `json:"as_of"`
+	Symbol string    `json:"symbol"`
+	Market string    `json:"market"`
+	AsOf   time.Time `json:"as_of"`
 
 	// Price Targets
-	CurrentPrice       *float64 `json:"current_price,omitempty"`
-	TargetMeanPrice    *float64 `json:"target_mean_price,omitempty"`
-	TargetMedianPrice  *float64 `json:"target_median_price,omitempty"`
-	TargetHighPrice    *float64 `json:"target_high_price,omitempty"`
-	TargetLowPrice     *float64 `json:"target_low_price,omitempty"`
-	
+	CurrentPrice      *float64 `json:"current_price,omitempty"`
+	TargetMeanPrice   *float64 `json:"target_mean_price,omitempty"`
+	TargetMedianPrice *float64 `json:"target_median_price,omitempty"`
+	TargetHighPrice   *float64 `json:"target_high_price,omitempty"`
+	TargetLowPrice    *float64 `json:"target_low_price,omitempty"`
+
 	// Analyst Opinions
 	NumberOfAnalysts   *int     `json:"number_of_analysts,omitempty"`
 	RecommendationMean *float64 `json:"recommendation_mean,omitempty"`
@@ -34,7 +35,7 @@ type AnalystInsightsRegexConfig struct {
 	FinancialData struct {
 		CombinedPattern string `yaml:"combined_pattern"`
 	} `yaml:"financial_data"`
-	
+
 	IndividualFields struct {
 		CurrentPrice       string `yaml:"current_price"`
 		TargetMeanPrice    string `yaml:"target_mean_price"`
@@ -54,25 +55,25 @@ func LoadAnalystInsightsRegexConfig() error {
 	if analystInsightsRegexConfig != nil {
 		return nil // Already loaded
 	}
-	
+
 	// Get the directory of the current file
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return fmt.Errorf("unable to get current file path")
 	}
-	
+
 	configPath := filepath.Join(filepath.Dir(filename), "regex", "analyst_insights.yaml")
-	
-	data, err := ioutil.ReadFile(configPath)
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read analyst insights regex config file: %w", err)
 	}
-	
+
 	analystInsightsRegexConfig = &AnalystInsightsRegexConfig{}
 	if err := yaml.Unmarshal(data, analystInsightsRegexConfig); err != nil {
 		return fmt.Errorf("failed to parse analyst insights regex config YAML: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -81,7 +82,7 @@ func ParseAnalystInsights(html []byte, symbol, market string) (*AnalystInsightsD
 	if err := LoadAnalystInsightsRegexConfig(); err != nil {
 		return nil, fmt.Errorf("failed to load analyst insights regex config: %w", err)
 	}
-	
+
 	dto := &AnalystInsightsDTO{
 		Symbol: symbol,
 		Market: market,
@@ -104,7 +105,7 @@ func extractFinancialDataFromJSON(html string, dto *AnalystInsightsDTO) error {
 	// Pattern to match: "financialData":{"maxAge":86400,"currentPrice":...}
 	re := regexp.MustCompile(analystInsightsRegexConfig.FinancialData.CombinedPattern)
 	matches := re.FindStringSubmatch(html)
-	
+
 	if len(matches) < 9 {
 		// Try a more flexible approach by searching for individual fields
 		return extractFinancialDataFlexible(html, dto)
@@ -197,4 +198,3 @@ func extractFinancialDataFlexible(html string, dto *AnalystInsightsDTO) error {
 
 	return nil
 }
-

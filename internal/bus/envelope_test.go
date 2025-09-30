@@ -11,12 +11,12 @@ import (
 
 func TestEnvelopeBuilder_BuildEnvelope(t *testing.T) {
 	builder := NewEnvelopeBuilder("test-producer", "test-source")
-	
+
 	key := &Key{
 		Symbol: "AAPL",
 		MIC:    "XNAS",
 	}
-	
+
 	envelope := builder.BuildEnvelope(
 		"ampy.bars.v1.BarBatch",
 		"1.0.0",
@@ -25,7 +25,7 @@ func TestEnvelopeBuilder_BuildEnvelope(t *testing.T) {
 		"test-trace-id",
 		nil,
 	)
-	
+
 	// Validate envelope
 	require.NotNil(t, envelope)
 	assert.NotEmpty(t, envelope.MessageID)
@@ -37,23 +37,23 @@ func TestEnvelopeBuilder_BuildEnvelope(t *testing.T) {
 	assert.Equal(t, "test-run-id", envelope.RunID)
 	assert.Equal(t, "test-trace-id", envelope.TraceID)
 	assert.Equal(t, "XNAS.AAPL", envelope.PartitionKey)
-	
+
 	// Validate UUID format
 	_, err := uuid.Parse(envelope.MessageID)
 	assert.NoError(t, err)
-	
+
 	// Validate timestamp
 	assert.WithinDuration(t, time.Now(), envelope.ProducedAt, time.Second)
 }
 
 func TestEnvelopeBuilder_BuildChunkedEnvelope(t *testing.T) {
 	builder := NewEnvelopeBuilder("test-producer", "test-source")
-	
+
 	key := &Key{
 		Symbol: "AAPL",
 		MIC:    "XNAS",
 	}
-	
+
 	envelope := builder.BuildChunkedEnvelope(
 		"ampy.bars.v1.BarBatch",
 		"1.0.0",
@@ -64,7 +64,7 @@ func TestEnvelopeBuilder_BuildChunkedEnvelope(t *testing.T) {
 		3,
 		nil,
 	)
-	
+
 	// Validate envelope
 	require.NotNil(t, envelope)
 	assert.Equal(t, "1", envelope.Extensions["chunk_index"])
@@ -113,7 +113,7 @@ func TestValidateEnvelope(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateEnvelope(tt.envelope)

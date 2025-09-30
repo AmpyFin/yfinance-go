@@ -30,17 +30,17 @@ var (
 	ErrCircuitOpen      = &ScrapeError{Type: "circuit_open", Message: "circuit breaker is open"}
 	ErrInvalidURL       = &ScrapeError{Type: "invalid_url", Message: "invalid URL format"}
 	ErrContentTooLarge  = &ScrapeError{Type: "content_too_large", Message: "response content exceeds size limit"}
-	
+
 	// Parse-specific errors
 	ErrNoQuoteSummary   = &ScrapeError{Type: "no_quote_summary", Message: "could not locate quoteSummary script payload"}
 	ErrJSONUnescape     = &ScrapeError{Type: "json_unescape", Message: "failed to unescape JSON from envelope body"}
 	ErrJSONDecode       = &ScrapeError{Type: "json_decode", Message: "failed to decode JSON structure"}
 	ErrMissingFieldBase = &ScrapeError{Type: "missing_field", Message: "required field is missing"}
 	ErrSchemaDriftBase  = &ScrapeError{Type: "schema_drift", Message: "unexpected schema change detected"}
-	
+
 	// News-specific errors
-	ErrNewsNoArticles   = &ScrapeError{Type: "news_no_articles", Message: "no news articles found"}
-	ErrNewsParse        = &ScrapeError{Type: "news_parse", Message: "failed to parse news HTML"}
+	ErrNewsNoArticles = &ScrapeError{Type: "news_no_articles", Message: "no news articles found"}
+	ErrNewsParse      = &ScrapeError{Type: "news_parse", Message: "failed to parse news HTML"}
 )
 
 // ErrHTTP creates an HTTP status error
@@ -103,7 +103,7 @@ func isNetworkError(err error) bool {
 		"no such host",
 		"network is unreachable",
 	}
-	
+
 	for _, netErr := range networkErrors {
 		if contains(errStr, netErr) {
 			return true
@@ -114,12 +114,12 @@ func isNetworkError(err error) bool {
 
 // contains checks if a string contains a substring (case-insensitive)
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-		    (len(s) > len(substr) && 
-		     (s[:len(substr)] == substr || 
-		      s[len(s)-len(substr):] == substr || 
-		      indexOf(s, substr) >= 0)))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			(len(s) > len(substr) &&
+				(s[:len(substr)] == substr ||
+					s[len(s)-len(substr):] == substr ||
+					indexOf(s, substr) >= 0)))
 }
 
 // indexOf finds the index of a substring in a string

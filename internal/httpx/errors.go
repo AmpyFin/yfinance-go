@@ -7,8 +7,8 @@ import (
 
 // Error types for HTTP operations
 var (
-	ErrTooManyRequests    = errors.New("too many requests (429)")
-	ErrServerUnavailable  = errors.New("server unavailable (5xx)")
+	ErrTooManyRequests   = errors.New("too many requests (429)")
+	ErrServerUnavailable = errors.New("server unavailable (5xx)")
 	ErrDecode            = errors.New("decode error")
 	ErrClientConfig      = errors.New("client configuration error")
 	ErrRateLimited       = errors.New("rate limited")
@@ -55,7 +55,7 @@ func IsRetryableError(err error) bool {
 			return false
 		}
 	}
-	
+
 	// Check for specific error types
 	return errors.Is(err, ErrTooManyRequests) ||
 		errors.Is(err, ErrServerUnavailable) ||
@@ -73,7 +73,7 @@ func IsFatalError(err error) bool {
 			return false
 		}
 	}
-	
+
 	return errors.Is(err, ErrClientConfig) ||
 		errors.Is(err, ErrDecode)
 }

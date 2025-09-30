@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -29,7 +29,7 @@ func MapFinancialsDTO(dto *scrape.FinancialsDTO, runID, producer string) (*funda
 	for i, line := range dto.Lines {
 		// Validate period dates
 		if line.PeriodStart.After(line.PeriodEnd) {
-			return nil, fmt.Errorf("line %d: period_start (%v) must be before period_end (%v)", 
+			return nil, fmt.Errorf("line %d: period_start (%v) must be before period_end (%v)",
 				i, line.PeriodStart, line.PeriodEnd)
 		}
 
@@ -355,36 +355,36 @@ func normalizeFinancialKey(key string) string {
 
 	// Map common variations to canonical names
 	keyMappings := map[string]string{
-		"total_revenues":                    "total_revenue",
-		"revenues":                          "total_revenue",
-		"net_revenues":                      "total_revenue",
-		"total_operating_revenues":          "total_revenue",
-		"operating_revenues":                "total_revenue",
-		"net_income_common_stockholders":    "net_income",
-		"net_income_applicable_to_common":   "net_income",
-		"net_earnings":                      "net_income",
-		"earnings":                          "net_income",
-		"basic_earnings_per_share":          "eps_basic",
-		"basic_eps":                         "eps_basic",
-		"diluted_earnings_per_share":        "eps_diluted",
-		"diluted_eps":                       "eps_diluted",
-		"operating_earnings":                "operating_income",
-		"operating_profit":                  "operating_income",
-		"gross_revenues":                    "gross_profit",
-		"total_stockholders_equity":         "shareholders_equity",
-		"stockholders_equity":               "shareholders_equity",
-		"shareholders_equity_total":         "shareholders_equity",
-		"cash_and_cash_equivalents":         "cash_and_equivalents",
-		"cash_equivalents":                  "cash_and_equivalents",
-		"total_cash":                        "cash_and_equivalents",
-		"free_cash_flows":                   "free_cash_flow",
-		"fcf":                               "free_cash_flow",
-		"operating_cash_flows":              "operating_cash_flow",
-		"cash_from_operations":              "operating_cash_flow",
-		"investing_cash_flows":              "investing_cash_flow",
-		"cash_from_investing":               "investing_cash_flow",
-		"financing_cash_flows":              "financing_cash_flow",
-		"cash_from_financing":               "financing_cash_flow",
+		"total_revenues":                  "total_revenue",
+		"revenues":                        "total_revenue",
+		"net_revenues":                    "total_revenue",
+		"total_operating_revenues":        "total_revenue",
+		"operating_revenues":              "total_revenue",
+		"net_income_common_stockholders":  "net_income",
+		"net_income_applicable_to_common": "net_income",
+		"net_earnings":                    "net_income",
+		"earnings":                        "net_income",
+		"basic_earnings_per_share":        "eps_basic",
+		"basic_eps":                       "eps_basic",
+		"diluted_earnings_per_share":      "eps_diluted",
+		"diluted_eps":                     "eps_diluted",
+		"operating_earnings":              "operating_income",
+		"operating_profit":                "operating_income",
+		"gross_revenues":                  "gross_profit",
+		"total_stockholders_equity":       "shareholders_equity",
+		"stockholders_equity":             "shareholders_equity",
+		"shareholders_equity_total":       "shareholders_equity",
+		"cash_and_cash_equivalents":       "cash_and_equivalents",
+		"cash_equivalents":                "cash_and_equivalents",
+		"total_cash":                      "cash_and_equivalents",
+		"free_cash_flows":                 "free_cash_flow",
+		"fcf":                             "free_cash_flow",
+		"operating_cash_flows":            "operating_cash_flow",
+		"cash_from_operations":            "operating_cash_flow",
+		"investing_cash_flows":            "investing_cash_flow",
+		"cash_from_investing":             "investing_cash_flow",
+		"financing_cash_flows":            "financing_cash_flow",
+		"cash_from_financing":             "financing_cash_flow",
 	}
 
 	if canonical, exists := keyMappings[normalized]; exists {
@@ -402,18 +402,18 @@ func normalizeMIC(market string) string {
 
 	// Convert common market names to MIC codes
 	micMappings := map[string]string{
-		"NASDAQ":     "XNAS",
-		"NYSE":       "XNYS",
-		"AMEX":       "XASE",
-		"OTC":        "OTCM",
-		"TSX":        "XTSE",
-		"LSE":        "XLON",
-		"TOKYO":      "XJPX",
-		"SHANGHAI":   "XSHG",
-		"SHENZHEN":   "XSHE",
-		"HONG_KONG":  "XHKG",
-		"FRANKFURT":  "XFRA",
-		"EURONEXT":   "XPAR",
+		"NASDAQ":    "XNAS",
+		"NYSE":      "XNYS",
+		"AMEX":      "XASE",
+		"OTC":       "OTCM",
+		"TSX":       "XTSE",
+		"LSE":       "XLON",
+		"TOKYO":     "XJPX",
+		"SHANGHAI":  "XSHG",
+		"SHENZHEN":  "XSHE",
+		"HONG_KONG": "XHKG",
+		"FRANKFURT": "XFRA",
+		"EURONEXT":  "XPAR",
 	}
 
 	upperMarket := strings.ToUpper(market)

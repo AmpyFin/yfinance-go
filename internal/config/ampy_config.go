@@ -12,19 +12,19 @@ import (
 
 // Config represents the complete configuration for yfinance-go
 type Config struct {
-	App           AppConfig           `yaml:"app"`
-	Yahoo         YahooConfig         `yaml:"yahoo"`
-	Concurrency   ConcurrencyConfig   `yaml:"concurrency"`
-	RateLimit     RateLimitConfig     `yaml:"rate_limit"`
-	Sessions      SessionsConfig      `yaml:"sessions"`
-	Retry         RetryConfig         `yaml:"retry"`
+	App            AppConfig            `yaml:"app"`
+	Yahoo          YahooConfig          `yaml:"yahoo"`
+	Concurrency    ConcurrencyConfig    `yaml:"concurrency"`
+	RateLimit      RateLimitConfig      `yaml:"rate_limit"`
+	Sessions       SessionsConfig       `yaml:"sessions"`
+	Retry          RetryConfig          `yaml:"retry"`
 	CircuitBreaker CircuitBreakerConfig `yaml:"circuit_breaker"`
-	Markets       MarketsConfig       `yaml:"markets"`
-	FX            FXConfig            `yaml:"fx"`
-	Bus           BusConfig           `yaml:"bus"`
-	Scrape        ScrapeConfig        `yaml:"scrape"`
-	Observability ObservabilityConfig `yaml:"observability"`
-	Secrets       []SecretConfig      `yaml:"secrets"`
+	Markets        MarketsConfig        `yaml:"markets"`
+	FX             FXConfig             `yaml:"fx"`
+	Bus            BusConfig            `yaml:"bus"`
+	Scrape         ScrapeConfig         `yaml:"scrape"`
+	Observability  ObservabilityConfig  `yaml:"observability"`
+	Secrets        []SecretConfig       `yaml:"secrets"`
 }
 
 // AppConfig represents application-level configuration
@@ -35,17 +35,17 @@ type AppConfig struct {
 
 // YahooConfig represents Yahoo Finance API configuration
 type YahooConfig struct {
-	BaseURL         string        `yaml:"base_url"`
-	TimeoutMs       int           `yaml:"timeout_ms"`
-	IdleTimeoutMs   int           `yaml:"idle_timeout_ms"`
-	MaxConnsPerHost int           `yaml:"max_conns_per_host"`
-	UserAgent       string        `yaml:"user_agent"`
+	BaseURL         string `yaml:"base_url"`
+	TimeoutMs       int    `yaml:"timeout_ms"`
+	IdleTimeoutMs   int    `yaml:"idle_timeout_ms"`
+	MaxConnsPerHost int    `yaml:"max_conns_per_host"`
+	UserAgent       string `yaml:"user_agent"`
 }
 
 // ConcurrencyConfig represents concurrency configuration
 type ConcurrencyConfig struct {
-	GlobalWorkers   int `yaml:"global_workers"`
-	PerHostWorkers  int `yaml:"per_host_workers"`
+	GlobalWorkers  int `yaml:"global_workers"`
+	PerHostWorkers int `yaml:"per_host_workers"`
 }
 
 // RateLimitConfig represents rate limiting configuration
@@ -58,76 +58,76 @@ type RateLimitConfig struct {
 
 // SessionsConfig represents session rotation configuration
 type SessionsConfig struct {
-	N                   int `yaml:"n"`
-	EjectAfter          int `yaml:"eject_after"`
-	RecreateCooldownMs  int `yaml:"recreate_cooldown_ms"`
+	N                  int `yaml:"n"`
+	EjectAfter         int `yaml:"eject_after"`
+	RecreateCooldownMs int `yaml:"recreate_cooldown_ms"`
 }
 
 // RetryConfig represents retry configuration
 type RetryConfig struct {
-	Attempts     int `yaml:"attempts"`
-	BaseMs       int `yaml:"base_ms"`
-	MaxDelayMs   int `yaml:"max_delay_ms"`
+	Attempts   int `yaml:"attempts"`
+	BaseMs     int `yaml:"base_ms"`
+	MaxDelayMs int `yaml:"max_delay_ms"`
 }
 
 // CircuitBreakerConfig represents circuit breaker configuration
 type CircuitBreakerConfig struct {
-	Window            int     `yaml:"window"`
-	FailureThreshold  float64 `yaml:"failure_threshold"`
-	ResetTimeoutMs    int     `yaml:"reset_timeout_ms"`
-	HalfOpenProbes    int     `yaml:"half_open_probes"`
+	Window           int     `yaml:"window"`
+	FailureThreshold float64 `yaml:"failure_threshold"`
+	ResetTimeoutMs   int     `yaml:"reset_timeout_ms"`
+	HalfOpenProbes   int     `yaml:"half_open_probes"`
 }
 
 // MarketsConfig represents market configuration
 type MarketsConfig struct {
-	AllowedIntervals         []string `yaml:"allowed_intervals"`
-	AllowedMics              []string `yaml:"allowed_mics"`
-	DefaultAdjustmentPolicy  string   `yaml:"default_adjustment_policy"`
+	AllowedIntervals        []string `yaml:"allowed_intervals"`
+	AllowedMics             []string `yaml:"allowed_mics"`
+	DefaultAdjustmentPolicy string   `yaml:"default_adjustment_policy"`
 }
 
 // FXConfig represents FX configuration
 type FXConfig struct {
-	Provider  string         `yaml:"provider"`
-	Target    string         `yaml:"target"`
-	CacheTTLMs int           `yaml:"cache_ttl_ms"`
-	RateScale int            `yaml:"rate_scale"`
-	Rounding  string         `yaml:"rounding"`
-	YahooWeb  YahooWebConfig `yaml:"yahoo_web"`
+	Provider   string         `yaml:"provider"`
+	Target     string         `yaml:"target"`
+	CacheTTLMs int            `yaml:"cache_ttl_ms"`
+	RateScale  int            `yaml:"rate_scale"`
+	Rounding   string         `yaml:"rounding"`
+	YahooWeb   YahooWebConfig `yaml:"yahoo_web"`
 }
 
 // YahooWebConfig represents Yahoo Web FX provider configuration
 type YahooWebConfig struct {
-	QPS                float64 `yaml:"qps"`
-	Burst              int     `yaml:"burst"`
-	TimeoutMs          int     `yaml:"timeout_ms"`
-	BackoffAttempts    int     `yaml:"backoff_attempts"`
-	BackoffBaseMs      int     `yaml:"backoff_base_ms"`
-	BackoffMaxDelayMs  int     `yaml:"backoff_max_delay_ms"`
-	CircuitResetMs     int     `yaml:"circuit_reset_ms"`
+	QPS               float64 `yaml:"qps"`
+	Burst             int     `yaml:"burst"`
+	TimeoutMs         int     `yaml:"timeout_ms"`
+	BackoffAttempts   int     `yaml:"backoff_attempts"`
+	BackoffBaseMs     int     `yaml:"backoff_base_ms"`
+	BackoffMaxDelayMs int     `yaml:"backoff_max_delay_ms"`
+	CircuitResetMs    int     `yaml:"circuit_reset_ms"`
 }
 
 // BusConfig represents bus configuration
 type BusConfig struct {
-	Enabled         bool              `yaml:"enabled"`
-	Env             string            `yaml:"env"`
-	TopicPrefix     string            `yaml:"topic_prefix"`
-	MaxPayloadBytes int64             `yaml:"max_payload_bytes"`
-	Publisher       PublisherConfig   `yaml:"publisher"`
-	Retry           RetryConfig       `yaml:"retry"`
+	Enabled         bool                 `yaml:"enabled"`
+	Env             string               `yaml:"env"`
+	TopicPrefix     string               `yaml:"topic_prefix"`
+	MaxPayloadBytes int64                `yaml:"max_payload_bytes"`
+	Publisher       PublisherConfig      `yaml:"publisher"`
+	Retry           RetryConfig          `yaml:"retry"`
 	CircuitBreaker  CircuitBreakerConfig `yaml:"circuit_breaker"`
 }
 
 // ScrapeConfig represents scraping configuration
 type ScrapeConfig struct {
-	Enabled      bool                    `yaml:"enabled"`
-	UserAgent    string                  `yaml:"user_agent"`
-	TimeoutMs    int                     `yaml:"timeout_ms"`
-	QPS          float64                 `yaml:"qps"`
-	Burst        int                     `yaml:"burst"`
-	Retry        ScrapeRetryConfig       `yaml:"retry"`
-	RobotsPolicy string                  `yaml:"robots_policy"`
-	CacheTTLMs   int                     `yaml:"cache_ttl_ms"`
-	Endpoints    ScrapeEndpointConfig    `yaml:"endpoints"`
+	Enabled      bool                 `yaml:"enabled"`
+	UserAgent    string               `yaml:"user_agent"`
+	TimeoutMs    int                  `yaml:"timeout_ms"`
+	QPS          float64              `yaml:"qps"`
+	Burst        int                  `yaml:"burst"`
+	Retry        ScrapeRetryConfig    `yaml:"retry"`
+	RobotsPolicy string               `yaml:"robots_policy"`
+	CacheTTLMs   int                  `yaml:"cache_ttl_ms"`
+	Endpoints    ScrapeEndpointConfig `yaml:"endpoints"`
 }
 
 // ScrapeRetryConfig represents scraping retry configuration
@@ -169,9 +169,9 @@ type KafkaConfig struct {
 
 // ObservabilityConfig represents observability configuration
 type ObservabilityConfig struct {
-	Logs      LogsConfig      `yaml:"logs"`
-	Metrics   MetricsConfig   `yaml:"metrics"`
-	Tracing   TracingConfig   `yaml:"tracing"`
+	Logs    LogsConfig    `yaml:"logs"`
+	Metrics MetricsConfig `yaml:"metrics"`
+	Tracing TracingConfig `yaml:"tracing"`
 }
 
 // LogsConfig represents logging configuration
@@ -197,9 +197,9 @@ type TracingConfig struct {
 
 // OTLPConfig represents OTLP configuration
 type OTLPConfig struct {
-	Enabled      bool    `yaml:"enabled"`
-	Endpoint     string  `yaml:"endpoint"`
-	SampleRatio  float64 `yaml:"sample_ratio"`
+	Enabled     bool    `yaml:"enabled"`
+	Endpoint    string  `yaml:"endpoint"`
+	SampleRatio float64 `yaml:"sample_ratio"`
 }
 
 // SecretConfig represents secret configuration
@@ -230,21 +230,21 @@ func (l *Loader) Load() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to load effective config: %w", err)
 	}
-	
+
 	// Interpolate environment variables
 	l.interpolateEnvVars(configMap)
-	
+
 	// Convert map to our Config struct
 	config, err := l.mapToConfig(configMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert config: %w", err)
 	}
-	
+
 	// Validate configuration
 	if err := l.validate(config); err != nil {
 		return nil, fmt.Errorf("configuration validation failed: %w", err)
 	}
-	
+
 	l.config = config
 	return config, nil
 }
@@ -280,15 +280,15 @@ func (l *Loader) interpolateString(str string) string {
 		if start == -1 {
 			break
 		}
-		
+
 		end := strings.Index(result[start:], "}")
 		if end == -1 {
 			break
 		}
-		
+
 		end += start
 		varExpr := result[start+2 : end]
-		
+
 		var value string
 		if strings.Contains(varExpr, ":-") {
 			// Handle ${VAR:-default} syntax
@@ -303,10 +303,10 @@ func (l *Loader) interpolateString(str string) string {
 			// Handle ${VAR} syntax
 			value = os.Getenv(varExpr)
 		}
-		
+
 		result = result[:start] + value + result[end+1:]
 	}
-	
+
 	return result
 }
 
@@ -317,12 +317,12 @@ func (l *Loader) mapToConfig(configMap map[string]interface{}) (*Config, error) 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var config Config
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, err
 	}
-	
+
 	return &config, nil
 }
 
@@ -334,66 +334,66 @@ func (l *Loader) validate(config *Config) error {
 		// In a real implementation, you might want to log a warning
 		_ = config.App.Env // Suppress unused variable warning
 	}
-	
+
 	// Validate concurrency constraints
 	if config.Concurrency.GlobalWorkers < config.Concurrency.PerHostWorkers {
-		return fmt.Errorf("concurrency.global_workers (%d) must be >= per_host_workers (%d)", 
+		return fmt.Errorf("concurrency.global_workers (%d) must be >= per_host_workers (%d)",
 			config.Concurrency.GlobalWorkers, config.Concurrency.PerHostWorkers)
 	}
-	
+
 	if config.Concurrency.PerHostWorkers < config.Sessions.N {
-		return fmt.Errorf("concurrency.per_host_workers (%d) must be >= sessions.n (%d)", 
+		return fmt.Errorf("concurrency.per_host_workers (%d) must be >= sessions.n (%d)",
 			config.Concurrency.PerHostWorkers, config.Sessions.N)
 	}
-	
+
 	// Validate rate limit constraints
 	if config.RateLimit.PerSessionQPS*float64(config.Sessions.N) > config.RateLimit.PerHostQPS {
 		// This is a warning, not an error
 		// In a real implementation, you might want to log a warning
 		_ = config.RateLimit.PerSessionQPS // Suppress unused variable warning
 	}
-	
+
 	// Validate markets.allowed_intervals (daily-only enforcement)
 	if len(config.Markets.AllowedIntervals) != 1 || config.Markets.AllowedIntervals[0] != "1d" {
 		return fmt.Errorf("markets.allowed_intervals must be exactly [\"1d\"] for yfinance-go (daily-only scope)")
 	}
-	
+
 	// Validate markets.default_adjustment_policy
 	if config.Markets.DefaultAdjustmentPolicy != "raw" && config.Markets.DefaultAdjustmentPolicy != "split_dividend" {
 		return fmt.Errorf("markets.default_adjustment_policy must be 'raw' or 'split_dividend'")
 	}
-	
+
 	// Validate bus.max_payload_bytes
 	if config.Bus.MaxPayloadBytes < 262144 || config.Bus.MaxPayloadBytes > 10485760 {
 		return fmt.Errorf("bus.max_payload_bytes must be between 262144 and 10485760")
 	}
-	
+
 	// Validate retry.attempts
 	if config.Retry.Attempts < 1 {
 		return fmt.Errorf("retry.attempts must be >= 1")
 	}
-	
+
 	// Validate circuit breaker thresholds
 	if config.CircuitBreaker.FailureThreshold <= 0 || config.CircuitBreaker.FailureThreshold > 1 {
 		return fmt.Errorf("circuit_breaker.failure_threshold must be between 0 and 1")
 	}
-	
+
 	// Validate bus configuration if enabled
 	if config.Bus.Enabled {
 		if config.Bus.Publisher.Backend == "nats" && config.Bus.Publisher.NATS.URL == "" {
 			return fmt.Errorf("bus.publisher.nats.url is required when bus.enabled=true and backend=nats")
 		}
 	}
-	
+
 	// Validate observability configuration
 	if config.Observability.Metrics.Prometheus.Enabled && config.Observability.Metrics.Prometheus.Addr == "" {
 		return fmt.Errorf("observability.metrics.prometheus.addr is required when prometheus is enabled")
 	}
-	
+
 	if config.Observability.Tracing.OTLP.Enabled && config.Observability.Tracing.OTLP.Endpoint == "" {
 		return fmt.Errorf("observability.tracing.otlp.endpoint is required when OTLP tracing is enabled")
 	}
-	
+
 	return nil
 }
 
@@ -402,20 +402,20 @@ func (l *Loader) GetEffectiveConfig() (map[string]interface{}, error) {
 	if l.config == nil {
 		return nil, fmt.Errorf("configuration not loaded")
 	}
-	
+
 	// Use ampy-config Loader to get the raw effective config
 	ampyLoader := ampyconfig.NewLoader(l.effectivePath)
 	configMap, err := ampyLoader.Load()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load effective config: %w", err)
 	}
-	
+
 	// Interpolate environment variables
 	l.interpolateEnvVars(configMap)
-	
+
 	// Redact secrets
 	l.redactSecrets(configMap)
-	
+
 	return configMap, nil
 }
 
@@ -431,7 +431,7 @@ func (l *Loader) redactSecrets(configMap map[string]interface{}) {
 			}
 		}
 	}
-	
+
 	// Redact known secret patterns
 	l.redactSecretPatterns(configMap)
 }
@@ -439,15 +439,15 @@ func (l *Loader) redactSecrets(configMap map[string]interface{}) {
 // redactSecretPatterns redacts values that match secret patterns
 func (l *Loader) redactSecretPatterns(configMap map[string]interface{}) {
 	secretPatterns := []string{"password", "token", "api_key", "secret", "key"}
-	
+
 	for key, value := range configMap {
 		keyLower := strings.ToLower(key)
-		
+
 		// Skip the secrets array itself - it's handled separately
 		if key == "secrets" {
 			continue
 		}
-		
+
 		// Check if key matches secret patterns
 		for _, pattern := range secretPatterns {
 			if strings.Contains(keyLower, pattern) {
@@ -455,7 +455,7 @@ func (l *Loader) redactSecretPatterns(configMap map[string]interface{}) {
 				continue
 			}
 		}
-		
+
 		// Recursively process nested maps
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			l.redactSecretPatterns(nestedMap)
@@ -466,43 +466,43 @@ func (l *Loader) redactSecretPatterns(configMap map[string]interface{}) {
 // GetHTTPConfig converts the configuration to httpx.Config
 func (c *Config) GetHTTPConfig() *HTTPConfig {
 	return &HTTPConfig{
-		BaseURL:            c.Yahoo.BaseURL,
-		Timeout:            time.Duration(c.Yahoo.TimeoutMs) * time.Millisecond,
-		IdleTimeout:        time.Duration(c.Yahoo.IdleTimeoutMs) * time.Millisecond,
-		MaxConnsPerHost:    c.Yahoo.MaxConnsPerHost,
-		UserAgent:          c.Yahoo.UserAgent,
-		MaxAttempts:        c.Retry.Attempts,
-		BackoffBaseMs:      c.Retry.BaseMs,
-		BackoffJitterMs:    c.Retry.BaseMs / 2, // Default jitter
-		MaxDelayMs:         c.Retry.MaxDelayMs,
-		QPS:                c.RateLimit.PerHostQPS,
-		Burst:              c.RateLimit.PerHostBurst,
-		CircuitWindow:      time.Duration(c.CircuitBreaker.Window) * time.Second,
-		FailureThreshold:   c.CircuitBreaker.FailureThreshold,
-		ResetTimeout:       time.Duration(c.CircuitBreaker.ResetTimeoutMs) * time.Millisecond,
+		BaseURL:               c.Yahoo.BaseURL,
+		Timeout:               time.Duration(c.Yahoo.TimeoutMs) * time.Millisecond,
+		IdleTimeout:           time.Duration(c.Yahoo.IdleTimeoutMs) * time.Millisecond,
+		MaxConnsPerHost:       c.Yahoo.MaxConnsPerHost,
+		UserAgent:             c.Yahoo.UserAgent,
+		MaxAttempts:           c.Retry.Attempts,
+		BackoffBaseMs:         c.Retry.BaseMs,
+		BackoffJitterMs:       c.Retry.BaseMs / 2, // Default jitter
+		MaxDelayMs:            c.Retry.MaxDelayMs,
+		QPS:                   c.RateLimit.PerHostQPS,
+		Burst:                 c.RateLimit.PerHostBurst,
+		CircuitWindow:         time.Duration(c.CircuitBreaker.Window) * time.Second,
+		FailureThreshold:      c.CircuitBreaker.FailureThreshold,
+		ResetTimeout:          time.Duration(c.CircuitBreaker.ResetTimeoutMs) * time.Millisecond,
 		EnableSessionRotation: true,
-		NumSessions:        c.Sessions.N,
+		NumSessions:           c.Sessions.N,
 	}
 }
 
 // HTTPConfig represents HTTP client configuration (compatible with httpx.Config)
 type HTTPConfig struct {
-	BaseURL            string
-	Timeout            time.Duration
-	IdleTimeout        time.Duration
-	MaxConnsPerHost    int
-	UserAgent          string
-	MaxAttempts        int
-	BackoffBaseMs      int
-	BackoffJitterMs    int
-	MaxDelayMs         int
-	QPS                float64
-	Burst              int
-	CircuitWindow      time.Duration
-	FailureThreshold   float64
-	ResetTimeout       time.Duration
+	BaseURL               string
+	Timeout               time.Duration
+	IdleTimeout           time.Duration
+	MaxConnsPerHost       int
+	UserAgent             string
+	MaxAttempts           int
+	BackoffBaseMs         int
+	BackoffJitterMs       int
+	MaxDelayMs            int
+	QPS                   float64
+	Burst                 int
+	CircuitWindow         time.Duration
+	FailureThreshold      float64
+	ResetTimeout          time.Duration
 	EnableSessionRotation bool
-	NumSessions        int
+	NumSessions           int
 }
 
 // GetBusConfig converts the configuration to bus.Config
@@ -547,14 +547,14 @@ func CreateEffectiveConfig(path string) error {
 			"run_id": "",
 		},
 		"yahoo": map[string]interface{}{
-			"base_url":          "https://query2.finance.yahoo.com",
-			"timeout_ms":        6000,
-			"idle_timeout_ms":   30000,
+			"base_url":           "https://query2.finance.yahoo.com",
+			"timeout_ms":         6000,
+			"idle_timeout_ms":    30000,
 			"max_conns_per_host": 64,
-			"user_agent":        "AmpyFin-yfinance-go/1.x",
+			"user_agent":         "AmpyFin-yfinance-go/1.x",
 		},
 		"concurrency": map[string]interface{}{
-			"global_workers":  64,
+			"global_workers":   64,
 			"per_host_workers": 32,
 		},
 		"rate_limit": map[string]interface{}{
@@ -564,8 +564,8 @@ func CreateEffectiveConfig(path string) error {
 			"per_session_burst": 1,
 		},
 		"sessions": map[string]interface{}{
-			"n":                   7,
-			"eject_after":         5,
+			"n":                    7,
+			"eject_after":          5,
 			"recreate_cooldown_ms": 15000,
 		},
 		"retry": map[string]interface{}{
@@ -580,8 +580,8 @@ func CreateEffectiveConfig(path string) error {
 			"half_open_probes":  3,
 		},
 		"markets": map[string]interface{}{
-			"allowed_intervals":        []string{"1d"},
-			"allowed_mics":             []string{"XNAS", "XNYS", "XNMS", "NYQ", "KSC", "XETR", "XTKS"},
+			"allowed_intervals":         []string{"1d"},
+			"allowed_mics":              []string{"XNAS", "XNYS", "XNMS", "NYQ", "KSC", "XETR", "XTKS"},
 			"default_adjustment_policy": "split_dividend",
 		},
 		"fx": map[string]interface{}{
@@ -591,13 +591,13 @@ func CreateEffectiveConfig(path string) error {
 			"rate_scale":   8,
 			"rounding":     "half_up",
 			"yahoo_web": map[string]interface{}{
-				"qps":                0.5,
-				"burst":              1,
-				"timeout_ms":         5000,
-				"backoff_attempts":   4,
-				"backoff_base_ms":    250,
+				"qps":                  0.5,
+				"burst":                1,
+				"timeout_ms":           5000,
+				"backoff_attempts":     4,
+				"backoff_base_ms":      250,
 				"backoff_max_delay_ms": 4000,
-				"circuit_reset_ms":   30000,
+				"circuit_reset_ms":     30000,
 			},
 		},
 		"bus": map[string]interface{}{
@@ -631,11 +631,11 @@ func CreateEffectiveConfig(path string) error {
 			},
 		},
 		"scrape": map[string]interface{}{
-			"enabled":       true,
-			"user_agent":    "Mozilla/5.0 (Ampy yfinance-go scraper)",
-			"timeout_ms":    10000,
-			"qps":           0.7,
-			"burst":         1,
+			"enabled":    true,
+			"user_agent": "Mozilla/5.0 (Ampy yfinance-go scraper)",
+			"timeout_ms": 10000,
+			"qps":        0.7,
+			"burst":      1,
 			"retry": map[string]interface{}{
 				"attempts":     4,
 				"base_ms":      300,
@@ -671,13 +671,13 @@ func CreateEffectiveConfig(path string) error {
 		},
 		"secrets": []interface{}{},
 	}
-	
+
 	// Marshal to YAML
 	data, err := yaml.Marshal(defaultConfig)
 	if err != nil {
 		return err
 	}
-	
+
 	// Write to file
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }

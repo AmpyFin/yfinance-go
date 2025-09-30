@@ -22,12 +22,12 @@ func main() {
 
 	// Merge coverage files if they exist
 	files := []string{"coverage.out", "coverage_obsv.out"}
-	
+
 	for _, filename := range files {
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			continue // Skip if file doesn't exist
 		}
-		
+
 		file, err := os.Open(filename)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error opening %s: %v\n", filename, err)
@@ -44,7 +44,7 @@ func main() {
 			}
 			fmt.Fprintln(combinedFile, line)
 		}
-		
+
 		if err := scanner.Err(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading %s: %v\n", filename, err)
 		}
@@ -52,19 +52,19 @@ func main() {
 
 	// Close the combined file before copying
 	combinedFile.Close()
-	
+
 	// Wait a moment for file handles to be released
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Copy combined file to coverage.out (more robust than rename)
 	if err := copyFile("coverage_combined.out", "coverage.out"); err != nil {
 		fmt.Fprintf(os.Stderr, "Error copying combined coverage file: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	// Clean up temporary file
 	os.Remove("coverage_combined.out")
-	
+
 	fmt.Println("Coverage files merged successfully")
 }
 

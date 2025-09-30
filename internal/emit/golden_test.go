@@ -14,9 +14,9 @@ import (
 
 func TestEmitBarBatch_Golden(t *testing.T) {
 	tests := []struct {
-		name     string
-		golden   string
-		input    *norm.NormalizedBarBatch
+		name   string
+		golden string
+		input  *norm.NormalizedBarBatch
 	}{
 		{
 			name:   "AAPL_1d_adjusted",
@@ -88,9 +88,9 @@ func TestEmitBarBatch_Golden(t *testing.T) {
 
 func TestEmitQuote_Golden(t *testing.T) {
 	tests := []struct {
-		name     string
-		golden   string
-		input    *norm.NormalizedQuote
+		name   string
+		golden string
+		input  *norm.NormalizedQuote
 	}{
 		{
 			name:   "MSFT_snapshot_quote",
@@ -100,15 +100,15 @@ func TestEmitQuote_Golden(t *testing.T) {
 					Symbol: "MSFT",
 					MIC:    "XNAS",
 				},
-				Type:                "QUOTE",
-				Bid:                 &norm.ScaledDecimal{Scaled: 4275000, Scale: 4},
-				BidSize:             int64Ptr(200),
-				Ask:                 &norm.ScaledDecimal{Scaled: 4275300, Scale: 4},
-				AskSize:             int64Ptr(300),
-				CurrencyCode:        "USD",
-				Venue:               "XNMS",
-				EventTime:           time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
-				IngestTime:          time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
+				Type:         "QUOTE",
+				Bid:          &norm.ScaledDecimal{Scaled: 4275000, Scale: 4},
+				BidSize:      int64Ptr(200),
+				Ask:          &norm.ScaledDecimal{Scaled: 4275300, Scale: 4},
+				AskSize:      int64Ptr(300),
+				CurrencyCode: "USD",
+				Venue:        "XNMS",
+				EventTime:    time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
+				IngestTime:   time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
 				Meta: norm.Meta{
 					RunID:         "golden_quote_v1",
 					Source:        "yfinance-go",
@@ -154,9 +154,9 @@ func TestEmitQuote_Golden(t *testing.T) {
 
 func TestEmitFundamentals_Golden(t *testing.T) {
 	tests := []struct {
-		name     string
-		golden   string
-		input    *norm.NormalizedFundamentalsSnapshot
+		name   string
+		golden string
+		input  *norm.NormalizedFundamentalsSnapshot
 	}{
 		{
 			name:   "AAPL_quarterly_snapshot",

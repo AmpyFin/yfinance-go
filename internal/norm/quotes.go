@@ -16,22 +16,22 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 	if quote.Currency == "" {
 		return nil, fmt.Errorf("missing currency")
 	}
-	
+
 	// Create security
 	security := CreateSecurity(quote.Symbol, quote.Exchange, quote.FullExchangeName)
 	if err := ValidateSecurity(security); err != nil {
 		return nil, fmt.Errorf("invalid security: %w", err)
 	}
-	
+
 	// Get currency scale
 	scale := GetScaleForCurrency(quote.Currency)
-	
+
 	// Convert event time - use current time for real-time data
 	eventTime := time.Now().UTC()
-	
+
 	// Convert bid/ask prices if present
 	var bid, ask *ScaledDecimal
-	
+
 	if quote.Bid != nil {
 		bidScaled, err := ToScaledDecimal(*quote.Bid, scale)
 		if err != nil {
@@ -39,7 +39,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		}
 		bid = &bidScaled
 	}
-	
+
 	if quote.Ask != nil {
 		askScaled, err := ToScaledDecimal(*quote.Ask, scale)
 		if err != nil {
@@ -47,10 +47,10 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		}
 		ask = &askScaled
 	}
-	
+
 	// Convert regular market data if present
 	var regularMarketPrice, regularMarketHigh, regularMarketLow *ScaledDecimal
-	
+
 	if quote.RegularMarketPrice != nil {
 		priceScaled, err := ToScaledDecimal(*quote.RegularMarketPrice, scale)
 		if err != nil {
@@ -58,7 +58,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		}
 		regularMarketPrice = &priceScaled
 	}
-	
+
 	if quote.RegularMarketDayHigh != nil {
 		highScaled, err := ToScaledDecimal(*quote.RegularMarketDayHigh, scale)
 		if err != nil {
@@ -66,7 +66,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		}
 		regularMarketHigh = &highScaled
 	}
-	
+
 	if quote.RegularMarketDayLow != nil {
 		lowScaled, err := ToScaledDecimal(*quote.RegularMarketDayLow, scale)
 		if err != nil {
@@ -74,7 +74,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		}
 		regularMarketLow = &lowScaled
 	}
-	
+
 	// Determine venue - use exchange MIC mapping
 	venue := ""
 	if quote.Exchange != "" {
@@ -83,7 +83,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 			venue = quote.Exchange
 		}
 	}
-	
+
 	// Create metadata
 	meta := Meta{
 		RunID:         runID,
@@ -91,7 +91,7 @@ func NormalizeQuote(quote yahoo.Quote, runID string) (*NormalizedQuote, error) {
 		Producer:      "local",
 		SchemaVersion: "ampy.ticks.v1:1.0.0",
 	}
-	
+
 	return &NormalizedQuote{
 		Security:            security,
 		Type:                "QUOTE",

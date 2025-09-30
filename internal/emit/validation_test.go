@@ -10,34 +10,34 @@ import (
 
 func TestValidateSecurity(t *testing.T) {
 	tests := []struct {
-		name    string
+		name     string
 		security norm.Security
-		wantErr bool
+		wantErr  bool
 	}{
 		{
-			name:    "valid security",
+			name:     "valid security",
 			security: norm.Security{Symbol: "AAPL", MIC: "XNAS"},
-			wantErr: false,
+			wantErr:  false,
 		},
 		{
-			name:    "empty symbol",
+			name:     "empty symbol",
 			security: norm.Security{Symbol: "", MIC: "XNAS"},
-			wantErr: true,
+			wantErr:  true,
 		},
 		{
-			name:    "invalid MIC length",
+			name:     "invalid MIC length",
 			security: norm.Security{Symbol: "AAPL", MIC: "XN"},
-			wantErr: true,
+			wantErr:  true,
 		},
 		{
-			name:    "invalid MIC format",
+			name:     "invalid MIC format",
 			security: norm.Security{Symbol: "AAPL", MIC: "xnas"},
-			wantErr: true,
+			wantErr:  true,
 		},
 		{
-			name:    "valid without MIC",
+			name:     "valid without MIC",
 			security: norm.Security{Symbol: "AAPL"},
-			wantErr: false,
+			wantErr:  false,
 		},
 	}
 

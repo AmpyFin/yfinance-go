@@ -1,0 +1,12 @@
+# Technology Sector
+# Generated on Tue Sep 30 00:46:03 EDT 2025
+AAPL
+MSFT
+GOOGL
+AMZN
+META
+NFLX
+NVDA
+CRM
+ADBE
+INTC

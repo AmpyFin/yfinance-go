@@ -19,7 +19,7 @@ var (
 		},
 		[]string{"endpoint", "outcome", "code"},
 	)
-	
+
 	retriesTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "yfin_retries_total",
@@ -27,7 +27,7 @@ var (
 		},
 		[]string{"endpoint", "reason"},
 	)
-	
+
 	backoffTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "yfin_backoff_total",
@@ -35,7 +35,7 @@ var (
 		},
 		[]string{"endpoint", "reason"},
 	)
-	
+
 	decodeFailTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "yfin_decode_fail_total",
@@ -43,7 +43,7 @@ var (
 		},
 		[]string{"reason"},
 	)
-	
+
 	cbOpenTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "yfin_cb_open_total",
@@ -51,14 +51,14 @@ var (
 		},
 		[]string{"scope"},
 	)
-	
+
 	sessionEjectTotal = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "yfin_session_eject_total",
 			Help: "Total number of session ejections.",
 		},
 	)
-	
+
 	publishTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "yfin_publish_total",
@@ -66,7 +66,7 @@ var (
 		},
 		[]string{"type", "outcome"},
 	)
-	
+
 	// Gauges
 	inflightRequests = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -75,7 +75,7 @@ var (
 		},
 		[]string{"endpoint"},
 	)
-	
+
 	cbState = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "yfin_cb_state",
@@ -83,7 +83,7 @@ var (
 		},
 		[]string{"scope"},
 	)
-	
+
 	// Histograms
 	requestLatencyMs = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
@@ -93,7 +93,7 @@ var (
 		},
 		[]string{"endpoint"},
 	)
-	
+
 	backoffSleepMs = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "yfin_backoff_sleep_ms",
@@ -102,7 +102,7 @@ var (
 		},
 		[]string{"endpoint"},
 	)
-	
+
 	batchBytes = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "yfin_batch_bytes",
@@ -111,7 +111,7 @@ var (
 		},
 		[]string{"type"},
 	)
-	
+
 	publishLatencyMs = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "yfin_publish_latency_ms",
@@ -156,12 +156,12 @@ func initMetrics(cfg PrometheusConfig) error {
 	// Start HTTP server for Prometheus metrics
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
-	
+
 	metricsServer = &http.Server{
 		Addr:    cfg.Addr,
 		Handler: mux,
 	}
-	
+
 	go func() {
 		Logger().Info("Prometheus metrics exporter started", "addr", cfg.Addr)
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {

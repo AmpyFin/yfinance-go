@@ -2,22 +2,26 @@ package scrape
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 	"time"
 )
 
+const (
+	yahooFinanceBaseURL = "https://finance.yahoo.com"
+)
+
 // TestParseNews tests the main ParseNews function with various fixtures
 func TestParseNews(t *testing.T) {
 	testCases := []struct {
-		name              string
-		fixture           string
-		expectedMinItems  int
-		expectedMaxItems  int
-		expectError       bool
-		expectedDeduped   int
+		name             string
+		fixture          string
+		expectedMinItems int
+		expectedMaxItems int
+		expectError      bool
+		expectedDeduped  int
 	}{
 		{
 			name:             "AAPL news - happy path",
@@ -71,8 +75,8 @@ func TestParseNews(t *testing.T) {
 
 			// Parse news
 			now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-			baseURL := "https://finance.yahoo.com"
-			
+			baseURL := yahooFinanceBaseURL
+
 			articles, stats, err := ParseNews(html, baseURL, now)
 
 			// Check error expectation
@@ -120,7 +124,7 @@ func TestParseNews(t *testing.T) {
 				if !isValidURL(article.URL) {
 					t.Errorf("Article %d has invalid URL: %s", i, article.URL)
 				}
-				
+
 				// Check that published time is not in the future
 				if article.PublishedAt != nil && article.PublishedAt.After(now) {
 					t.Errorf("Article %d has future published time: %v", i, article.PublishedAt)
@@ -133,7 +137,7 @@ func TestParseNews(t *testing.T) {
 // TestRelativeTimeConversion tests relative time parsing
 func TestRelativeTimeConversion(t *testing.T) {
 	now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-	
+
 	testCases := []struct {
 		input    string
 		expected *time.Time
@@ -180,7 +184,7 @@ func TestRelativeTimeConversion(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.input, func(t *testing.T) {
 			result := parseRelativeTime(tc.input, now)
-			
+
 			if tc.expected == nil && result != nil {
 				t.Errorf("Expected nil but got %v", result)
 			}
@@ -200,8 +204,8 @@ func TestRelativeTimeConversion(t *testing.T) {
 
 // TestURLNormalization tests URL cleaning and normalization
 func TestURLNormalization(t *testing.T) {
-	baseURL := "https://finance.yahoo.com"
-	
+	baseURL := yahooFinanceBaseURL
+
 	testCases := []struct {
 		input    string
 		expected string
@@ -272,7 +276,7 @@ func TestTickerValidation(t *testing.T) {
 // TestDeduplication tests the deduplication logic
 func TestDeduplication(t *testing.T) {
 	now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-	
+
 	articles := []NewsItem{
 		{
 			Title:       "Test Article 1",
@@ -326,7 +330,7 @@ func TestDeduplication(t *testing.T) {
 // TestErrorCases tests various error conditions
 func TestErrorCases(t *testing.T) {
 	now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-	baseURL := "https://finance.yahoo.com"
+	baseURL := yahooFinanceBaseURL
 
 	testCases := []struct {
 		name        string
@@ -359,14 +363,14 @@ func TestErrorCases(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, _, err := ParseNews([]byte(tc.html), baseURL, now)
-			
+
 			if tc.expectError && err == nil {
 				t.Errorf("Expected error but got none")
 			}
 			if !tc.expectError && err != nil {
 				t.Errorf("Unexpected error: %v", err)
 			}
-			
+
 			if err != nil && tc.errorType != "" {
 				if scrapeErr, ok := err.(*ScrapeError); ok {
 					if scrapeErr.Type != tc.errorType {
@@ -387,13 +391,13 @@ func loadFixture(filename string) ([]byte, error) {
 	if !ok {
 		return nil, fmt.Errorf("unable to get current file path")
 	}
-	
+
 	// Navigate to project root and then to fixtures
 	// From internal/scrape -> internal -> root
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(currentFile)))
 	fixturePath := filepath.Join(projectRoot, "testdata", "fixtures", "yahoo", "news", filename)
-	
-	return ioutil.ReadFile(fixturePath)
+
+	return os.ReadFile(fixturePath)
 }
 
 func timePtr(t time.Time) *time.Time {
@@ -411,10 +415,10 @@ func BenchmarkParseNews(b *testing.B) {
 	if err != nil {
 		b.Fatalf("Failed to load fixture: %v", err)
 	}
-	
+
 	now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-	baseURL := "https://finance.yahoo.com"
-	
+	baseURL := yahooFinanceBaseURL
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _, err := ParseNews(html, baseURL, now)
@@ -426,7 +430,7 @@ func BenchmarkParseNews(b *testing.B) {
 
 func BenchmarkDeduplication(b *testing.B) {
 	now := time.Date(2025, 9, 29, 12, 0, 0, 0, time.UTC)
-	
+
 	// Create a large set of articles with some duplicates
 	articles := make([]NewsItem, 100)
 	for i := 0; i < 100; i++ {
@@ -437,7 +441,7 @@ func BenchmarkDeduplication(b *testing.B) {
 			PublishedAt: &now,
 		}
 	}
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		deduplicateArticles(articles)

@@ -62,7 +62,7 @@ func (c *FXCache) Set(base string, symbols []string, at time.Time, rates map[str
 	defer c.mu.Unlock()
 
 	key := c.makeKey(base, symbols, at)
-	
+
 	// Create a copy of the rates
 	ratesCopy := make(map[string]norm.ScaledDecimal)
 	for k, v := range rates {

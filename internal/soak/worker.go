@@ -48,10 +48,10 @@ func NewWorker(id int, client *yfinance.Client, bus *bus.Bus, rateLimiter *rate.
 // Run starts the worker loop
 func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup, stopCh <-chan struct{}, tickers []string, endpoints []string, config *SoakConfig) {
 	defer wg.Done()
-	
+
 	w.logger.Debug("Worker started", zap.Int("worker_id", w.id))
 	defer w.logger.Debug("Worker stopped", zap.Int("worker_id", w.id))
-	
+
 	for {
 		select {
 		case <-stopCh:
@@ -67,10 +67,10 @@ func (w *Worker) Run(ctx context.Context, wg *sync.WaitGroup, stopCh <-chan stru
 				w.logger.Warn("Rate limiter error", zap.Error(err))
 				continue
 			}
-			
+
 			// Generate random work request
 			request := w.generateWorkRequest(tickers, endpoints)
-			
+
 			// Execute request
 			w.executeRequest(ctx, request, config)
 		}
@@ -82,7 +82,7 @@ func (w *Worker) generateWorkRequest(tickers []string, endpoints []string) WorkR
 	ticker := tickers[w.rng.Intn(len(tickers))]
 	endpoint := endpoints[w.rng.Intn(len(endpoints))]
 	runID := fmt.Sprintf("soak-%d-%d", time.Now().Unix(), w.rng.Intn(10000))
-	
+
 	return WorkRequest{
 		Ticker:   ticker,
 		Endpoint: endpoint,
@@ -93,20 +93,20 @@ func (w *Worker) generateWorkRequest(tickers []string, endpoints []string) WorkR
 // executeRequest executes a single work request
 func (w *Worker) executeRequest(ctx context.Context, req WorkRequest, config *SoakConfig) {
 	startTime := time.Now()
-	
+
 	// Update total requests counter
 	atomic.AddInt64(&w.stats.TotalRequests, 1)
-	
+
 	// Get endpoint stats
 	endpointStats := w.stats.EndpointStats[req.Endpoint]
 	endpointStats.mu.Lock()
 	endpointStats.Requests++
 	endpointStats.mu.Unlock()
-	
+
 	// Execute based on fallback strategy
 	var err error
 	var fallbackUsed bool
-	
+
 	switch config.Fallback {
 	case "api-only":
 		err = w.executeAPIRequest(ctx, req)
@@ -122,20 +122,20 @@ func (w *Worker) executeRequest(ctx context.Context, req WorkRequest, config *So
 	default:
 		err = fmt.Errorf("unknown fallback strategy: %s", config.Fallback)
 	}
-	
+
 	// Record execution time
 	duration := time.Since(startTime)
 	endpointStats.mu.Lock()
 	endpointStats.TotalLatency += duration
 	endpointStats.mu.Unlock()
-	
+
 	// Update success/failure counters
 	if err != nil {
 		atomic.AddInt64(&w.stats.FailedRequests, 1)
 		endpointStats.mu.Lock()
 		endpointStats.Failures++
 		endpointStats.mu.Unlock()
-		
+
 		w.logger.Debug("Request failed",
 			zap.Int("worker_id", w.id),
 			zap.String("ticker", req.Ticker),
@@ -143,7 +143,7 @@ func (w *Worker) executeRequest(ctx context.Context, req WorkRequest, config *So
 			zap.Duration("duration", duration),
 			zap.Error(err),
 		)
-		
+
 		// Check for specific error types
 		if isRateLimitError(err) {
 			atomic.AddInt64(&w.stats.RateLimitHits, 1)
@@ -156,7 +156,7 @@ func (w *Worker) executeRequest(ctx context.Context, req WorkRequest, config *So
 		endpointStats.mu.Lock()
 		endpointStats.Successes++
 		endpointStats.mu.Unlock()
-		
+
 		w.logger.Debug("Request succeeded",
 			zap.Int("worker_id", w.id),
 			zap.String("ticker", req.Ticker),
@@ -227,7 +227,7 @@ func (w *Worker) executeAutoFallbackRequest(ctx context.Context, req WorkRequest
 			atomic.AddInt64(&w.stats.APIRequests, 1)
 			return nil, false
 		}
-		
+
 		// If API fails, check if we should fallback to scraping
 		if w.shouldFallbackToScrape(err) {
 			w.logger.Debug("Falling back to scrape",
@@ -235,16 +235,16 @@ func (w *Worker) executeAutoFallbackRequest(ctx context.Context, req WorkRequest
 				zap.String("endpoint", req.Endpoint),
 				zap.Error(err),
 			)
-			
+
 			scrapeErr := w.executeScrapeRequest(ctx, req)
 			atomic.AddInt64(&w.stats.ScrapeRequests, 1)
 			return scrapeErr, true
 		}
-		
+
 		atomic.AddInt64(&w.stats.APIRequests, 1)
 		return err, false
 	}
-	
+
 	// For scrape-only endpoints, go directly to scraping
 	err := w.executeScrapeRequest(ctx, req)
 	atomic.AddInt64(&w.stats.ScrapeRequests, 1)
@@ -256,12 +256,12 @@ func (w *Worker) executeScrapeProfile(ctx context.Context, req WorkRequest) erro
 	// This would integrate with the comprehensive profile scraping
 	// For now, we'll use a placeholder that simulates the work
 	time.Sleep(time.Duration(w.rng.Intn(500)) * time.Millisecond)
-	
+
 	// Simulate occasional failures
 	if w.rng.Float64() < 0.05 { // 5% failure rate
 		return fmt.Errorf("simulated profile scrape failure")
 	}
-	
+
 	return nil
 }
 
@@ -280,24 +280,24 @@ func (w *Worker) shouldFallbackToScrape(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	errStr := err.Error()
-	
+
 	// Fallback on authentication errors (paid features)
 	if contains(errStr, "401") || contains(errStr, "authentication") || contains(errStr, "subscription") {
 		return true
 	}
-	
+
 	// Fallback on rate limiting
 	if contains(errStr, "429") || contains(errStr, "rate limit") {
 		return true
 	}
-	
+
 	// Fallback on server errors
 	if contains(errStr, "500") || contains(errStr, "502") || contains(errStr, "503") {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -321,10 +321,10 @@ func isRobotsError(err error) bool {
 
 // contains checks if a string contains a substring (case-insensitive)
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || 
-		len(s) > len(substr) && 
-		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || 
-		 indexOfSubstring(s, substr) >= 0))
+	return len(s) >= len(substr) && (s == substr ||
+		len(s) > len(substr) &&
+			(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
+				indexOfSubstring(s, substr) >= 0))
 }
 
 // indexOfSubstring finds the index of a substring in a string

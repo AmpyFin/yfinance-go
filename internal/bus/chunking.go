@@ -25,9 +25,9 @@ type ChunkResult struct {
 
 // ChunkInfo represents information about a chunk
 type ChunkInfo struct {
-	Index     int
-	Size      int
-	IsLast    bool
+	Index  int
+	Size   int
+	IsLast bool
 }
 
 // ChunkPayload chunks a payload if it exceeds the size limit
@@ -38,7 +38,7 @@ func (cs *ChunkingStrategy) ChunkPayload(payload []byte) (*ChunkResult, error) {
 			ChunkInfo: []ChunkInfo{{Index: 0, Size: 0, IsLast: true}},
 		}, nil
 	}
-	
+
 	// If payload is within limits, return as single chunk
 	if int64(len(payload)) <= cs.MaxPayloadBytes {
 		return &ChunkResult{
@@ -46,22 +46,22 @@ func (cs *ChunkingStrategy) ChunkPayload(payload []byte) (*ChunkResult, error) {
 			ChunkInfo: []ChunkInfo{{Index: 0, Size: len(payload), IsLast: true}},
 		}, nil
 	}
-	
+
 	// Calculate number of chunks needed
 	numChunks := int(math.Ceil(float64(len(payload)) / float64(cs.MaxPayloadBytes)))
-	
+
 	chunks := make([][]byte, numChunks)
 	chunkInfo := make([]ChunkInfo, numChunks)
-	
+
 	for i := 0; i < numChunks; i++ {
 		start := i * int(cs.MaxPayloadBytes)
 		end := start + int(cs.MaxPayloadBytes)
-		
+
 		// Ensure we don't exceed the payload length
 		if end > len(payload) {
 			end = len(payload)
 		}
-		
+
 		chunks[i] = payload[start:end]
 		chunkInfo[i] = ChunkInfo{
 			Index:  i,
@@ -69,7 +69,7 @@ func (cs *ChunkingStrategy) ChunkPayload(payload []byte) (*ChunkResult, error) {
 			IsLast: i == numChunks-1,
 		}
 	}
-	
+
 	return &ChunkResult{
 		Chunks:    chunks,
 		ChunkInfo: chunkInfo,
@@ -81,11 +81,11 @@ func (cs *ChunkingStrategy) EstimateChunkCount(payloadSize int) int {
 	if payloadSize == 0 {
 		return 1
 	}
-	
+
 	if int64(payloadSize) <= cs.MaxPayloadBytes {
 		return 1
 	}
-	
+
 	return int(math.Ceil(float64(payloadSize) / float64(cs.MaxPayloadBytes)))
 }
 
@@ -100,7 +100,7 @@ func (cs *ChunkingStrategy) ValidateChunkSize(chunk []byte) error {
 // GetChunkingInfo returns chunking information for preview
 func (cs *ChunkingStrategy) GetChunkingInfo(payloadSize int) ChunkingInfo {
 	chunkCount := cs.EstimateChunkCount(payloadSize)
-	
+
 	chunkSizes := make([]int, chunkCount)
 	if chunkCount == 1 {
 		chunkSizes[0] = payloadSize
@@ -108,7 +108,7 @@ func (cs *ChunkingStrategy) GetChunkingInfo(payloadSize int) ChunkingInfo {
 		// Estimate chunk sizes
 		baseSize := payloadSize / chunkCount
 		remainder := payloadSize % chunkCount
-		
+
 		for i := 0; i < chunkCount; i++ {
 			chunkSizes[i] = baseSize
 			if i < remainder {
@@ -116,7 +116,7 @@ func (cs *ChunkingStrategy) GetChunkingInfo(payloadSize int) ChunkingInfo {
 			}
 		}
 	}
-	
+
 	return ChunkingInfo{
 		ChunkCount: chunkCount,
 		MaxPayload: cs.MaxPayloadBytes,

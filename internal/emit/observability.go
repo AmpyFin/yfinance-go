@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
 	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 	"github.com/AmpyFin/yfinance-go/internal/scrape"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 // Metrics for proto emission
@@ -74,7 +74,7 @@ func NewObservableMapper(mapper *ScrapeMapper, logger *slog.Logger) *ObservableM
 	if logger == nil {
 		logger = slog.Default()
 	}
-	
+
 	return &ObservableMapper{
 		mapper: mapper,
 		logger: logger,
@@ -85,7 +85,7 @@ func NewObservableMapper(mapper *ScrapeMapper, logger *slog.Logger) *ObservableM
 func (o *ObservableMapper) MapFinancialsWithObservability(ctx context.Context, dto interface{}, runID, producer string) (interface{}, error) {
 	start := time.Now()
 	messageType := "fundamentals"
-	
+
 	// Increment in-progress gauge
 	protoMappingInProgress.WithLabelValues(messageType).Inc()
 	defer protoMappingInProgress.WithLabelValues(messageType).Dec()
@@ -143,7 +143,7 @@ func (o *ObservableMapper) MapFinancialsWithObservability(ctx context.Context, d
 
 	protoEmissionTotal.WithLabelValues(messageType, outcome).Inc()
 	protoEmissionLatencyMs.WithLabelValues(messageType).Observe(float64(duration.Nanoseconds()) / 1e6)
-	
+
 	if resultSize > 0 {
 		protoEmissionBytes.WithLabelValues(messageType).Observe(float64(resultSize))
 	}
@@ -155,7 +155,7 @@ func (o *ObservableMapper) MapFinancialsWithObservability(ctx context.Context, d
 func (o *ObservableMapper) MapProfileWithObservability(ctx context.Context, dto *scrape.ComprehensiveProfileDTO, runID, producer string) (*ProfileMappingResult, error) {
 	start := time.Now()
 	messageType := "profile"
-	
+
 	// Increment in-progress gauge
 	protoMappingInProgress.WithLabelValues(messageType).Inc()
 	defer protoMappingInProgress.WithLabelValues(messageType).Dec()
@@ -166,12 +166,12 @@ func (o *ObservableMapper) MapProfileWithObservability(ctx context.Context, dto 
 		slog.String("symbol", dto.Symbol))
 
 	result, err := MapProfileDTO(dto, runID, producer)
-	
+
 	// Record metrics
 	duration := time.Since(start)
 	outcome := "success"
 	var resultSize int64
-	
+
 	if err != nil {
 		outcome = "error"
 		o.logger.ErrorContext(ctx, "Profile mapping failed",
@@ -191,7 +191,7 @@ func (o *ObservableMapper) MapProfileWithObservability(ctx context.Context, dto 
 
 	protoEmissionTotal.WithLabelValues(messageType, outcome).Inc()
 	protoEmissionLatencyMs.WithLabelValues(messageType).Observe(float64(duration.Nanoseconds()) / 1e6)
-	
+
 	if resultSize > 0 {
 		protoEmissionBytes.WithLabelValues(messageType).Observe(float64(resultSize))
 	}
@@ -203,7 +203,7 @@ func (o *ObservableMapper) MapProfileWithObservability(ctx context.Context, dto 
 func (o *ObservableMapper) MapNewsWithObservability(ctx context.Context, items []scrape.NewsItem, symbol, runID, producer string) ([]*newsv1.NewsItem, error) {
 	start := time.Now()
 	messageType := "news"
-	
+
 	// Increment in-progress gauge
 	protoMappingInProgress.WithLabelValues(messageType).Inc()
 	defer protoMappingInProgress.WithLabelValues(messageType).Dec()
@@ -215,12 +215,12 @@ func (o *ObservableMapper) MapNewsWithObservability(ctx context.Context, items [
 		slog.Int("article_count", len(items)))
 
 	articles, err := MapNewsItems(items, symbol, runID, producer)
-	
+
 	// Record metrics
 	duration := time.Since(start)
 	outcome := "success"
 	var totalSize int64
-	
+
 	if err != nil {
 		outcome = "error"
 		o.logger.ErrorContext(ctx, "News mapping failed",
@@ -232,7 +232,7 @@ func (o *ObservableMapper) MapNewsWithObservability(ctx context.Context, items [
 		for _, article := range articles {
 			totalSize += estimateProtoSize(article)
 		}
-		
+
 		o.logger.InfoContext(ctx, "News mapping completed",
 			slog.String("run_id", runID),
 			slog.String("symbol", symbol),
@@ -244,7 +244,7 @@ func (o *ObservableMapper) MapNewsWithObservability(ctx context.Context, items [
 
 	protoEmissionTotal.WithLabelValues(messageType, outcome).Inc()
 	protoEmissionLatencyMs.WithLabelValues(messageType).Observe(float64(duration.Nanoseconds()) / 1e6)
-	
+
 	if totalSize > 0 {
 		protoEmissionBytes.WithLabelValues(messageType).Observe(float64(totalSize))
 	}
@@ -307,7 +307,7 @@ func estimateProtoSize(msg interface{}) int64 {
 		baseSize := int64(200) // Base message overhead
 		lineSize := int64(100) // Average size per line item
 		return baseSize + int64(len(v.Lines))*lineSize
-		
+
 	case *newsv1.NewsItem:
 		// Estimate based on content sizes
 		baseSize := int64(100) // Base message overhead
@@ -317,7 +317,7 @@ func estimateProtoSize(msg interface{}) int64 {
 		bodySize := int64(len(v.Body))
 		tickerSize := int64(len(v.Tickers) * 10) // Average ticker length
 		return baseSize + headlineSize + urlSize + sourceSize + bodySize + tickerSize
-		
+
 	default:
 		// Default estimation
 		return 500
@@ -338,11 +338,10 @@ func (s *MappingSummary) RecordOperation(messageType string, duration time.Durat
 	s.TotalDuration += duration
 	s.TotalBytes += bytes
 	s.OperationsByType[messageType]++
-	
+
 	if success {
 		s.SuccessfulOperations++
 	} else {
 		s.FailedOperations++
 	}
 }
-

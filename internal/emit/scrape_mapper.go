@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	commonv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/common/v1"
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
 	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
+	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ScrapeMapperConfig holds configuration for scrape mapping
 type ScrapeMapperConfig struct {
-	RunID      string
-	Producer   string
-	Source     string
-	TraceID    string
+	RunID    string
+	Producer string
+	Source   string
+	TraceID  string
 }
 
 // ScrapeMapper converts scrape DTOs to ampy-proto messages
@@ -91,7 +91,7 @@ func (m *ScrapeMapper) MapNews(ctx context.Context, items []scrape.NewsItem, sym
 	}
 
 	articles := make([]*newsv1.NewsItem, 0, len(items))
-	
+
 	for i, item := range items {
 		article, err := m.mapNewsItem(&item, symbol)
 		if err != nil {
@@ -172,17 +172,16 @@ func ScaledFromFloat(value float64, scale int) *commonv1.Decimal {
 	if scale < 0 || scale > 9 {
 		scale = 2 // Default to 2 decimal places for currency
 	}
-	
+
 	multiplier := int64(1)
 	for i := 0; i < scale; i++ {
 		multiplier *= 10
 	}
-	
+
 	scaled := int64(value * float64(multiplier))
-	
+
 	return &commonv1.Decimal{
 		Scaled: scaled,
 		Scale:  int32(scale),
 	}
 }
-

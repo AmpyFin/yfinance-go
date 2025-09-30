@@ -44,22 +44,22 @@ func NewClient(config *Config, httpxPool *httpx.Client) *client {
 	} else {
 		// Create a new httpx client with scraping-optimized config
 		httpxConfig := &httpx.Config{
-			BaseURL:            "https://finance.yahoo.com",
-			Timeout:            time.Duration(config.TimeoutMs) * time.Millisecond,
-			IdleTimeout:        90 * time.Second,
-			MaxConnsPerHost:    10,
-			MaxAttempts:        config.Retry.Attempts,
-			BackoffBaseMs:      config.Retry.BaseMs,
-			BackoffJitterMs:    config.Retry.BaseMs / 2,
-			MaxDelayMs:         config.Retry.MaxDelayMs,
-			QPS:                config.QPS,
-			Burst:              config.Burst,
-			CircuitWindow:      60 * time.Second,
-			FailureThreshold:   5,
-			ResetTimeout:       30 * time.Second,
-			UserAgent:          config.UserAgent,
+			BaseURL:               "https://finance.yahoo.com",
+			Timeout:               time.Duration(config.TimeoutMs) * time.Millisecond,
+			IdleTimeout:           90 * time.Second,
+			MaxConnsPerHost:       10,
+			MaxAttempts:           config.Retry.Attempts,
+			BackoffBaseMs:         config.Retry.BaseMs,
+			BackoffJitterMs:       config.Retry.BaseMs / 2,
+			MaxDelayMs:            config.Retry.MaxDelayMs,
+			QPS:                   config.QPS,
+			Burst:                 config.Burst,
+			CircuitWindow:         60 * time.Second,
+			FailureThreshold:      5,
+			ResetTimeout:          30 * time.Second,
+			UserAgent:             config.UserAgent,
 			EnableSessionRotation: true,
-			NumSessions:        3,
+			NumSessions:           3,
 		}
 		httpClient = httpx.NewClient(httpxConfig)
 	}
@@ -108,19 +108,19 @@ func (c *client) Fetch(ctx context.Context, urlStr string) ([]byte, *FetchMeta, 
 	}()
 
 	// Check robots.txt policy
-	if err := c.robotsManager.CheckRobots(ctx, host, parsedURL.Path); err != nil {
+	if robotsErr := c.robotsManager.CheckRobots(ctx, host, parsedURL.Path); robotsErr != nil {
 		c.metrics.RecordRobotsDenied(host)
-		c.logger.LogRobotsDenied(urlStr, host, err.Error())
-		c.tracer.RecordSpanError(span, err)
-		return nil, nil, err
+		c.logger.LogRobotsDenied(urlStr, host, robotsErr.Error())
+		c.tracer.RecordSpanError(span, robotsErr)
+		return nil, nil, robotsErr
 	}
 
 	// Rate limiting
-	if err := c.rateLimiter.Wait(ctx); err != nil {
+	if rateLimitErr := c.rateLimiter.Wait(ctx); rateLimitErr != nil {
 		c.metrics.RecordRequest(host, "error", "rate_limit")
-		c.logger.LogRateLimit(urlStr, host, err.Error())
-		c.tracer.RecordSpanError(span, err)
-		return nil, nil, fmt.Errorf("rate limiter: %w", err)
+		c.logger.LogRateLimit(urlStr, host, rateLimitErr.Error())
+		c.tracer.RecordSpanError(span, rateLimitErr)
+		return nil, nil, fmt.Errorf("rate limiter: %w", rateLimitErr)
 	}
 
 	// Create HTTP request
@@ -141,13 +141,13 @@ func (c *client) Fetch(ctx context.Context, urlStr string) ([]byte, *FetchMeta, 
 
 	for attempt := 0; attempt < c.config.Retry.Attempts; attempt++ {
 		attemptStart := time.Now()
-		
+
 		// Execute HTTP request
 		resp, err := c.httpClient.Do(ctx, req)
 		if err != nil {
 			c.metrics.RecordRetry(host, "network_error")
 			c.logger.LogRetry(urlStr, host, attempt+1, "network_error", err.Error())
-			
+
 			if !IsRetryableError(err) || attempt >= c.config.Retry.Attempts-1 {
 				c.metrics.RecordRequest(host, "error", "network_error")
 				c.logger.LogRequest(urlStr, host, 0, attempt+1, time.Since(attemptStart), 0, false, 0, err.Error())
@@ -159,14 +159,14 @@ func (c *client) Fetch(ctx context.Context, urlStr string) ([]byte, *FetchMeta, 
 			body, meta, err := c.processResponse(resp, urlStr, host, attempt+1, time.Since(attemptStart))
 			if err != nil {
 				resp.Body.Close()
-				
+
 				if !IsRetryableError(err) || attempt >= c.config.Retry.Attempts-1 {
 					c.metrics.RecordRequest(host, "error", fmt.Sprintf("http_%d", meta.Status))
 					c.logger.LogRequest(urlStr, host, meta.Status, attempt+1, meta.Duration, meta.Bytes, meta.Gzip, meta.Redirects, err.Error())
 					c.tracer.RecordSpanError(span, err)
 					return nil, nil, err
 				}
-				
+
 				c.metrics.RecordRetry(host, fmt.Sprintf("http_%d", meta.Status))
 				c.logger.LogRetry(urlStr, host, attempt+1, fmt.Sprintf("http_%d", meta.Status), err.Error())
 			} else {
@@ -174,13 +174,13 @@ func (c *client) Fetch(ctx context.Context, urlStr string) ([]byte, *FetchMeta, 
 				fetchMeta = meta
 				fetchMeta.Duration = time.Since(startTime)
 				fetchMeta.RobotsPolicy = c.config.RobotsPolicy
-				
+
 				c.metrics.RecordRequest(host, "success", fmt.Sprintf("%d", meta.Status))
 				c.metrics.RecordLatency(host, meta.Duration)
 				c.metrics.RecordPageBytes(host, meta.Bytes)
 				c.logger.LogRequest(urlStr, host, meta.Status, attempt+1, meta.Duration, meta.Bytes, meta.Gzip, meta.Redirects, "")
 				c.tracer.UpdateSpan(span, meta.Status, meta.Bytes, meta.Duration)
-				
+
 				return body, fetchMeta, nil
 			}
 		}
@@ -189,11 +189,11 @@ func (c *client) Fetch(ctx context.Context, urlStr string) ([]byte, *FetchMeta, 
 		delay := c.backoffPolicy.CalculateDelay(attempt)
 		c.metrics.RecordBackoff(host, "retry")
 		c.logger.LogBackoff(urlStr, host, delay)
-		
+
 		// Wait with context cancellation support
 		select {
 		case <-ctx.Done():
-			c.metrics.RecordRequest(host, "error", "context_cancelled")
+			c.metrics.RecordRequest(host, "error", "context_canceled")
 			c.logger.LogRequest(urlStr, host, 0, attempt+1, time.Since(startTime), 0, false, 0, ctx.Err().Error())
 			c.tracer.RecordSpanError(span, ctx.Err())
 			return nil, nil, ctx.Err()
@@ -404,7 +404,7 @@ func (tb *tokenBucket) Wait(ctx context.Context) error {
 	}
 
 	// Calculate wait time needed to get a token
-	waitTime := time.Duration((1.0-tb.tokens)/tb.rate * float64(time.Second))
+	waitTime := time.Duration((1.0 - tb.tokens) / tb.rate * float64(time.Second))
 
 	// Wait with context cancellation
 	select {

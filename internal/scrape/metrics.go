@@ -19,8 +19,8 @@ type Metrics struct {
 	backoffTotal      *prometheus.CounterVec
 	backoffSleep      *prometheus.HistogramVec
 	// News-specific metrics
-	newsTotal         *prometheus.CounterVec
-	newsParseLatency  *prometheus.HistogramVec
+	newsTotal        *prometheus.CounterVec
+	newsParseLatency *prometheus.HistogramVec
 }
 
 var (
@@ -34,9 +34,9 @@ var (
 	backoffTotal      *prometheus.CounterVec
 	backoffSleep      *prometheus.HistogramVec
 	// News-specific global metrics
-	newsTotal         *prometheus.CounterVec
-	newsParseLatency  *prometheus.HistogramVec
-	metricsOnce       sync.Once
+	newsTotal        *prometheus.CounterVec
+	newsParseLatency *prometheus.HistogramVec
+	metricsOnce      sync.Once
 )
 
 // NewMetrics creates a new metrics instance
@@ -243,7 +243,7 @@ func (it *InflightTracker) GetCount(host string) int {
 func (it *InflightTracker) GetAllCounts() map[string]int {
 	it.mu.RLock()
 	defer it.mu.RUnlock()
-	
+
 	result := make(map[string]int)
 	for host, count := range it.count {
 		result[host] = count

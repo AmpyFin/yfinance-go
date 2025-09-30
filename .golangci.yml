@@ -8,13 +8,42 @@ linters:
     - govet
     - errcheck
     - staticcheck
-    - unused
     - gosimple
     - ineffassign
     - misspell
+    - typecheck
+    - predeclared
+  disable:
+    - unused
     - gocyclo
     - goconst
     - gocritic
     - gosec
     - revive
-    - typecheck
+
+linters-settings:
+  gocyclo:
+    min-complexity: 50
+  goconst:
+    min-len: 5
+    min-occurrences: 5
+  misspell:
+    locale: US
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - ifElseChain
+      - assignOp
+      - dupBranchBody
+      - exitAfterDefer
+      - indentErrorFlow
+      - redefinesBuiltinId
+      - unexportedReturn
+      - varNaming
+      - unusedParam
+      - errorReturn

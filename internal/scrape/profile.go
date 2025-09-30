@@ -9,47 +9,47 @@ import (
 
 // Executive represents a company executive
 type Executive struct {
-	Name             string  `json:"name,omitempty"`
-	Title            string  `json:"title,omitempty"`
-	YearBorn         *int    `json:"year_born,omitempty"`
-	TotalPay         *int64  `json:"total_pay,omitempty"`
-	ExercisedValue   *int64  `json:"exercised_value,omitempty"`
-	UnexercisedValue *int64  `json:"unexercised_value,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Title            string `json:"title,omitempty"`
+	YearBorn         *int   `json:"year_born,omitempty"`
+	TotalPay         *int64 `json:"total_pay,omitempty"`
+	ExercisedValue   *int64 `json:"exercised_value,omitempty"`
+	UnexercisedValue *int64 `json:"unexercised_value,omitempty"`
 }
 
 // ComprehensiveProfileDTO holds comprehensive profile data
 type ComprehensiveProfileDTO struct {
-	Symbol   string    `json:"symbol"`
-	Market   string    `json:"market"`
-	AsOf     time.Time `json:"as_of"`
-	
+	Symbol string    `json:"symbol"`
+	Market string    `json:"market"`
+	AsOf   time.Time `json:"as_of"`
+
 	// Company Information
-	CompanyName      string `json:"company_name,omitempty"`
-	ShortName        string `json:"short_name,omitempty"`
-	Address1         string `json:"address1,omitempty"`
-	City             string `json:"city,omitempty"`
-	State            string `json:"state,omitempty"`
-	Zip              string `json:"zip,omitempty"`
-	Country          string `json:"country,omitempty"`
-	Phone            string `json:"phone,omitempty"`
-	Website          string `json:"website,omitempty"`
-	Industry         string `json:"industry,omitempty"`
-	Sector           string `json:"sector,omitempty"`
+	CompanyName       string `json:"company_name,omitempty"`
+	ShortName         string `json:"short_name,omitempty"`
+	Address1          string `json:"address1,omitempty"`
+	City              string `json:"city,omitempty"`
+	State             string `json:"state,omitempty"`
+	Zip               string `json:"zip,omitempty"`
+	Country           string `json:"country,omitempty"`
+	Phone             string `json:"phone,omitempty"`
+	Website           string `json:"website,omitempty"`
+	Industry          string `json:"industry,omitempty"`
+	Sector            string `json:"sector,omitempty"`
 	FullTimeEmployees *int64 `json:"full_time_employees,omitempty"`
-	BusinessSummary  string `json:"business_summary,omitempty"`
-	
+	BusinessSummary   string `json:"business_summary,omitempty"`
+
 	// Key Executives
 	Executives []Executive `json:"executives,omitempty"`
-	
+
 	// Additional Information
-	MaxAge                        *int64 `json:"max_age,omitempty"`
-	AuditRisk                     *int64 `json:"audit_risk,omitempty"`
-	BoardRisk                     *int64 `json:"board_risk,omitempty"`
-	CompensationRisk              *int64 `json:"compensation_risk,omitempty"`
-	ShareHolderRightsRisk         *int64 `json:"share_holder_rights_risk,omitempty"`
-	OverallRisk                   *int64 `json:"overall_risk,omitempty"`
-	GovernanceEpochDate           *int64 `json:"governance_epoch_date,omitempty"`
-	CompensationAsOfEpochDate     *int64 `json:"compensation_as_of_epoch_date,omitempty"`
+	MaxAge                    *int64 `json:"max_age,omitempty"`
+	AuditRisk                 *int64 `json:"audit_risk,omitempty"`
+	BoardRisk                 *int64 `json:"board_risk,omitempty"`
+	CompensationRisk          *int64 `json:"compensation_risk,omitempty"`
+	ShareHolderRightsRisk     *int64 `json:"share_holder_rights_risk,omitempty"`
+	OverallRisk               *int64 `json:"overall_risk,omitempty"`
+	GovernanceEpochDate       *int64 `json:"governance_epoch_date,omitempty"`
+	CompensationAsOfEpochDate *int64 `json:"compensation_as_of_epoch_date,omitempty"`
 }
 
 // extractCompanyNameFromQuote extracts company name from the quote data in the same script tag
@@ -66,45 +66,45 @@ func extractCompanyNameFromQuote(html string, dto *ComprehensiveProfileDTO) {
 			return
 		}
 	}
-	
+
 	scriptContent := scriptMatch[1]
-	
+
 	// Parse the outer JSON structure
 	var outerData map[string]interface{}
 	if err := json.Unmarshal([]byte(scriptContent), &outerData); err != nil {
 		return
 	}
-	
+
 	// Extract the body field which contains the inner JSON
 	bodyStr, ok := outerData["body"].(string)
 	if !ok {
 		return
 	}
-	
+
 	// Parse the inner JSON structure
 	var innerData map[string]interface{}
 	if err := json.Unmarshal([]byte(bodyStr), &innerData); err != nil {
 		return
 	}
-	
+
 	// Navigate to the quote data
 	quoteResponse, ok := innerData["quoteResponse"].(map[string]interface{})
 	if !ok {
 		return
 	}
-	
+
 	result, ok := quoteResponse["result"].([]interface{})
 	if !ok || len(result) == 0 {
 		return
 	}
-	
+
 	// Find the quote for our symbol
 	for _, quoteData := range result {
 		quote, ok := quoteData.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		
+
 		if symbol, ok := quote["symbol"].(string); ok && symbol == dto.Symbol {
 			if longName, ok := quote["longName"].(string); ok {
 				dto.CompanyName = longName
@@ -124,17 +124,17 @@ func ParseComprehensiveProfile(html []byte, symbol, market string) (*Comprehensi
 		Market: market,
 		AsOf:   time.Now().UTC(),
 	}
-	
+
 	htmlStr := string(html)
-	
+
 	// Extract profile data using JSON parsing
 	if err := extractProfileFromJSON(htmlStr, dto); err != nil {
 		return nil, fmt.Errorf("failed to extract profile from JSON: %w", err)
 	}
-	
+
 	// Extract company name from quote data
 	extractCompanyNameFromQuote(htmlStr, dto)
-	
+
 	return dto, nil
 }
 
@@ -146,57 +146,57 @@ func extractProfileFromJSON(html string, dto *ComprehensiveProfileDTO) error {
 	if len(scriptMatch) < 2 {
 		return fmt.Errorf("no script tag with assetProfile found")
 	}
-	
+
 	scriptContent := scriptMatch[1]
-	
+
 	// Parse the outer JSON structure
 	var outerData map[string]interface{}
 	if err := json.Unmarshal([]byte(scriptContent), &outerData); err != nil {
 		return fmt.Errorf("failed to parse outer JSON: %w", err)
 	}
-	
+
 	// Extract the body field which contains the inner JSON
 	bodyStr, ok := outerData["body"].(string)
 	if !ok {
 		return fmt.Errorf("body field not found or not a string")
 	}
-	
+
 	// Parse the inner JSON structure
 	var innerData map[string]interface{}
 	if err := json.Unmarshal([]byte(bodyStr), &innerData); err != nil {
 		return fmt.Errorf("failed to parse inner JSON: %w", err)
 	}
-	
+
 	// Navigate to the assetProfile data
 	quoteSummary, ok := innerData["quoteSummary"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("quoteSummary not found")
 	}
-	
+
 	result, ok := quoteSummary["result"].([]interface{})
 	if !ok || len(result) == 0 {
 		return fmt.Errorf("result array not found or empty")
 	}
-	
+
 	firstResult, ok := result[0].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("first result item is not a map")
 	}
-	
+
 	assetProfile, ok := firstResult["assetProfile"].(map[string]interface{})
 	if !ok {
 		return fmt.Errorf("assetProfile not found")
 	}
-	
+
 	// Extract company information
 	extractCompanyInfoFromJSON(assetProfile, dto)
-	
+
 	// Extract executives information
 	extractExecutivesFromJSON(assetProfile, dto)
-	
+
 	// Extract additional information
 	extractAdditionalInfoFromJSON(assetProfile, dto)
-	
+
 	return nil
 }
 
@@ -204,7 +204,7 @@ func extractProfileFromJSON(html string, dto *ComprehensiveProfileDTO) error {
 func extractCompanyInfoFromJSON(assetProfile map[string]interface{}, dto *ComprehensiveProfileDTO) {
 	// Company Name (from longName in the quote data, not assetProfile)
 	// We'll need to get this from the quote data separately
-	
+
 	// Address information
 	if val, ok := assetProfile["address1"].(string); ok {
 		dto.Address1 = val
@@ -248,15 +248,15 @@ func extractExecutivesFromJSON(assetProfile map[string]interface{}, dto *Compreh
 	if !ok {
 		return
 	}
-	
+
 	for _, officerData := range companyOfficers {
 		officer, ok := officerData.(map[string]interface{})
 		if !ok {
 			continue
 		}
-		
+
 		executive := Executive{}
-		
+
 		if val, ok := officer["name"].(string); ok {
 			executive.Name = val
 		}
@@ -267,7 +267,7 @@ func extractExecutivesFromJSON(assetProfile map[string]interface{}, dto *Compreh
 			yearBorn := int(val)
 			executive.YearBorn = &yearBorn
 		}
-		
+
 		// Extract total pay from nested structure
 		if totalPayData, ok := officer["totalPay"].(map[string]interface{}); ok {
 			if val, ok := totalPayData["raw"].(float64); ok {
@@ -275,7 +275,7 @@ func extractExecutivesFromJSON(assetProfile map[string]interface{}, dto *Compreh
 				executive.TotalPay = &totalPay
 			}
 		}
-		
+
 		// Extract exercised value from nested structure
 		if exercisedValueData, ok := officer["exercisedValue"].(map[string]interface{}); ok {
 			if val, ok := exercisedValueData["raw"].(float64); ok {
@@ -283,7 +283,7 @@ func extractExecutivesFromJSON(assetProfile map[string]interface{}, dto *Compreh
 				executive.ExercisedValue = &exercisedValue
 			}
 		}
-		
+
 		// Extract unexercised value from nested structure
 		if unexercisedValueData, ok := officer["unexercisedValue"].(map[string]interface{}); ok {
 			if val, ok := unexercisedValueData["raw"].(float64); ok {
@@ -291,7 +291,7 @@ func extractExecutivesFromJSON(assetProfile map[string]interface{}, dto *Compreh
 				executive.UnexercisedValue = &unexercisedValue
 			}
 		}
-		
+
 		// Only add executive if we have at least a name or title
 		if executive.Name != "" || executive.Title != "" {
 			dto.Executives = append(dto.Executives, executive)
@@ -334,4 +334,3 @@ func extractAdditionalInfoFromJSON(assetProfile map[string]interface{}, dto *Com
 		dto.CompensationAsOfEpochDate = &compensationAsOfEpochDate
 	}
 }
-

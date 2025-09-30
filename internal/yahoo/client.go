@@ -22,7 +22,7 @@ func NewClient(httpClient *httpx.Client, baseURL string) *Client {
 	if baseURL == "" {
 		baseURL = "https://query1.finance.yahoo.com"
 	}
-	
+
 	return &Client{
 		httpClient: httpClient,
 		baseURL:    baseURL,
@@ -36,32 +36,32 @@ func (c *Client) FetchDailyBars(ctx context.Context, symbol string, start, end t
 	if err != nil {
 		return nil, fmt.Errorf("failed to build bars URL: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Execute request
 	resp, err := c.httpClient.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch bars: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Decode response
 	barsResp, err := DecodeBarsResponseFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode bars response: %w", err)
 	}
-	
+
 	// Validate response has data
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	return barsResp, nil
 }
 
@@ -71,18 +71,18 @@ func (c *Client) FetchQuote(ctx context.Context, symbol string) (*QuoteResponse,
 	// This is more reliable since v7 quote endpoint returns 401
 	end := time.Now()
 	start := end.AddDate(0, 0, -7) // Get 7 days of data to ensure we have recent data
-	
+
 	barsResp, err := c.FetchDailyBars(ctx, symbol, start, end, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch quote via chart endpoint: %w", err)
 	}
-	
+
 	// Convert chart metadata to quote response
 	quoteResp, err := c.convertChartToQuote(barsResp, symbol)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert chart to quote: %w", err)
 	}
-	
+
 	return quoteResp, nil
 }
 
@@ -93,31 +93,31 @@ func (c *Client) FetchFundamentalsQuarterly(ctx context.Context, symbol string) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to build fundamentals URL: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Execute request
 	resp, err := c.httpClient.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch fundamentals: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Decode response
 	fundResp, err := DecodeFundamentalsResponseFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode fundamentals response: %w", err)
 	}
-	
+
 	// Validate response has data
 	if len(fundResp.QuoteSummary.Result) == 0 {
 		return nil, fmt.Errorf("no fundamentals results found")
 	}
-	
+
 	return fundResp, nil
 }
 
@@ -127,7 +127,7 @@ func (c *Client) buildBarsURL(symbol string, start, end time.Time, adjusted bool
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Add query parameters
 	params := url.Values{}
 	params.Set("period1", strconv.FormatInt(start.Unix(), 10))
@@ -135,11 +135,10 @@ func (c *Client) buildBarsURL(symbol string, start, end time.Time, adjusted bool
 	params.Set("interval", "1d")
 	params.Set("includePrePost", "false")
 	params.Set("events", "div,split")
-	
+
 	u.RawQuery = params.Encode()
 	return u.String(), nil
 }
-
 
 // buildFundamentalsURL builds the URL for fetching fundamentals
 func (c *Client) buildFundamentalsURL(symbol string) (string, error) {
@@ -147,11 +146,11 @@ func (c *Client) buildFundamentalsURL(symbol string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Add query parameters
 	params := url.Values{}
 	params.Set("modules", "incomeStatementHistoryQuarterly,balanceSheetHistoryQuarterly,cashflowStatementHistoryQuarterly")
-	
+
 	u.RawQuery = params.Encode()
 	return u.String(), nil
 }
@@ -161,18 +160,17 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 	if len(barsResp.Chart.Result) == 0 {
 		return nil, fmt.Errorf("no chart results found")
 	}
-	
+
 	result := barsResp.Chart.Result[0]
 	meta := result.Meta
-	
+
 	// Get the most recent close price from the bars data
 	var regularMarketPrice *float64
 	var regularMarketDayHigh, regularMarketDayLow *float64
-	
+
 	if len(result.Indicators.Quote) > 0 {
 		quote := result.Indicators.Quote[0]
-		
-		
+
 		if len(quote.Close) > 0 {
 			// Get the last close price
 			lastClose := quote.Close[len(quote.Close)-1]
@@ -180,7 +178,7 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 				regularMarketPrice = lastClose
 			}
 		}
-		
+
 		// Get the last high and low
 		if len(quote.High) > 0 {
 			lastHigh := quote.High[len(quote.High)-1]
@@ -188,7 +186,7 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 				regularMarketDayHigh = lastHigh
 			}
 		}
-		
+
 		if len(quote.Low) > 0 {
 			lastLow := quote.Low[len(quote.Low)-1]
 			if lastLow != nil {
@@ -196,29 +194,28 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 			}
 		}
 	}
-	
-	
+
 	// Create a quote result from chart metadata
 	quoteResult := QuoteResult{
-		Symbol:                        meta.Symbol,
-		Currency:                      meta.Currency,
-		Exchange:                      meta.ExchangeName,
-		FullExchangeName:              meta.FullExchangeName,
-		ShortName:                     meta.ShortName,
-		LongName:                      meta.LongName,
-		RegularMarketPrice:            regularMarketPrice,
-		RegularMarketDayHigh:          regularMarketDayHigh,
-		RegularMarketDayLow:           regularMarketDayLow,
-		RegularMarketVolume:           meta.RegularMarketVolume,
-		RegularMarketTime:             &meta.RegularMarketTime,
-		ExchangeTimezoneName:          meta.ExchangeTimezoneName,
-		GmtOffsetMilliseconds:         meta.GmtOffset,
-		MarketState:                   "REGULAR", // Default to regular market
-		QuoteType:                     "EQUITY",  // Default to equity
-		Language:                      "en-US",   // Default language
-		Region:                        "US",      // Default region
+		Symbol:                meta.Symbol,
+		Currency:              meta.Currency,
+		Exchange:              meta.ExchangeName,
+		FullExchangeName:      meta.FullExchangeName,
+		ShortName:             meta.ShortName,
+		LongName:              meta.LongName,
+		RegularMarketPrice:    regularMarketPrice,
+		RegularMarketDayHigh:  regularMarketDayHigh,
+		RegularMarketDayLow:   regularMarketDayLow,
+		RegularMarketVolume:   meta.RegularMarketVolume,
+		RegularMarketTime:     &meta.RegularMarketTime,
+		ExchangeTimezoneName:  meta.ExchangeTimezoneName,
+		GmtOffsetMilliseconds: meta.GmtOffset,
+		MarketState:           "REGULAR", // Default to regular market
+		QuoteType:             "EQUITY",  // Default to equity
+		Language:              "en-US",   // Default language
+		Region:                "US",      // Default region
 	}
-	
+
 	// Create quote response
 	quoteResponse := &QuoteResponse{
 		QuoteResponse: QuoteResponseData{
@@ -226,7 +223,7 @@ func (c *Client) convertChartToQuote(barsResp *BarsResponse, symbol string) (*Qu
 			Error:  nil,
 		},
 	}
-	
+
 	return quoteResponse, nil
 }
 
@@ -237,32 +234,32 @@ func (c *Client) FetchIntradayBars(ctx context.Context, symbol string, start, en
 	if err != nil {
 		return nil, fmt.Errorf("failed to build intraday bars URL: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Execute request
 	resp, err := c.httpClient.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch intraday bars: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Decode response
 	barsResp, err := DecodeBarsResponseFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode intraday bars response: %w", err)
 	}
-	
+
 	// Validate response has data
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	return barsResp, nil
 }
 
@@ -273,32 +270,32 @@ func (c *Client) FetchWeeklyBars(ctx context.Context, symbol string, start, end 
 	if err != nil {
 		return nil, fmt.Errorf("failed to build weekly bars URL: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Execute request
 	resp, err := c.httpClient.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch weekly bars: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Decode response
 	barsResp, err := DecodeBarsResponseFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode weekly bars response: %w", err)
 	}
-	
+
 	// Validate response has data
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	return barsResp, nil
 }
 
@@ -309,32 +306,32 @@ func (c *Client) FetchMonthlyBars(ctx context.Context, symbol string, start, end
 	if err != nil {
 		return nil, fmt.Errorf("failed to build monthly bars URL: %w", err)
 	}
-	
+
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	// Execute request
 	resp, err := c.httpClient.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch monthly bars: %w", err)
 	}
 	defer resp.Body.Close()
-	
+
 	// Decode response
 	barsResp, err := DecodeBarsResponseFromReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode monthly bars response: %w", err)
 	}
-	
+
 	// Validate response has data
 	meta := barsResp.GetMetadata()
 	if meta == nil {
 		return nil, fmt.Errorf("missing metadata")
 	}
-	
+
 	return barsResp, nil
 }
 
@@ -344,7 +341,7 @@ func (c *Client) buildIntradayBarsURL(symbol string, start, end time.Time, inter
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Add query parameters
 	params := url.Values{}
 	params.Set("period1", strconv.FormatInt(start.Unix(), 10))
@@ -352,7 +349,7 @@ func (c *Client) buildIntradayBarsURL(symbol string, start, end time.Time, inter
 	params.Set("interval", interval)
 	params.Set("includePrePost", "false")
 	params.Set("events", "div,split")
-	
+
 	u.RawQuery = params.Encode()
 	return u.String(), nil
 }
@@ -363,7 +360,7 @@ func (c *Client) buildWeeklyBarsURL(symbol string, start, end time.Time, adjuste
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Add query parameters
 	params := url.Values{}
 	params.Set("period1", strconv.FormatInt(start.Unix(), 10))
@@ -371,7 +368,7 @@ func (c *Client) buildWeeklyBarsURL(symbol string, start, end time.Time, adjuste
 	params.Set("interval", "1wk")
 	params.Set("includePrePost", "false")
 	params.Set("events", "div,split")
-	
+
 	u.RawQuery = params.Encode()
 	return u.String(), nil
 }
@@ -382,7 +379,7 @@ func (c *Client) buildMonthlyBarsURL(symbol string, start, end time.Time, adjust
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Add query parameters
 	params := url.Values{}
 	params.Set("period1", strconv.FormatInt(start.Unix(), 10))
@@ -390,7 +387,7 @@ func (c *Client) buildMonthlyBarsURL(symbol string, start, end time.Time, adjust
 	params.Set("interval", "1mo")
 	params.Set("includePrePost", "false")
 	params.Set("events", "div,split")
-	
+
 	u.RawQuery = params.Encode()
 	return u.String(), nil
 }

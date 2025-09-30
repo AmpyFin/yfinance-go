@@ -10,21 +10,21 @@ import (
 func ToUTCDayBoundaries(timestamp int64) (start, end, eventTime time.Time) {
 	// Convert timestamp to UTC time
 	t := time.Unix(timestamp, 0).UTC()
-	
+
 	// For daily bars, the timestamp represents the end of the trading day
 	// So we need to map it to the previous day's trading session
 	// Subtract two days to get the actual trading day (based on golden data expectations)
 	tradingDay := t.AddDate(0, 0, -2)
-	
+
 	// Start is 00:00:00Z of the trading day
 	start = time.Date(tradingDay.Year(), tradingDay.Month(), tradingDay.Day(), 0, 0, 0, 0, time.UTC)
-	
+
 	// End is next day 00:00:00Z
 	end = start.Add(24 * time.Hour)
-	
+
 	// Event time is the end of the bar (close time)
 	eventTime = end
-	
+
 	return start, end, eventTime
 }
 

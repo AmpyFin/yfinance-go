@@ -33,18 +33,18 @@ type MessageQueue struct {
 // NewMessageQueue creates a new message queue
 func NewMessageQueue(key string, bufferSize int) *MessageQueue {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	queue := &MessageQueue{
 		key:      key,
 		messages: make(chan *Message, bufferSize),
 		ctx:      ctx,
 		cancel:   cancel,
 	}
-	
+
 	// Start the queue processor
 	queue.wg.Add(1)
 	go queue.process()
-	
+
 	return queue
 }
 
@@ -63,7 +63,7 @@ func (q *MessageQueue) Enqueue(msg *Message) error {
 // process processes messages in the queue sequentially
 func (q *MessageQueue) process() {
 	defer q.wg.Done()
-	
+
 	for {
 		select {
 		case msg := <-q.messages:
@@ -88,13 +88,13 @@ func (q *MessageQueue) Close() {
 func (op *OrderedPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) error {
 	key := batch.Key.PartitionKey()
 	queue := op.getOrCreateQueue(key)
-	
+
 	// Create message
 	msg := &Message{
 		Topic: "", // Will be set by the actual publisher
 		Key:   batch.Key,
 	}
-	
+
 	return queue.Enqueue(msg)
 }
 
@@ -102,13 +102,13 @@ func (op *OrderedPublisher) PublishBars(ctx context.Context, batch *BarBatchMess
 func (op *OrderedPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) error {
 	key := quote.Key.PartitionKey()
 	queue := op.getOrCreateQueue(key)
-	
+
 	// Create message
 	msg := &Message{
 		Topic: "", // Will be set by the actual publisher
 		Key:   quote.Key,
 	}
-	
+
 	return queue.Enqueue(msg)
 }
 
@@ -116,13 +116,13 @@ func (op *OrderedPublisher) PublishQuote(ctx context.Context, quote *QuoteMessag
 func (op *OrderedPublisher) PublishFundamentals(ctx context.Context, fundamentals *FundamentalsMessage) error {
 	key := fundamentals.Key.PartitionKey()
 	queue := op.getOrCreateQueue(key)
-	
+
 	// Create message
 	msg := &Message{
 		Topic: "", // Will be set by the actual publisher
 		Key:   fundamentals.Key,
 	}
-	
+
 	return queue.Enqueue(msg)
 }
 
@@ -130,15 +130,15 @@ func (op *OrderedPublisher) PublishFundamentals(ctx context.Context, fundamental
 func (op *OrderedPublisher) Close(ctx context.Context) error {
 	op.mu.Lock()
 	defer op.mu.Unlock()
-	
+
 	// Close all queues
 	for _, queue := range op.queues {
 		queue.Close()
 	}
-	
+
 	// Clear the queues map
 	op.queues = make(map[string]*MessageQueue)
-	
+
 	// Close the underlying publisher
 	return op.publisher.Close(ctx)
 }
@@ -147,12 +147,12 @@ func (op *OrderedPublisher) Close(ctx context.Context) error {
 func (op *OrderedPublisher) getOrCreateQueue(key string) *MessageQueue {
 	op.mu.Lock()
 	defer op.mu.Unlock()
-	
+
 	queue, exists := op.queues[key]
 	if !exists {
 		queue = NewMessageQueue(key, 1000) // Buffer size of 1000
 		op.queues[key] = queue
 	}
-	
+
 	return queue
 }

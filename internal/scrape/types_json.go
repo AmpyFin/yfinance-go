@@ -25,9 +25,9 @@ type YahooNum struct {
 
 // YahooInt represents Yahoo's integer format with raw, fmt, and longFmt
 type YahooInt struct {
-	Raw     *int64  `json:"raw,omitempty"`
-	Fmt     string  `json:"fmt,omitempty"`
-	LongFmt string  `json:"longFmt,omitempty"`
+	Raw     *int64 `json:"raw,omitempty"`
+	Fmt     string `json:"fmt,omitempty"`
+	LongFmt string `json:"longFmt,omitempty"`
 }
 
 // YahooString represents Yahoo's string format that might contain numbers
@@ -39,44 +39,44 @@ type YahooString struct {
 
 // KeyStatisticsDTO represents extracted key statistics data
 type KeyStatisticsDTO struct {
-	Symbol                    string   `json:"symbol"`
-	Market                    string   `json:"market"`
-	Currency                  Currency `json:"currency"`
-	
+	Symbol   string   `json:"symbol"`
+	Market   string   `json:"market"`
+	Currency Currency `json:"currency"`
+
 	// Market metrics (from summaryDetail - real-time data)
-	MarketCap                 *Scaled  `json:"market_cap,omitempty"`
-	ForwardPE                 *Scaled  `json:"forward_pe,omitempty"`
-	TrailingPE                *Scaled  `json:"trailing_pe,omitempty"`
-	Beta                      *Scaled  `json:"beta,omitempty"`
-	PriceToSales              *Scaled  `json:"price_to_sales,omitempty"`
-	
+	MarketCap    *Scaled `json:"market_cap,omitempty"`
+	ForwardPE    *Scaled `json:"forward_pe,omitempty"`
+	TrailingPE   *Scaled `json:"trailing_pe,omitempty"`
+	Beta         *Scaled `json:"beta,omitempty"`
+	PriceToSales *Scaled `json:"price_to_sales,omitempty"`
+
 	// Share data
-	SharesOutstanding         *int64   `json:"shares_outstanding,omitempty"`
-	FloatShares               *int64   `json:"float_shares,omitempty"`
-	ShortInterest             *int64   `json:"short_interest,omitempty"`
-	
+	SharesOutstanding *int64 `json:"shares_outstanding,omitempty"`
+	FloatShares       *int64 `json:"float_shares,omitempty"`
+	ShortInterest     *int64 `json:"short_interest,omitempty"`
+
 	// Financial metrics (from financialData)
-	EnterpriseValue           *Scaled  `json:"enterprise_value,omitempty"`
-	TotalCash                 *Scaled  `json:"total_cash,omitempty"`
-	TotalDebt                 *Scaled  `json:"total_debt,omitempty"`
-	QuickRatio                *Scaled  `json:"quick_ratio,omitempty"`
-	CurrentRatio              *Scaled  `json:"current_ratio,omitempty"`
-	DebtToEquity              *Scaled  `json:"debt_to_equity,omitempty"`
-	ReturnOnAssets            *Scaled  `json:"return_on_assets,omitempty"`
-	ReturnOnEquity            *Scaled  `json:"return_on_equity,omitempty"`
-	GrossMargins              *Scaled  `json:"gross_margins,omitempty"`
-	OperatingMargins          *Scaled  `json:"operating_margins,omitempty"`
-	ProfitMargins             *Scaled  `json:"profit_margins,omitempty"`
-	RevenueGrowth             *Scaled  `json:"revenue_growth,omitempty"`
-	EarningsGrowth            *Scaled  `json:"earnings_growth,omitempty"`
-	
+	EnterpriseValue  *Scaled `json:"enterprise_value,omitempty"`
+	TotalCash        *Scaled `json:"total_cash,omitempty"`
+	TotalDebt        *Scaled `json:"total_debt,omitempty"`
+	QuickRatio       *Scaled `json:"quick_ratio,omitempty"`
+	CurrentRatio     *Scaled `json:"current_ratio,omitempty"`
+	DebtToEquity     *Scaled `json:"debt_to_equity,omitempty"`
+	ReturnOnAssets   *Scaled `json:"return_on_assets,omitempty"`
+	ReturnOnEquity   *Scaled `json:"return_on_equity,omitempty"`
+	GrossMargins     *Scaled `json:"gross_margins,omitempty"`
+	OperatingMargins *Scaled `json:"operating_margins,omitempty"`
+	ProfitMargins    *Scaled `json:"profit_margins,omitempty"`
+	RevenueGrowth    *Scaled `json:"revenue_growth,omitempty"`
+	EarningsGrowth   *Scaled `json:"earnings_growth,omitempty"`
+
 	// Price data
-	FiftyTwoWeekHigh          *Scaled  `json:"fifty_two_week_high,omitempty"`
-	FiftyTwoWeekLow           *Scaled  `json:"fifty_two_week_low,omitempty"`
-	AverageVolume             *int64   `json:"average_volume,omitempty"`
-	AverageVolume10Day        *int64   `json:"average_volume_10_day,omitempty"`
-	
-	AsOf                      time.Time `json:"as_of"`
+	FiftyTwoWeekHigh   *Scaled `json:"fifty_two_week_high,omitempty"`
+	FiftyTwoWeekLow    *Scaled `json:"fifty_two_week_low,omitempty"`
+	AverageVolume      *int64  `json:"average_volume,omitempty"`
+	AverageVolume10Day *int64  `json:"average_volume_10_day,omitempty"`
+
+	AsOf time.Time `json:"as_of"`
 }
 
 // PeriodLine represents a financial statement line item for a specific period
@@ -90,10 +90,10 @@ type PeriodLine struct {
 
 // FinancialsDTO represents extracted financial statements data
 type FinancialsDTO struct {
-	Symbol   string        `json:"symbol"`
-	Market   string        `json:"market"`
-	Lines    []PeriodLine  `json:"lines"`
-	AsOf     time.Time     `json:"as_of"`
+	Symbol string       `json:"symbol"`
+	Market string       `json:"market"`
+	Lines  []PeriodLine `json:"lines"`
+	AsOf   time.Time    `json:"as_of"`
 }
 
 // Recommendation represents analyst recommendation data for a period
@@ -115,12 +115,12 @@ type QuarterlyEPS struct {
 
 // AnalysisDTO represents extracted analysis data
 type AnalysisDTO struct {
-	Symbol       string          `json:"symbol"`
-	Market       string          `json:"market"`
-	Currency     Currency        `json:"currency"`
+	Symbol       string           `json:"symbol"`
+	Market       string           `json:"market"`
+	Currency     Currency         `json:"currency"`
 	RecTrends    []Recommendation `json:"rec_trends"`
-	EPSQuarterly []QuarterlyEPS  `json:"eps_quarterly"`
-	AsOf         time.Time       `json:"as_of"`
+	EPSQuarterly []QuarterlyEPS   `json:"eps_quarterly"`
+	AsOf         time.Time        `json:"as_of"`
 }
 
 // Officer represents a company officer/executive
@@ -133,18 +133,18 @@ type Officer struct {
 
 // ProfileDTO represents extracted company profile data
 type ProfileDTO struct {
-	Symbol    string   `json:"symbol"`
-	Market    string   `json:"market"`
-	Company   string   `json:"company"`
-	Address1  string   `json:"address1"`
-	City      string   `json:"city"`
-	State     string   `json:"state"`
-	Country   string   `json:"country"`
-	Phone     string   `json:"phone"`
-	Website   string   `json:"website"`
-	Industry  string   `json:"industry"`
-	Sector    string   `json:"sector"`
-	Employees *int     `json:"employees,omitempty"`
+	Symbol    string    `json:"symbol"`
+	Market    string    `json:"market"`
+	Company   string    `json:"company"`
+	Address1  string    `json:"address1"`
+	City      string    `json:"city"`
+	State     string    `json:"state"`
+	Country   string    `json:"country"`
+	Phone     string    `json:"phone"`
+	Website   string    `json:"website"`
+	Industry  string    `json:"industry"`
+	Sector    string    `json:"sector"`
+	Employees *int      `json:"employees,omitempty"`
 	Officers  []Officer `json:"officers"`
 	AsOf      time.Time `json:"as_of"`
 }
@@ -156,13 +156,13 @@ func NumToScaled(n YahooNum, scale int) (Scaled, bool) {
 	if n.Raw == nil {
 		return Scaled{}, false
 	}
-	
+
 	// Convert to scaled integer
 	multiplier := int64(1)
 	for i := 0; i < scale; i++ {
 		multiplier *= 10
 	}
-	
+
 	scaled := int64(*n.Raw * float64(multiplier))
 	return Scaled{Scaled: scaled, Scale: scale}, true
 }
@@ -172,18 +172,18 @@ func IntToScaled(i YahooInt, scale int) (Scaled, bool) {
 	if i.Raw == nil {
 		return Scaled{}, false
 	}
-	
+
 	// For integers, we typically use scale 0 unless it's a percentage
 	actualScale := scale
 	if scale == 0 {
 		actualScale = 0
 	}
-	
+
 	multiplier := int64(1)
 	for j := 0; j < actualScale; j++ {
 		multiplier *= 10
 	}
-	
+
 	scaled := *i.Raw * multiplier
 	return Scaled{Scaled: scaled, Scale: actualScale}, true
 }
@@ -226,7 +226,7 @@ func ParseYahooDate(ts any) (time.Time, bool) {
 			"2006-01-02T15:04:05.000Z",
 			"2006-01-02 15:04:05",
 		}
-		
+
 		for _, format := range formats {
 			if t, err := time.Parse(format, val); err == nil {
 				return t.UTC(), true
@@ -255,11 +255,11 @@ func StringToInt64(s string) (int64, bool) {
 	if s == "" {
 		return 0, false
 	}
-	
+
 	// Remove common formatting
 	s = strings.ReplaceAll(s, ",", "")
 	s = strings.ReplaceAll(s, " ", "")
-	
+
 	val, err := strconv.ParseInt(s, 10, 64)
 	return val, err == nil
 }
@@ -269,11 +269,11 @@ func StringToFloat64(s string) (float64, bool) {
 	if s == "" {
 		return 0, false
 	}
-	
+
 	// Remove common formatting
 	s = strings.ReplaceAll(s, ",", "")
 	s = strings.ReplaceAll(s, " ", "")
-	
+
 	val, err := strconv.ParseFloat(s, 64)
 	return val, err == nil
 }
@@ -285,12 +285,12 @@ func (s Scaled) String() string {
 	if s.Scale == 0 {
 		return fmt.Sprintf("%d", s.Scaled)
 	}
-	
+
 	divisor := float64(1)
 	for i := 0; i < s.Scale; i++ {
 		divisor *= 10
 	}
-	
+
 	value := float64(s.Scaled) / divisor
 	return fmt.Sprintf("%.6f", value)
 }
@@ -300,12 +300,12 @@ func (s Scaled) Float64() float64 {
 	if s.Scale == 0 {
 		return float64(s.Scaled)
 	}
-	
+
 	divisor := float64(1)
 	for i := 0; i < s.Scale; i++ {
 		divisor *= 10
 	}
-	
+
 	return float64(s.Scaled) / divisor
 }
 

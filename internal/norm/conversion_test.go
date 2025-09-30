@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+const (
+	noneProvider = "none"
+)
+
 func TestNormalizedBarBatchConvertTo(t *testing.T) {
 	// Create a mock FX converter
 	fxConverter := &MockFXConverter{}
@@ -74,7 +78,7 @@ func TestNormalizedBarBatchConvertTo(t *testing.T) {
 	// Verify FX metadata
 	if fxMeta == nil {
 		t.Error("Expected FX metadata")
-	} else if fxMeta.Provider != "none" {
+	} else if fxMeta.Provider != noneProvider {
 		t.Errorf("Expected provider 'none', got '%s'", fxMeta.Provider)
 	}
 
@@ -91,19 +95,19 @@ func TestNormalizedQuoteConvertTo(t *testing.T) {
 
 	// Create test data
 	security := Security{Symbol: "AAPL", MIC: "XNAS"}
-	bid := ScaledDecimal{Scaled: 10000, Scale: 4} // 1.0000
-	ask := ScaledDecimal{Scaled: 10050, Scale: 4} // 1.0050
+	bid := ScaledDecimal{Scaled: 10000, Scale: 4}                // 1.0000
+	ask := ScaledDecimal{Scaled: 10050, Scale: 4}                // 1.0050
 	regularMarketPrice := ScaledDecimal{Scaled: 10025, Scale: 4} // 1.0025
 
 	quote := &NormalizedQuote{
-		Security:            security,
-		Type:                "QUOTE",
-		Bid:                 &bid,
-		Ask:                 &ask,
-		RegularMarketPrice:  &regularMarketPrice,
-		CurrencyCode:        "USD",
-		EventTime:           time.Now().UTC(),
-		IngestTime:          time.Now().UTC(),
+		Security:           security,
+		Type:               "QUOTE",
+		Bid:                &bid,
+		Ask:                &ask,
+		RegularMarketPrice: &regularMarketPrice,
+		CurrencyCode:       "USD",
+		EventTime:          time.Now().UTC(),
+		IngestTime:         time.Now().UTC(),
 		Meta: Meta{
 			RunID:         "test-run",
 			Source:        "test",
@@ -139,7 +143,7 @@ func TestNormalizedQuoteConvertTo(t *testing.T) {
 	// Verify FX metadata
 	if fxMeta == nil {
 		t.Error("Expected FX metadata")
-	} else if fxMeta.Provider != "none" {
+	} else if fxMeta.Provider != noneProvider {
 		t.Errorf("Expected provider 'none', got '%s'", fxMeta.Provider)
 	}
 
@@ -212,7 +216,7 @@ func TestNormalizedFundamentalsSnapshotConvertTo(t *testing.T) {
 	// Verify FX metadata
 	if fxMeta == nil {
 		t.Error("Expected FX metadata")
-	} else if fxMeta.Provider != "none" {
+	} else if fxMeta.Provider != noneProvider {
 		t.Errorf("Expected provider 'none', got '%s'", fxMeta.Provider)
 	}
 
@@ -234,13 +238,13 @@ func TestNormalizedMarketDataConvertTo(t *testing.T) {
 	fiftyTwoWeekLow := ScaledDecimal{Scaled: 8000, Scale: 4}     // 0.8000
 
 	marketData := &NormalizedMarketData{
-		Security:               security,
-		RegularMarketPrice:     &regularMarketPrice,
-		FiftyTwoWeekHigh:       &fiftyTwoWeekHigh,
-		FiftyTwoWeekLow:        &fiftyTwoWeekLow,
-		CurrencyCode:           "USD",
-		EventTime:              time.Now().UTC(),
-		IngestTime:             time.Now().UTC(),
+		Security:           security,
+		RegularMarketPrice: &regularMarketPrice,
+		FiftyTwoWeekHigh:   &fiftyTwoWeekHigh,
+		FiftyTwoWeekLow:    &fiftyTwoWeekLow,
+		CurrencyCode:       "USD",
+		EventTime:          time.Now().UTC(),
+		IngestTime:         time.Now().UTC(),
 		Meta: Meta{
 			RunID:         "test-run",
 			Source:        "test",
@@ -276,7 +280,7 @@ func TestNormalizedMarketDataConvertTo(t *testing.T) {
 	// Verify FX metadata
 	if fxMeta == nil {
 		t.Error("Expected FX metadata")
-	} else if fxMeta.Provider != "none" {
+	} else if fxMeta.Provider != noneProvider {
 		t.Errorf("Expected provider 'none', got '%s'", fxMeta.Provider)
 	}
 

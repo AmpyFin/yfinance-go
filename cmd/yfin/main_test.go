@@ -142,7 +142,7 @@ func TestGetSymbols(t *testing.T) {
 	// Create a temporary universe file
 	tempDir := t.TempDir()
 	universeFile := filepath.Join(tempDir, "symbols.txt")
-	
+
 	content := `AAPL
 MSFT
 # This is a comment
@@ -152,25 +152,25 @@ TSLA
 	require.NoError(t, err)
 
 	tests := []struct {
-		name        string
-		ticker      string
+		name         string
+		ticker       string
 		universeFile string
-		wantErr     bool
-		wantSymbols []string
+		wantErr      bool
+		wantSymbols  []string
 	}{
 		{
-			name:        "single ticker",
-			ticker:      "AAPL",
+			name:         "single ticker",
+			ticker:       "AAPL",
 			universeFile: "",
-			wantErr:     false,
-			wantSymbols: []string{"AAPL"},
+			wantErr:      false,
+			wantSymbols:  []string{"AAPL"},
 		},
 		{
-			name:        "universe file",
-			ticker:      "",
+			name:         "universe file",
+			ticker:       "",
 			universeFile: universeFile,
-			wantErr:     false,
-			wantSymbols: []string{"AAPL", "MSFT", "TSLA"},
+			wantErr:      false,
+			wantSymbols:  []string{"AAPL", "MSFT", "TSLA"},
 		},
 	}
 
@@ -190,20 +190,20 @@ TSLA
 func TestWriteJSONFile(t *testing.T) {
 	tempDir := t.TempDir()
 	filePath := filepath.Join(tempDir, "test.json")
-	
+
 	testData := map[string]interface{}{
-		"test": "data",
+		"test":   "data",
 		"number": 42,
 	}
-	
+
 	err := writeJSONFile(filePath, testData)
 	require.NoError(t, err)
-	
+
 	// Check that file exists and has content
 	info, err := os.Stat(filePath)
 	require.NoError(t, err)
 	assert.True(t, info.Size() > 0)
-	
+
 	// Check that file contains JSON
 	content, err := os.ReadFile(filePath)
 	require.NoError(t, err)

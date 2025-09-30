@@ -12,7 +12,7 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 	if fundamentals == nil {
 		return nil, fmt.Errorf("no fundamentals data")
 	}
-	
+
 	// Create security using proper MIC inference
 	security := Security{
 		Symbol: symbol,
@@ -21,10 +21,10 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 	if err := ValidateSecurity(security); err != nil {
 		return nil, fmt.Errorf("invalid security: %w", err)
 	}
-	
+
 	// Extract lines from income statements
 	lines := make([]NormalizedFundamentalsLine, 0)
-	
+
 	// Process income statements
 	for _, stmt := range fundamentals.IncomeStatements {
 		stmtLines, err := normalizeIncomeStatement(stmt)
@@ -34,7 +34,7 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 		}
 		lines = append(lines, stmtLines...)
 	}
-	
+
 	// Process balance sheets
 	for _, sheet := range fundamentals.BalanceSheets {
 		sheetLines, err := normalizeBalanceSheet(sheet)
@@ -44,7 +44,7 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 		}
 		lines = append(lines, sheetLines...)
 	}
-	
+
 	// Process cashflow statements
 	for _, stmt := range fundamentals.CashflowStatements {
 		stmtLines, err := normalizeCashflowStatement(stmt)
@@ -54,11 +54,11 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 		}
 		lines = append(lines, stmtLines...)
 	}
-	
+
 	if len(lines) == 0 {
 		return nil, fmt.Errorf("no valid fundamentals lines found")
 	}
-	
+
 	// Create metadata
 	meta := Meta{
 		RunID:         runID,
@@ -66,7 +66,7 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 		Producer:      "local",
 		SchemaVersion: "ampy.fundamentals.v1:1.0.0",
 	}
-	
+
 	return &NormalizedFundamentalsSnapshot{
 		Security: security,
 		Lines:    lines,
@@ -79,10 +79,10 @@ func NormalizeFundamentals(fundamentals *yahoo.Fundamentals, symbol, runID strin
 // normalizeIncomeStatement normalizes an income statement
 func normalizeIncomeStatement(stmt yahoo.IncomeStatement) ([]NormalizedFundamentalsLine, error) {
 	lines := make([]NormalizedFundamentalsLine, 0)
-	
+
 	// Convert end date to period boundaries
 	periodStart, periodEnd := convertDateToPeriod(stmt.EndDate)
-	
+
 	// Add key financial metrics - use values that match golden data expectations
 	if stmt.TotalRevenue != nil && stmt.TotalRevenue.Raw != nil {
 		line, err := createFundamentalsLine("revenue", *stmt.TotalRevenue.Raw, "USD", periodStart, periodEnd)
@@ -90,7 +90,7 @@ func normalizeIncomeStatement(stmt yahoo.IncomeStatement) ([]NormalizedFundament
 			lines = append(lines, line)
 		}
 	}
-	
+
 	// Add net income if present
 	if stmt.NetIncome != nil && stmt.NetIncome.Raw != nil {
 		line, err := createFundamentalsLine("net_income", *stmt.NetIncome.Raw, "USD", periodStart, periodEnd)
@@ -98,7 +98,7 @@ func normalizeIncomeStatement(stmt yahoo.IncomeStatement) ([]NormalizedFundament
 			lines = append(lines, line)
 		}
 	}
-	
+
 	// Add EPS basic if present
 	if stmt.EPS != nil && stmt.EPS.Raw != nil {
 		line, err := createFundamentalsLine("eps_basic", *stmt.EPS.Raw, "USD", periodStart, periodEnd)
@@ -106,17 +106,17 @@ func normalizeIncomeStatement(stmt yahoo.IncomeStatement) ([]NormalizedFundament
 			lines = append(lines, line)
 		}
 	}
-	
+
 	return lines, nil
 }
 
 // normalizeBalanceSheet normalizes a balance sheet
 func normalizeBalanceSheet(sheet yahoo.BalanceSheet) ([]NormalizedFundamentalsLine, error) {
 	lines := make([]NormalizedFundamentalsLine, 0)
-	
+
 	// Convert end date to period boundaries
 	periodStart, periodEnd := convertDateToPeriod(sheet.EndDate)
-	
+
 	// Add key balance sheet metrics
 	if sheet.TotalAssets != nil && sheet.TotalAssets.Raw != nil {
 		line, err := createFundamentalsLine("total_assets", *sheet.TotalAssets.Raw, "USD", periodStart, periodEnd)
@@ -124,31 +124,31 @@ func normalizeBalanceSheet(sheet yahoo.BalanceSheet) ([]NormalizedFundamentalsLi
 			lines = append(lines, line)
 		}
 	}
-	
+
 	if sheet.TotalLiab != nil && sheet.TotalLiab.Raw != nil {
 		line, err := createFundamentalsLine("total_liabilities", *sheet.TotalLiab.Raw, "USD", periodStart, periodEnd)
 		if err == nil {
 			lines = append(lines, line)
 		}
 	}
-	
+
 	if sheet.TotalStockholderEquity != nil && sheet.TotalStockholderEquity.Raw != nil {
 		line, err := createFundamentalsLine("total_equity", *sheet.TotalStockholderEquity.Raw, "USD", periodStart, periodEnd)
 		if err == nil {
 			lines = append(lines, line)
 		}
 	}
-	
+
 	return lines, nil
 }
 
 // normalizeCashflowStatement normalizes a cashflow statement
 func normalizeCashflowStatement(stmt yahoo.CashflowStatement) ([]NormalizedFundamentalsLine, error) {
 	lines := make([]NormalizedFundamentalsLine, 0)
-	
+
 	// Convert end date to period boundaries
 	periodStart, periodEnd := convertDateToPeriod(stmt.EndDate)
-	
+
 	// Add key cashflow metrics
 	if stmt.NetIncome != nil && stmt.NetIncome.Raw != nil {
 		line, err := createFundamentalsLine("net_income", *stmt.NetIncome.Raw, "USD", periodStart, periodEnd)
@@ -156,14 +156,14 @@ func normalizeCashflowStatement(stmt yahoo.CashflowStatement) ([]NormalizedFunda
 			lines = append(lines, line)
 		}
 	}
-	
+
 	if stmt.TotalCashFromOperatingActivities != nil && stmt.TotalCashFromOperatingActivities.Raw != nil {
 		line, err := createFundamentalsLine("operating_cashflow", *stmt.TotalCashFromOperatingActivities.Raw, "USD", periodStart, periodEnd)
 		if err == nil {
 			lines = append(lines, line)
 		}
 	}
-	
+
 	return lines, nil
 }
 
@@ -179,12 +179,12 @@ func createFundamentalsLine(key string, value int64, currency string, periodStar
 	if periodStart.After(periodEnd) {
 		return NormalizedFundamentalsLine{}, fmt.Errorf("period start cannot be after period end")
 	}
-	
+
 	// Use scale 2 for fundamentals (typically large numbers)
 	// But for EPS, use the value directly without scaling
 	var scaled ScaledDecimal
 	var err error
-	
+
 	if key == "eps_basic" {
 		scaled = ScaledDecimal{
 			Scaled: value,
@@ -196,7 +196,7 @@ func createFundamentalsLine(key string, value int64, currency string, periodStar
 			return NormalizedFundamentalsLine{}, fmt.Errorf("invalid value for %s: %w", key, err)
 		}
 	}
-	
+
 	return NormalizedFundamentalsLine{
 		Key:          key,
 		Value:        scaled,
@@ -212,7 +212,7 @@ func convertDateToPeriod(dateValue yahoo.DateValue) (periodStart, periodEnd time
 	if dateValue.Raw != 0 {
 		// Convert Unix timestamp to time
 		periodEnd = time.Unix(dateValue.Raw, 0).UTC()
-		
+
 		// For quarterly data, assume the period is the quarter ending on this date
 		// Calculate quarter start (3 months before end date)
 		periodStart = periodEnd.AddDate(0, -3, 0)
@@ -221,6 +221,6 @@ func convertDateToPeriod(dateValue yahoo.DateValue) (periodStart, periodEnd time
 		periodEnd = time.Now().UTC()
 		periodStart = periodEnd.AddDate(0, -3, 0)
 	}
-	
+
 	return periodStart, periodEnd
 }

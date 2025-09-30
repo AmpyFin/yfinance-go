@@ -58,7 +58,7 @@ func TestEmitBarBatch_RoundTrip(t *testing.T) {
 	// Verify the protobuf message is valid
 	assert.NotNil(t, barBatch)
 	assert.Len(t, barBatch.Bars, 1)
-	
+
 	bar := barBatch.Bars[0]
 	assert.Equal(t, "AAPL", bar.Security.Symbol)
 	assert.Equal(t, "XNAS", bar.Security.Mic)
@@ -76,15 +76,15 @@ func TestEmitQuote_RoundTrip(t *testing.T) {
 			Symbol: "MSFT",
 			MIC:    "XNAS",
 		},
-		Type:                "QUOTE",
-		Bid:                 &norm.ScaledDecimal{Scaled: 4275000, Scale: 4},
-		BidSize:             int64Ptr(200),
-		Ask:                 &norm.ScaledDecimal{Scaled: 4275300, Scale: 4},
-		AskSize:             int64Ptr(300),
-		CurrencyCode:        "USD",
-		Venue:               "XNMS",
-		EventTime:           time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
-		IngestTime:          time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
+		Type:         "QUOTE",
+		Bid:          &norm.ScaledDecimal{Scaled: 4275000, Scale: 4},
+		BidSize:      int64Ptr(200),
+		Ask:          &norm.ScaledDecimal{Scaled: 4275300, Scale: 4},
+		AskSize:      int64Ptr(300),
+		CurrencyCode: "USD",
+		Venue:        "XNMS",
+		EventTime:    time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
+		IngestTime:   time.Date(2024, 1, 3, 15, 30, 12, 0, time.UTC),
 		Meta: norm.Meta{
 			RunID:         "test_roundtrip",
 			Source:        "yfinance-go",
@@ -162,14 +162,14 @@ func TestEmitFundamentals_RoundTrip(t *testing.T) {
 	assert.Equal(t, "AAPL", fundamentals.Security.Symbol)
 	assert.Equal(t, "XNAS", fundamentals.Security.Mic)
 	assert.Len(t, fundamentals.Lines, 2)
-	
+
 	// Check first line item
 	line1 := fundamentals.Lines[0]
 	assert.Equal(t, "revenue", line1.Key)
 	assert.Equal(t, int64(119870000000000), line1.Value.Scaled)
 	assert.Equal(t, int32(2), line1.Value.Scale)
 	assert.Equal(t, "USD", line1.CurrencyCode)
-	
+
 	// Check second line item
 	line2 := fundamentals.Lines[1]
 	assert.Equal(t, "net_income", line2.Key)

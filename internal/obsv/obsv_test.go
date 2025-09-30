@@ -11,7 +11,7 @@ import (
 
 func TestInit(t *testing.T) {
 	ctx := context.Background()
-	
+
 	config := &Config{
 		ServiceName:       "test-service",
 		ServiceVersion:    "1.0.0",
@@ -24,14 +24,14 @@ func TestInit(t *testing.T) {
 		MetricsEnabled:    false, // Disable for testing
 		TracingEnabled:    false, // Disable for testing
 	}
-	
+
 	err := Init(ctx, config)
 	require.NoError(t, err)
-	
+
 	// Test that global instance is set
 	assert.NotNil(t, globalObsv)
 	assert.Equal(t, config, globalObsv.config)
-	
+
 	// Test shutdown
 	err = Shutdown(ctx)
 	require.NoError(t, err)
@@ -51,32 +51,32 @@ func TestTracer(t *testing.T) {
 
 func TestStartSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Test with noop tracer
 	ctx, span := StartSpan(ctx, "test.operation")
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartRunSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartRunSpan(ctx, "test-run-123", "test", []string{"arg1", "arg2"})
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartIngestFetchSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartIngestFetchSpan(ctx, "bars_1d", "AAPL", "XNAS", "https://example.com", 1)
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
@@ -84,58 +84,58 @@ func TestUpdateIngestFetchSpan(t *testing.T) {
 	ctx := context.Background()
 	_, span := StartIngestFetchSpan(ctx, "bars_1d", "AAPL", "XNAS", "https://example.com", 1)
 	defer span.End()
-	
+
 	UpdateIngestFetchSpan(span, 200, 1024, 100*time.Millisecond)
 	// No assertion needed as this just sets attributes
 }
 
 func TestStartIngestDecodeSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartIngestDecodeSpan(ctx, "bars_1d", "AAPL")
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartIngestNormalizeSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartIngestNormalizeSpan(ctx, "bars_1d", "AAPL", "XNAS")
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartEmitProtoSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartEmitProtoSpan(ctx, "bars", "AAPL")
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartPublishBusSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartPublishBusSpan(ctx, "ampy.bars", "AAPL", 0, 1024)
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
 func TestStartFXRatesSpan(t *testing.T) {
 	ctx := context.Background()
-	
+
 	ctx, span := StartFXRatesSpan(ctx, "USD", "EUR")
 	assert.NotNil(t, span)
 	assert.NotNil(t, ctx)
-	
+
 	span.End()
 }
 
@@ -143,10 +143,10 @@ func TestRecordSpanError(t *testing.T) {
 	ctx := context.Background()
 	_, span := StartSpan(ctx, "test.operation")
 	defer span.End()
-	
+
 	// Test with nil error
 	RecordSpanError(span, nil)
-	
+
 	// Test with error
 	err := assert.AnError
 	RecordSpanError(span, err)
@@ -156,17 +156,17 @@ func TestLogWithTrace(t *testing.T) {
 	ctx := context.Background()
 	ctx, span := StartSpan(ctx, "test.operation")
 	defer span.End()
-	
+
 	attrs := []any{"key1", "value1", "key2", "value2"}
 	result := LogWithTrace(ctx, attrs...)
-	
+
 	// Should have added trace_id and span_id (or not if noop tracer)
 	assert.GreaterOrEqual(t, len(result), len(attrs)) // At least the original attrs
 }
 
 func TestCommonLogAttrs(t *testing.T) {
 	attrs := CommonLogAttrs("run-123", "AAPL", "XNAS", "bars_1d")
-	
+
 	// Should contain source and provided values
 	assert.Contains(t, attrs, "source")
 	assert.Contains(t, attrs, "yfinance-go")
@@ -182,7 +182,7 @@ func TestCommonLogAttrs(t *testing.T) {
 
 func TestCommonLogAttrsEmpty(t *testing.T) {
 	attrs := CommonLogAttrs("", "", "", "")
-	
+
 	// Should only contain source
 	assert.Contains(t, attrs, "source")
 	assert.Contains(t, attrs, "yfinance-go")

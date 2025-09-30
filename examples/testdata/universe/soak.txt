@@ -1,0 +1,6 @@
+# Test universe for soak testing
+AAPL
+MSFT
+GOOGL
+TSLA
+AMZN

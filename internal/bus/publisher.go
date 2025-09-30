@@ -11,11 +11,11 @@ import (
 
 // BusPublisher implements the Publisher interface using ampy-bus
 type BusPublisher struct {
-	config       *Config
-	bus          *natsbinding.Bus
-	topicBuilder *TopicBuilder
+	config          *Config
+	bus             *natsbinding.Bus
+	topicBuilder    *TopicBuilder
 	envelopeBuilder *EnvelopeBuilder
-	chunking     *ChunkingStrategy
+	chunking        *ChunkingStrategy
 }
 
 // NewBusPublisher creates a new bus publisher
@@ -23,21 +23,21 @@ func NewBusPublisher(config *Config) (*BusPublisher, error) {
 	if !config.Enabled {
 		return nil, fmt.Errorf("bus publishing is disabled")
 	}
-	
+
 	// Create topic builder
 	topicBuilder := NewTopicBuilder(config.Env, config.TopicPrefix)
-	
+
 	// Create envelope builder
 	producer := fmt.Sprintf("yfinance-go@%s", getHostname())
 	envelopeBuilder := NewEnvelopeBuilder(producer, "yfinance-go")
-	
+
 	// Create chunking strategy
 	chunking := NewChunkingStrategy(config.MaxPayloadBytes)
-	
+
 	// Create bus based on backend
 	var bus *natsbinding.Bus
 	var err error
-	
+
 	switch config.Publisher.Backend {
 	case "nats":
 		bus, err = createNATSBus(config)
@@ -46,11 +46,11 @@ func NewBusPublisher(config *Config) (*BusPublisher, error) {
 	default:
 		return nil, fmt.Errorf("unsupported backend: %s", config.Publisher.Backend)
 	}
-	
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to create bus: %w", err)
 	}
-	
+
 	return &BusPublisher{
 		config:          config,
 		bus:             bus,
@@ -64,13 +64,13 @@ func NewBusPublisher(config *Config) (*BusPublisher, error) {
 func (p *BusPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) error {
 	// Build topic
 	topic := p.topicBuilder.BuildBarsTopic(batch.Key, "v1")
-	
+
 	// Marshal the batch to protobuf
 	payload, err := proto.Marshal(batch.Batch.(proto.Message))
 	if err != nil {
 		return fmt.Errorf("failed to marshal bar batch: %w", err)
 	}
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.bars.v1.BarBatch",
@@ -80,17 +80,17 @@ func (p *BusPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) 
 		"", // traceID - could be extracted from context
 		nil,
 	)
-	
+
 	// Check if chunking is needed
 	chunkResult, err := p.chunking.ChunkPayload(payload)
 	if err != nil {
 		return fmt.Errorf("failed to chunk payload: %w", err)
 	}
-	
+
 	// Publish chunks
 	for i, chunk := range chunkResult.Chunks {
 		chunkEnvelope := envelope
-		
+
 		// If we have multiple chunks, create a chunked envelope
 		if len(chunkResult.Chunks) > 1 {
 			chunkEnvelope = p.envelopeBuilder.BuildChunkedEnvelope(
@@ -104,7 +104,7 @@ func (p *BusPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) 
 				nil,
 			)
 		}
-		
+
 		// Create ampy-bus envelope
 		ampyEnvelope := ampybus.Envelope{
 			Topic: topic,
@@ -122,14 +122,14 @@ func (p *BusPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) 
 			},
 			Payload: chunk,
 		}
-		
+
 		// Publish to bus
 		_, err = p.bus.PublishEnvelope(ctx, ampyEnvelope, map[string]string{})
 		if err != nil {
 			return fmt.Errorf("failed to publish bar batch chunk %d: %w", i, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -137,13 +137,13 @@ func (p *BusPublisher) PublishBars(ctx context.Context, batch *BarBatchMessage) 
 func (p *BusPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) error {
 	// Build topic
 	topic := p.topicBuilder.BuildQuotesTopic(quote.Key, "v1")
-	
+
 	// Marshal the quote to protobuf
 	payload, err := proto.Marshal(quote.Quote.(proto.Message))
 	if err != nil {
 		return fmt.Errorf("failed to marshal quote: %w", err)
 	}
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.ticks.v1.QuoteTick",
@@ -153,17 +153,17 @@ func (p *BusPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) er
 		"", // traceID - could be extracted from context
 		nil,
 	)
-	
+
 	// Check if chunking is needed
 	chunkResult, err := p.chunking.ChunkPayload(payload)
 	if err != nil {
 		return fmt.Errorf("failed to chunk payload: %w", err)
 	}
-	
+
 	// Publish chunks
 	for i, chunk := range chunkResult.Chunks {
 		chunkEnvelope := envelope
-		
+
 		// If we have multiple chunks, create a chunked envelope
 		if len(chunkResult.Chunks) > 1 {
 			chunkEnvelope = p.envelopeBuilder.BuildChunkedEnvelope(
@@ -177,7 +177,7 @@ func (p *BusPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) er
 				nil,
 			)
 		}
-		
+
 		// Create ampy-bus envelope
 		ampyEnvelope := ampybus.Envelope{
 			Topic: topic,
@@ -195,14 +195,14 @@ func (p *BusPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) er
 			},
 			Payload: chunk,
 		}
-		
+
 		// Publish to bus
 		_, err = p.bus.PublishEnvelope(ctx, ampyEnvelope, map[string]string{})
 		if err != nil {
 			return fmt.Errorf("failed to publish quote chunk %d: %w", i, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -210,13 +210,13 @@ func (p *BusPublisher) PublishQuote(ctx context.Context, quote *QuoteMessage) er
 func (p *BusPublisher) PublishFundamentals(ctx context.Context, fundamentals *FundamentalsMessage) error {
 	// Build topic
 	topic := p.topicBuilder.BuildFundamentalsTopic(fundamentals.Key, "v1")
-	
+
 	// Marshal the fundamentals to protobuf
 	payload, err := proto.Marshal(fundamentals.Fundamentals.(proto.Message))
 	if err != nil {
 		return fmt.Errorf("failed to marshal fundamentals: %w", err)
 	}
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.fundamentals.v1.FundamentalsSnapshot",
@@ -226,17 +226,17 @@ func (p *BusPublisher) PublishFundamentals(ctx context.Context, fundamentals *Fu
 		"", // traceID - could be extracted from context
 		nil,
 	)
-	
+
 	// Check if chunking is needed
 	chunkResult, err := p.chunking.ChunkPayload(payload)
 	if err != nil {
 		return fmt.Errorf("failed to chunk payload: %w", err)
 	}
-	
+
 	// Publish chunks
 	for i, chunk := range chunkResult.Chunks {
 		chunkEnvelope := envelope
-		
+
 		// If we have multiple chunks, create a chunked envelope
 		if len(chunkResult.Chunks) > 1 {
 			chunkEnvelope = p.envelopeBuilder.BuildChunkedEnvelope(
@@ -250,7 +250,7 @@ func (p *BusPublisher) PublishFundamentals(ctx context.Context, fundamentals *Fu
 				nil,
 			)
 		}
-		
+
 		// Create ampy-bus envelope
 		ampyEnvelope := ampybus.Envelope{
 			Topic: topic,
@@ -268,14 +268,14 @@ func (p *BusPublisher) PublishFundamentals(ctx context.Context, fundamentals *Fu
 			},
 			Payload: chunk,
 		}
-		
+
 		// Publish to bus
 		_, err = p.bus.PublishEnvelope(ctx, ampyEnvelope, map[string]string{})
 		if err != nil {
 			return fmt.Errorf("failed to publish fundamentals chunk %d: %w", i, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -295,10 +295,9 @@ func createNATSBus(config *Config) (*natsbinding.Bus, error) {
 		Subjects:      []string{fmt.Sprintf("%s.%s.>", config.TopicPrefix, config.Env)},
 		DurablePrefix: "ampy-trading",
 	}
-	
+
 	return natsbinding.Connect(natsConfig)
 }
-
 
 // getHostname returns the hostname for the producer field
 func getHostname() string {

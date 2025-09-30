@@ -66,12 +66,12 @@ func (rm *RobotsManager) CheckRobots(ctx context.Context, host, path string) err
 			Message: fmt.Sprintf("robots.txt disallows path: %s", path),
 			URL:     fmt.Sprintf("https://%s%s", host, path),
 		}
-		
+
 		if rm.policy == RobotsWarn {
 			// Log warning but don't block
 			return nil
 		}
-		
+
 		return err
 	}
 
@@ -139,7 +139,7 @@ func (rm *RobotsManager) parseRobotsTxt(body interface{ Read([]byte) (int, error
 	scanner := bufio.NewScanner(body)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		// Skip empty lines and comments
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
@@ -192,7 +192,7 @@ func (rm *RobotsManager) parseRobotsTxt(body interface{ Read([]byte) (int, error
 func (rm *RobotsManager) isPathAllowed(robots *RobotsCache, path string) bool {
 	// Find applicable rules (look for wildcard or our user agent)
 	var applicableRules []RobotsRule
-	
+
 	for _, rule := range robots.Rules {
 		if rule.UserAgent == "*" || strings.Contains(strings.ToLower(rule.UserAgent), "ampy") {
 			applicableRules = append(applicableRules, rule)

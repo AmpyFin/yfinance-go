@@ -32,10 +32,10 @@ func TestNewBus(t *testing.T) {
 					MaxDelayMs: 8000,
 				},
 				CircuitBreaker: CircuitBreakerConfig{
-					Window:          50,
+					Window:           50,
 					FailureThreshold: 0.30,
-					ResetTimeoutMs:  30000,
-					HalfOpenProbes:  3,
+					ResetTimeoutMs:   30000,
+					HalfOpenProbes:   3,
 				},
 			},
 			wantError: false,
@@ -53,16 +53,16 @@ func TestNewBus(t *testing.T) {
 					MaxDelayMs: 8000,
 				},
 				CircuitBreaker: CircuitBreakerConfig{
-					Window:          50,
+					Window:           50,
 					FailureThreshold: 0.30,
-					ResetTimeoutMs:  30000,
-					HalfOpenProbes:  3,
+					ResetTimeoutMs:   30000,
+					HalfOpenProbes:   3,
 				},
 			},
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			bus, err := NewBus(tt.config)
@@ -80,11 +80,11 @@ func TestNewBus(t *testing.T) {
 func TestBus_PreviewBars(t *testing.T) {
 	config := GetDefaultConfig()
 	config.Enabled = false // Disable actual publishing
-	
+
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	message := &BarBatchMessage{
 		Key: &Key{
 			Symbol: "AAPL",
@@ -93,11 +93,11 @@ func TestBus_PreviewBars(t *testing.T) {
 		RunID: "test-run-id",
 		Env:   "dev",
 	}
-	
+
 	preview, err := bus.PreviewBars(message, 1000)
 	require.NoError(t, err)
 	require.NotNil(t, preview)
-	
+
 	assert.Equal(t, "ampy.dev.bars.v1.XNAS.AAPL", preview.Topic)
 	assert.Equal(t, "XNAS.AAPL", preview.PartitionKey)
 	assert.Equal(t, 1000, preview.PayloadBytes)
@@ -107,11 +107,11 @@ func TestBus_PreviewBars(t *testing.T) {
 func TestBus_PreviewQuote(t *testing.T) {
 	config := GetDefaultConfig()
 	config.Enabled = false // Disable actual publishing
-	
+
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	message := &QuoteMessage{
 		Key: &Key{
 			Symbol: "MSFT",
@@ -120,11 +120,11 @@ func TestBus_PreviewQuote(t *testing.T) {
 		RunID: "test-run-id",
 		Env:   "dev",
 	}
-	
+
 	preview, err := bus.PreviewQuote(message, 500)
 	require.NoError(t, err)
 	require.NotNil(t, preview)
-	
+
 	assert.Equal(t, "ampy.dev.ticks.v1.XNAS.MSFT", preview.Topic)
 	assert.Equal(t, "XNAS.MSFT", preview.PartitionKey)
 	assert.Equal(t, 500, preview.PayloadBytes)
@@ -134,11 +134,11 @@ func TestBus_PreviewQuote(t *testing.T) {
 func TestBus_PreviewFundamentals(t *testing.T) {
 	config := GetDefaultConfig()
 	config.Enabled = false // Disable actual publishing
-	
+
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	message := &FundamentalsMessage{
 		Key: &Key{
 			Symbol: "GOOGL",
@@ -147,11 +147,11 @@ func TestBus_PreviewFundamentals(t *testing.T) {
 		RunID: "test-run-id",
 		Env:   "dev",
 	}
-	
+
 	preview, err := bus.PreviewFundamentals(message, 2000)
 	require.NoError(t, err)
 	require.NotNil(t, preview)
-	
+
 	assert.Equal(t, "ampy.dev.fundamentals.v1.GOOGL", preview.Topic)
 	assert.Equal(t, "XNAS.GOOGL", preview.PartitionKey)
 	assert.Equal(t, 2000, preview.PayloadBytes)
@@ -161,11 +161,11 @@ func TestBus_PreviewFundamentals(t *testing.T) {
 func TestBus_PublishBars_Disabled(t *testing.T) {
 	config := GetDefaultConfig()
 	config.Enabled = false // Disable actual publishing
-	
+
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	message := &BarBatchMessage{
 		Key: &Key{
 			Symbol: "AAPL",
@@ -174,7 +174,7 @@ func TestBus_PublishBars_Disabled(t *testing.T) {
 		RunID: "test-run-id",
 		Env:   "dev",
 	}
-	
+
 	ctx := context.Background()
 	err = bus.PublishBars(ctx, message)
 	assert.Error(t, err)
@@ -186,7 +186,7 @@ func TestBus_GetConfig(t *testing.T) {
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	retrievedConfig := bus.GetConfig()
 	assert.Equal(t, config, retrievedConfig)
 }
@@ -196,7 +196,7 @@ func TestBus_GetCircuitBreakerStats(t *testing.T) {
 	bus, err := NewBus(config)
 	require.NoError(t, err)
 	require.NotNil(t, bus)
-	
+
 	stats := bus.GetCircuitBreakerStats()
 	assert.Equal(t, CircuitBreakerClosed, stats.State)
 	assert.Equal(t, 0, stats.SuccessCount)
@@ -227,10 +227,10 @@ func TestValidateConfig(t *testing.T) {
 					MaxDelayMs: 8000,
 				},
 				CircuitBreaker: CircuitBreakerConfig{
-					Window:          50,
+					Window:           50,
 					FailureThreshold: 0.30,
-					ResetTimeoutMs:  30000,
-					HalfOpenProbes:  3,
+					ResetTimeoutMs:   30000,
+					HalfOpenProbes:   3,
 				},
 			},
 			wantError: false,
@@ -269,7 +269,7 @@ func TestValidateConfig(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateConfig(tt.config)
@@ -284,7 +284,7 @@ func TestValidateConfig(t *testing.T) {
 
 func TestGetDefaultConfig(t *testing.T) {
 	config := GetDefaultConfig()
-	
+
 	assert.NotNil(t, config)
 	assert.False(t, config.Enabled)
 	assert.Equal(t, "dev", config.Env)
@@ -298,8 +298,8 @@ func TestGetConfigFromEnv(t *testing.T) {
 	// This test would require setting environment variables
 	// For now, just test that it returns a valid config
 	config := GetConfigFromEnv()
-	
+
 	assert.NotNil(t, config)
-	assert.Equal(t, "dev", config.Env) // Default value
+	assert.Equal(t, "dev", config.Env)          // Default value
 	assert.Equal(t, "ampy", config.TopicPrefix) // Default value
 }

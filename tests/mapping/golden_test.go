@@ -6,19 +6,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/AmpyFin/yfinance-go/internal/emit"
 	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/AmpyFin/yfinance-go/internal/yahoo"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMappingRegressionBars(t *testing.T) {
 	tests := []struct {
-		name           string
-		sourceFile     string
-		runID          string
-		expectedScale  int
+		name          string
+		sourceFile    string
+		runID         string
+		expectedScale int
 	}{
 		{
 			name:          "AAPL USD adjusted bars",

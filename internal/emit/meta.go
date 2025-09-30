@@ -11,11 +11,11 @@ import (
 
 // MetaConfig holds configuration for metadata creation
 type MetaConfig struct {
-	RunID         string
-	Producer      string
-	Source        string
-	TraceID       string
-	IncludeChecksum bool
+	RunID             string
+	Producer          string
+	Source            string
+	TraceID           string
+	IncludeChecksum   bool
 	IncludeProducedAt bool
 }
 
@@ -109,13 +109,13 @@ func ValidateMetaConfig(config MetaConfig) error {
 
 // MetaSummary provides a summary of metadata for logging/preview
 type MetaSummary struct {
-	RunID         string    `json:"run_id"`
-	Producer      string    `json:"producer"`
-	Source        string    `json:"source"`
-	SchemaVersion string    `json:"schema_version"`
-	HasChecksum   bool      `json:"has_checksum"`
+	RunID         string     `json:"run_id"`
+	Producer      string     `json:"producer"`
+	Source        string     `json:"source"`
+	SchemaVersion string     `json:"schema_version"`
+	HasChecksum   bool       `json:"has_checksum"`
 	ProducedAt    *time.Time `json:"produced_at,omitempty"`
-	TraceID       string    `json:"trace_id,omitempty"`
+	TraceID       string     `json:"trace_id,omitempty"`
 }
 
 // SummarizeMeta creates a summary of metadata for logging/preview
@@ -143,7 +143,7 @@ type LineageInfo struct {
 	SourceSystem   string                 `json:"source_system"`
 	SourceEndpoint string                 `json:"source_endpoint"`
 	ProcessingStep string                 `json:"processing_step"`
-	Timestamp      time.Time             `json:"timestamp"`
+	Timestamp      time.Time              `json:"timestamp"`
 	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -172,12 +172,12 @@ func AddLineageToMeta(meta *commonv1.Meta, lineage *LineageInfo) *commonv1.Meta 
 
 // MetricsInfo represents metrics information for observability
 type MetricsInfo struct {
-	MessageType   string        `json:"message_type"`
-	MessageCount  int           `json:"message_count"`
-	TotalBytes    int64         `json:"total_bytes"`
+	MessageType    string        `json:"message_type"`
+	MessageCount   int           `json:"message_count"`
+	TotalBytes     int64         `json:"total_bytes"`
 	ProcessingTime time.Duration `json:"processing_time"`
-	SuccessCount  int           `json:"success_count"`
-	ErrorCount    int           `json:"error_count"`
+	SuccessCount   int           `json:"success_count"`
+	ErrorCount     int           `json:"error_count"`
 }
 
 // CreateMetricsInfo creates metrics information for observability

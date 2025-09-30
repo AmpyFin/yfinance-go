@@ -36,8 +36,8 @@ type PrometheusConfig struct {
 
 // Observability represents the main observability interface
 type Observability struct {
-	config   *Config
-	ampyConfig ampyobs.Config
+	config      *Config
+	ampyConfig  ampyobs.Config
 	initialized bool
 }
 
@@ -51,7 +51,7 @@ var (
 func Init(ctx context.Context, config *Config) error {
 	globalMux.Lock()
 	defer globalMux.Unlock()
-	
+
 	if globalObsv != nil {
 		return fmt.Errorf("observability already initialized")
 	}
@@ -82,8 +82,8 @@ func Init(ctx context.Context, config *Config) error {
 	}
 
 	globalObsv = &Observability{
-		config:     config,
-		ampyConfig: ampyConfig,
+		config:      config,
+		ampyConfig:  ampyConfig,
 		initialized: true,
 	}
 
@@ -94,7 +94,7 @@ func Init(ctx context.Context, config *Config) error {
 func Shutdown(ctx context.Context) error {
 	globalMux.Lock()
 	defer globalMux.Unlock()
-	
+
 	if globalObsv == nil {
 		return nil
 	}
@@ -120,7 +120,7 @@ func Reset() {
 func Logger() *slog.Logger {
 	globalMux.RLock()
 	defer globalMux.RUnlock()
-	
+
 	if globalObsv == nil || !globalObsv.initialized {
 		return slog.Default()
 	}
@@ -131,7 +131,7 @@ func Logger() *slog.Logger {
 func Tracer() trace.Tracer {
 	globalMux.RLock()
 	defer globalMux.RUnlock()
-	
+
 	if globalObsv == nil || !globalObsv.initialized {
 		return noop.NewTracerProvider().Tracer("yfinance-go")
 	}
@@ -149,13 +149,13 @@ func StartSpan(ctx context.Context, name string, opts ...trace.SpanStartOption) 
 
 // Span names for different operations
 const (
-	SpanNameRun           = "yfin.run"
-	SpanNameIngestFetch   = "ingest.fetch"
-	SpanNameIngestDecode  = "ingest.decode"
+	SpanNameRun             = "yfin.run"
+	SpanNameIngestFetch     = "ingest.fetch"
+	SpanNameIngestDecode    = "ingest.decode"
 	SpanNameIngestNormalize = "ingest.normalize"
-	SpanNameEmitProto     = "emit.proto"
-	SpanNamePublishBus    = "publish.bus"
-	SpanNameFXRates       = "fx.rates"
+	SpanNameEmitProto       = "emit.proto"
+	SpanNamePublishBus      = "publish.bus"
+	SpanNameFXRates         = "fx.rates"
 )
 
 // StartRunSpan creates the root span for a yfin run
@@ -165,7 +165,7 @@ func StartRunSpan(ctx context.Context, runID, env string, args []string) (contex
 		attribute.String("env", env),
 		attribute.StringSlice("args", args),
 	}
-	
+
 	return StartSpan(ctx, SpanNameRun, trace.WithAttributes(attrs...))
 }
 
@@ -178,7 +178,7 @@ func StartIngestFetchSpan(ctx context.Context, endpoint, symbol, mic, url string
 		attribute.String("url", url),
 		attribute.Int("attempt", attempt),
 	}
-	
+
 	return StartSpan(ctx, SpanNameIngestFetch, trace.WithAttributes(attrs...))
 }
 
@@ -189,7 +189,7 @@ func UpdateIngestFetchSpan(span trace.Span, status int, bytes int64, elapsed tim
 		attribute.Int64("bytes", bytes),
 		attribute.Int64("elapsed_ms", elapsed.Milliseconds()),
 	}
-	
+
 	span.SetAttributes(attrs...)
 }
 
@@ -199,7 +199,7 @@ func StartIngestDecodeSpan(ctx context.Context, endpoint, symbol string) (contex
 		attribute.String("endpoint", endpoint),
 		attribute.String("symbol", symbol),
 	}
-	
+
 	return StartSpan(ctx, SpanNameIngestDecode, trace.WithAttributes(attrs...))
 }
 
@@ -210,7 +210,7 @@ func StartIngestNormalizeSpan(ctx context.Context, endpoint, symbol, mic string)
 		attribute.String("symbol", symbol),
 		attribute.String("mic", mic),
 	}
-	
+
 	return StartSpan(ctx, SpanNameIngestNormalize, trace.WithAttributes(attrs...))
 }
 
@@ -220,7 +220,7 @@ func StartEmitProtoSpan(ctx context.Context, messageType, symbol string) (contex
 		attribute.String("message_type", messageType),
 		attribute.String("symbol", symbol),
 	}
-	
+
 	return StartSpan(ctx, SpanNameEmitProto, trace.WithAttributes(attrs...))
 }
 
@@ -232,7 +232,7 @@ func StartPublishBusSpan(ctx context.Context, topic, partitionKey string, chunkI
 		attribute.Int("chunk_index", chunkIndex),
 		attribute.Int64("bytes", bytes),
 	}
-	
+
 	return StartSpan(ctx, SpanNamePublishBus, trace.WithAttributes(attrs...))
 }
 
@@ -242,7 +242,7 @@ func StartFXRatesSpan(ctx context.Context, fromCurrency, toCurrency string) (con
 		attribute.String("from_currency", fromCurrency),
 		attribute.String("to_currency", toCurrency),
 	}
-	
+
 	return StartSpan(ctx, SpanNameFXRates, trace.WithAttributes(attrs...))
 }
 
@@ -269,7 +269,7 @@ func CommonLogAttrs(runID, symbol, mic, endpoint string) []any {
 	attrs := []any{
 		"source", "yfinance-go",
 	}
-	
+
 	if runID != "" {
 		attrs = append(attrs, "run_id", runID)
 	}
@@ -282,6 +282,6 @@ func CommonLogAttrs(runID, symbol, mic, endpoint string) []any {
 	if endpoint != "" {
 		attrs = append(attrs, "endpoint", endpoint)
 	}
-	
+
 	return attrs
 }

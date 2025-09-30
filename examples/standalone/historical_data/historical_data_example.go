@@ -23,12 +23,12 @@ func main() {
 	fmt.Println("1. Fetching Daily Bars...")
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 31, 0, 0, 0, 0, time.UTC)
-	
+
 	dailyBars, err := client.FetchDailyBars(ctx, "AAPL", start, end, true, runID)
 	if err != nil {
 		log.Printf("Error fetching daily bars: %v", err)
 	} else {
-		fmt.Printf("✅ Daily Bars: %d bars, schema: %s\n", 
+		fmt.Printf("✅ Daily Bars: %d bars, schema: %s\n",
 			len(dailyBars.Bars), dailyBars.Meta.SchemaVersion)
 		fmt.Printf("   Source: %s\n", dailyBars.Meta.Source)
 		fmt.Printf("   Producer: %s\n", dailyBars.Meta.Producer)
@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error fetching intraday bars: %v", err)
 	} else {
-		fmt.Printf("✅ Intraday Bars: %d bars, schema: %s\n", 
+		fmt.Printf("✅ Intraday Bars: %d bars, schema: %s\n",
 			len(intradayBars.Bars), intradayBars.Meta.SchemaVersion)
 		fmt.Printf("   Source: %s\n", intradayBars.Meta.Source)
 		fmt.Printf("   Producer: %s\n", intradayBars.Meta.Producer)

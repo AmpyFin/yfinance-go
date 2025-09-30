@@ -34,11 +34,11 @@ type FailureScenario struct {
 
 // FailureStats tracks failure injection statistics
 type FailureStats struct {
-	TotalRequests    int64
-	FailuresSent     int64
-	ScenarioStats    map[string]int64
-	LastFailureTime  time.Time
-	mu               sync.RWMutex
+	TotalRequests   int64
+	FailuresSent    int64
+	ScenarioStats   map[string]int64
+	LastFailureTime time.Time
+	mu              sync.RWMutex
 }
 
 // NewFailureServer creates a new failure injection server
@@ -90,7 +90,7 @@ func NewFailureServer(failureRate float64, logger *zap.Logger) *FailureServer {
 			Headers:     map[string]string{"WWW-Authenticate": "Bearer"},
 		},
 	}
-	
+
 	return &FailureServer{
 		failureRate: failureRate,
 		logger:      logger,
@@ -104,37 +104,37 @@ func (fs *FailureServer) Start() error {
 		fs.logger.Info("Failure injection disabled (rate = 0)")
 		return nil
 	}
-	
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", fs.handleRequest)
 	mux.HandleFunc("/health", fs.handleHealth)
 	mux.HandleFunc("/stats", fs.handleStats)
 	mux.HandleFunc("/scenarios", fs.handleScenarios)
-	
+
 	fs.server = &http.Server{
 		Addr:         ":8080", // Failure injection server port
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	
+
 	fs.mu.Lock()
 	fs.active = true
 	fs.mu.Unlock()
-	
+
 	go func() {
-		fs.logger.Info("Failure injection server starting", 
+		fs.logger.Info("Failure injection server starting",
 			zap.String("addr", fs.server.Addr),
 			zap.Float64("failure_rate", fs.failureRate))
-		
+
 		if err := fs.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fs.logger.Error("Failure server error", zap.Error(err))
 		}
 	}()
-	
+
 	// Wait a moment for server to start
 	time.Sleep(100 * time.Millisecond)
-	
+
 	return nil
 }
 
@@ -143,14 +143,14 @@ func (fs *FailureServer) Stop() error {
 	if fs.server == nil {
 		return nil
 	}
-	
+
 	fs.mu.Lock()
 	fs.active = false
 	fs.mu.Unlock()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	fs.logger.Info("Stopping failure injection server")
 	return fs.server.Shutdown(ctx)
 }
@@ -160,18 +160,18 @@ func (fs *FailureServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 	fs.mu.RLock()
 	active := fs.active
 	fs.mu.RUnlock()
-	
+
 	if !active {
 		http.Error(w, "Failure server not active", http.StatusServiceUnavailable)
 		return
 	}
-	
+
 	// Decide whether to inject a failure
 	if rand.Float64() < fs.failureRate {
 		fs.injectFailure(w, r)
 		return
 	}
-	
+
 	// Return success response
 	fs.handleSuccess(w, r)
 }
@@ -179,17 +179,17 @@ func (fs *FailureServer) handleRequest(w http.ResponseWriter, r *http.Request) {
 // injectFailure injects a random failure scenario
 func (fs *FailureServer) injectFailure(w http.ResponseWriter, r *http.Request) {
 	scenario := fs.selectFailureScenario()
-	
+
 	fs.logger.Debug("Injecting failure",
 		zap.String("scenario", scenario.Name),
 		zap.String("path", r.URL.Path),
 		zap.Int("status_code", scenario.StatusCode))
-	
+
 	// Add delay if specified
 	if scenario.Delay > 0 {
 		time.Sleep(scenario.Delay)
 	}
-	
+
 	// Handle timeout scenario (close connection)
 	if scenario.StatusCode == 0 {
 		// Simulate connection timeout by closing without response
@@ -204,19 +204,19 @@ func (fs *FailureServer) injectFailure(w http.ResponseWriter, r *http.Request) {
 		scenario.StatusCode = 408
 		scenario.Response = `{"error": "Request timeout"}`
 	}
-	
+
 	// Set custom headers
 	for key, value := range scenario.Headers {
 		w.Header().Set(key, value)
 	}
-	
+
 	// Set content type
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	// Write status code and response
 	w.WriteHeader(scenario.StatusCode)
 	if scenario.Response != "" {
-		w.Write([]byte(scenario.Response))
+		_, _ = w.Write([]byte(scenario.Response))
 	}
 }
 
@@ -226,17 +226,17 @@ func (fs *FailureServer) selectFailureScenario() FailureScenario {
 	for _, scenario := range fs.scenarios {
 		totalProb += scenario.Probability
 	}
-	
+
 	r := rand.Float64() * totalProb
 	cumulative := 0.0
-	
+
 	for _, scenario := range fs.scenarios {
 		cumulative += scenario.Probability
 		if r <= cumulative {
 			return scenario
 		}
 	}
-	
+
 	// Fallback to first scenario
 	return fs.scenarios[0]
 }
@@ -250,7 +250,7 @@ func (fs *FailureServer) handleSuccess(w http.ResponseWriter, r *http.Request) {
 		"method":    r.Method,
 		"message":   "Request processed successfully",
 	}
-	
+
 	// Simulate different response types based on path
 	if strings.Contains(r.URL.Path, "quote") {
 		response["data"] = map[string]interface{}{
@@ -265,10 +265,10 @@ func (fs *FailureServer) handleSuccess(w http.ResponseWriter, r *http.Request) {
 			"currency":   "USD",
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		fs.logger.Error("Failed to encode success response", zap.Error(err))
 	}
@@ -279,17 +279,17 @@ func (fs *FailureServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	fs.mu.RLock()
 	active := fs.active
 	fs.mu.RUnlock()
-	
+
 	health := map[string]interface{}{
 		"status":       "healthy",
 		"active":       active,
 		"failure_rate": fs.failureRate,
 		"timestamp":    time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(health)
+	_ = json.NewEncoder(w).Encode(health)
 }
 
 // handleStats returns failure injection statistics
@@ -301,10 +301,10 @@ func (fs *FailureServer) handleStats(w http.ResponseWriter, r *http.Request) {
 		"scenarios":         fs.scenarios,
 		"timestamp":         time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(stats)
+	_ = json.NewEncoder(w).Encode(stats)
 }
 
 // handleScenarios returns available failure scenarios
@@ -314,10 +314,10 @@ func (fs *FailureServer) handleScenarios(w http.ResponseWriter, r *http.Request)
 		"failure_rate": fs.failureRate,
 		"timestamp":    time.Now().Unix(),
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(scenarios)
+	_ = json.NewEncoder(w).Encode(scenarios)
 }
 
 // UpdateFailureRate updates the failure injection rate
@@ -325,7 +325,7 @@ func (fs *FailureServer) UpdateFailureRate(rate float64) {
 	fs.mu.Lock()
 	fs.failureRate = rate
 	fs.mu.Unlock()
-	
+
 	fs.logger.Info("Updated failure rate", zap.Float64("new_rate", rate))
 }
 
@@ -334,7 +334,7 @@ func (fs *FailureServer) AddScenario(scenario FailureScenario) {
 	fs.mu.Lock()
 	fs.scenarios = append(fs.scenarios, scenario)
 	fs.mu.Unlock()
-	
+
 	fs.logger.Info("Added failure scenario", zap.String("name", scenario.Name))
 }
 

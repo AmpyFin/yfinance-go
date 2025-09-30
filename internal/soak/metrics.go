@@ -11,29 +11,29 @@ import (
 // Metrics holds soak test specific metrics
 type Metrics struct {
 	// Request metrics
-	RequestsTotal     *prometheus.CounterVec
-	RequestDuration   *prometheus.HistogramVec
-	RequestsInFlight  *prometheus.GaugeVec
-	
+	RequestsTotal    *prometheus.CounterVec
+	RequestDuration  *prometheus.HistogramVec
+	RequestsInFlight *prometheus.GaugeVec
+
 	// Fallback metrics
 	FallbackDecisions *prometheus.CounterVec
-	
+
 	// Error metrics
-	ErrorsTotal       *prometheus.CounterVec
-	RateLimitHits     *prometheus.CounterVec
-	RobotsBlocked     *prometheus.CounterVec
-	
+	ErrorsTotal   *prometheus.CounterVec
+	RateLimitHits *prometheus.CounterVec
+	RobotsBlocked *prometheus.CounterVec
+
 	// Correctness metrics
-	ProbesTotal       *prometheus.CounterVec
-	ProbeLatency      *prometheus.HistogramVec
-	
+	ProbesTotal  *prometheus.CounterVec
+	ProbeLatency *prometheus.HistogramVec
+
 	// Memory metrics
-	MemoryUsage       prometheus.Gauge
-	GoroutineCount    prometheus.Gauge
-	
+	MemoryUsage    prometheus.Gauge
+	GoroutineCount prometheus.Gauge
+
 	// Worker metrics
 	WorkerUtilization *prometheus.GaugeVec
-	
+
 	mu sync.RWMutex
 }
 
@@ -47,7 +47,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"endpoint", "ticker", "outcome", "source"},
 		),
-		
+
 		RequestDuration: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "yfin_soak_request_duration_seconds",
@@ -56,7 +56,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"endpoint", "source"},
 		),
-		
+
 		RequestsInFlight: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "yfin_soak_requests_in_flight",
@@ -64,7 +64,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"endpoint"},
 		),
-		
+
 		FallbackDecisions: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "yfin_soak_fallback_decisions_total",
@@ -72,7 +72,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"from_source", "to_source", "reason"},
 		),
-		
+
 		ErrorsTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "yfin_soak_errors_total",
@@ -80,7 +80,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"endpoint", "error_type", "source"},
 		),
-		
+
 		RateLimitHits: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "yfin_soak_rate_limit_hits_total",
@@ -88,7 +88,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"host", "endpoint"},
 		),
-		
+
 		RobotsBlocked: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "yfin_soak_robots_blocked_total",
@@ -96,7 +96,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"host", "path"},
 		),
-		
+
 		ProbesTotal: promauto.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "yfin_soak_probes_total",
@@ -104,7 +104,7 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"ticker", "outcome"},
 		),
-		
+
 		ProbeLatency: promauto.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "yfin_soak_probe_duration_seconds",
@@ -113,21 +113,21 @@ func NewMetrics() *Metrics {
 			},
 			[]string{"ticker", "probe_type"},
 		),
-		
+
 		MemoryUsage: promauto.NewGauge(
 			prometheus.GaugeOpts{
 				Name: "yfin_soak_memory_usage_bytes",
 				Help: "Current memory usage in bytes",
 			},
 		),
-		
+
 		GoroutineCount: promauto.NewGauge(
 			prometheus.GaugeOpts{
 				Name: "yfin_soak_goroutines_count",
 				Help: "Current number of goroutines",
 			},
 		),
-		
+
 		WorkerUtilization: promauto.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "yfin_soak_worker_utilization",

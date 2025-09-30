@@ -15,15 +15,15 @@ func (m *CanonicalJSONMarshaler) Marshal(v interface{}) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var obj map[string]interface{}
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return nil, err
 	}
-	
+
 	// Recursively sort keys
 	sortedObj := m.sortKeys(obj)
-	
+
 	// Marshal with sorted keys
 	return json.Marshal(sortedObj)
 }
@@ -34,21 +34,21 @@ func (m *CanonicalJSONMarshaler) sortKeys(obj interface{}) interface{} {
 	case map[string]interface{}:
 		// Create a new map with sorted keys
 		sorted := make(map[string]interface{})
-		
+
 		// Get all keys and sort them
 		keys := make([]string, 0, len(v))
 		for k := range v {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
-		
+
 		// Recursively sort nested objects
 		for _, k := range keys {
 			sorted[k] = m.sortKeys(v[k])
 		}
-		
+
 		return sorted
-		
+
 	case []interface{}:
 		// Recursively sort array elements
 		sorted := make([]interface{}, len(v))
@@ -56,7 +56,7 @@ func (m *CanonicalJSONMarshaler) sortKeys(obj interface{}) interface{} {
 			sorted[i] = m.sortKeys(item)
 		}
 		return sorted
-		
+
 	default:
 		// Primitive types don't need sorting
 		return v

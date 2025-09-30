@@ -9,8 +9,9 @@ echo "=== yfinance-go Soak Testing Examples ==="
 echo "========================================"
 
 # Configuration
-CONFIG_FILE="configs/example.dev.yaml"
-UNIVERSE_FILE="testdata/universe/soak.txt"
+CONFIG_FILE="../../configs/effective.yaml"
+UNIVERSE_FILE="../../testdata/universe/soak.txt"
+YFIN_CMD="../../yfin"
 
 # Check if files exist
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -39,10 +40,10 @@ run_soak_test() {
     shift
     echo ""
     echo "--- $description ---"
-    echo "Command: yfin soak $*"
+    echo "Command: $YFIN_CMD soak $*"
     echo ""
     
-    if yfin soak "$@"; then
+    if $YFIN_CMD soak "$@"; then
         echo "✓ Soak test completed successfully"
     else
         local exit_code=$?

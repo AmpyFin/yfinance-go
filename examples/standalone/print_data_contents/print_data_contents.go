@@ -33,9 +33,9 @@ func main() {
 		fmt.Printf("  Producer: %s\n", quote.Meta.Producer)
 		fmt.Printf("  Currency: %s\n", quote.CurrencyCode)
 		fmt.Printf("  Type: %s\n", quote.Type)
-		
+
 		if quote.RegularMarketPrice != nil {
-			fmt.Printf("  Regular Market Price: %d (scale: %d)\n", 
+			fmt.Printf("  Regular Market Price: %d (scale: %d)\n",
 				quote.RegularMarketPrice.Scaled, quote.RegularMarketPrice.Scale)
 		}
 		if quote.Bid != nil {
@@ -47,7 +47,7 @@ func main() {
 		if quote.RegularMarketVolume != nil {
 			fmt.Printf("  Volume: %d\n", *quote.RegularMarketVolume)
 		}
-		
+
 		fmt.Printf("  Event Time: %s\n", quote.EventTime.Format(time.RFC3339))
 		fmt.Printf("  Ingest Time: %s\n", quote.IngestTime.Format(time.RFC3339))
 	}
@@ -57,7 +57,7 @@ func main() {
 	fmt.Println("================================")
 	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2024, 1, 5, 0, 0, 0, 0, time.UTC) // Just 5 days for brevity
-	
+
 	dailyBars, err := client.FetchDailyBars(ctx, "AAPL", start, end, true, runID)
 	if err != nil {
 		log.Printf("Error fetching daily bars: %v", err)
@@ -66,7 +66,7 @@ func main() {
 		fmt.Printf("  Schema: %s\n", dailyBars.Meta.SchemaVersion)
 		fmt.Printf("  Source: %s\n", dailyBars.Meta.Source)
 		fmt.Printf("  Producer: %s\n", dailyBars.Meta.Producer)
-		
+
 		// Show first few bars
 		for i, bar := range dailyBars.Bars {
 			if i >= 3 { // Show only first 3 bars
@@ -94,7 +94,7 @@ func main() {
 		log.Printf("Error fetching news: %v", err)
 	} else {
 		fmt.Printf("News for AAPL (%d articles):\n", len(news))
-		
+
 		// Show first few news articles
 		for i, article := range news {
 			if i >= 3 { // Show only first 3 articles
@@ -129,7 +129,7 @@ func main() {
 		fmt.Printf("  Source: %s\n", financials.Source)
 		fmt.Printf("  Producer: %s\n", financials.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", financials.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show first few line items
 		for i, line := range financials.Lines {
 			if i >= 5 { // Show only first 5 line items
@@ -140,7 +140,7 @@ func main() {
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}
@@ -158,7 +158,7 @@ func main() {
 		fmt.Printf("  Source: %s\n", keyStats.Source)
 		fmt.Printf("  Producer: %s\n", keyStats.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", keyStats.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show first few line items
 		for i, line := range keyStats.Lines {
 			if i >= 5 { // Show only first 5 line items
@@ -169,7 +169,7 @@ func main() {
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}

@@ -7,26 +7,26 @@ import (
 
 // ExchangeToMIC maps Yahoo Finance exchange names to MIC codes
 var ExchangeToMIC = map[string]string{
-	"NASDAQ":     "XNAS",
-	"NMS":        "XNMS", // Nasdaq Market System
-	"NasdaqGS":   "XNAS", // Nasdaq Global Select Market
-	"NYSE":       "XNYS", 
-	"AMEX":       "XASE",
-	"OTC":        "OTC",
-	"OTCBB":      "OTC",
-	"PINK":       "OTC",
-	"BATS":       "BATS",
-	"EDGX":       "EDGX",
-	"EDGA":       "EDGA",
-	"XETR":       "XETR", // Frankfurt
-	"XTKS":       "XTKS", // Tokyo
-	"LSE":        "XLON", // London
-	"TSE":        "XTKS", // Tokyo Stock Exchange
-	"ASX":        "XASX", // Sydney
-	"HKEX":       "XHKG", // Hong Kong
-	"SGX":        "XSES", // Singapore
-	"BSE":        "XBOM", // Mumbai
-	"NSE":        "XNSE", // National Stock Exchange of India
+	"NASDAQ":   "XNAS",
+	"NMS":      "XNMS", // Nasdaq Market System
+	"NasdaqGS": "XNAS", // Nasdaq Global Select Market
+	"NYSE":     "XNYS",
+	"AMEX":     "XASE",
+	"OTC":      "OTC",
+	"OTCBB":    "OTC",
+	"PINK":     "OTC",
+	"BATS":     "BATS",
+	"EDGX":     "EDGX",
+	"EDGA":     "EDGA",
+	"XETR":     "XETR", // Frankfurt
+	"XTKS":     "XTKS", // Tokyo
+	"LSE":      "XLON", // London
+	"TSE":      "XTKS", // Tokyo Stock Exchange
+	"ASX":      "XASX", // Sydney
+	"HKEX":     "XHKG", // Hong Kong
+	"SGX":      "XSES", // Singapore
+	"BSE":      "XBOM", // Mumbai
+	"NSE":      "XNSE", // National Stock Exchange of India
 }
 
 // InferMIC attempts to infer the MIC code from exchange information
@@ -35,23 +35,23 @@ func InferMIC(exchangeName, fullExchangeName string) string {
 	if mic, ok := ExchangeToMIC[fullExchangeName]; ok {
 		return mic
 	}
-	
+
 	// Try exchange name
 	if mic, ok := ExchangeToMIC[exchangeName]; ok {
 		return mic
 	}
-	
+
 	// Try case-insensitive match
 	exchangeUpper := strings.ToUpper(exchangeName)
 	if mic, ok := ExchangeToMIC[exchangeUpper]; ok {
 		return mic
 	}
-	
+
 	fullExchangeUpper := strings.ToUpper(fullExchangeName)
 	if mic, ok := ExchangeToMIC[fullExchangeUpper]; ok {
 		return mic
 	}
-	
+
 	// Return empty string if no match found
 	return ""
 }
@@ -59,10 +59,10 @@ func InferMIC(exchangeName, fullExchangeName string) string {
 // CreateSecurity creates a Security with best-effort MIC inference
 func CreateSecurity(symbol, exchangeName, fullExchangeName string) Security {
 	mic := InferMIC(exchangeName, fullExchangeName)
-	
+
 	// Clean up symbol for specific exchanges
 	cleanSymbol := cleanSymbol(symbol, mic)
-	
+
 	return Security{
 		Symbol: cleanSymbol,
 		MIC:    mic,
@@ -75,7 +75,7 @@ func cleanSymbol(symbol, mic string) string {
 	if mic == "XTKS" && strings.HasSuffix(symbol, ".T") {
 		return strings.TrimSuffix(symbol, ".T")
 	}
-	
+
 	return symbol
 }
 

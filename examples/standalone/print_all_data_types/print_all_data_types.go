@@ -32,14 +32,14 @@ func main() {
 		fmt.Printf("  Source: %s\n", analysis.Source)
 		fmt.Printf("  Producer: %s\n", analysis.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", analysis.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show all line items (analysis usually has fewer items)
 		for i, line := range analysis.Lines {
 			fmt.Printf("  Line %d:\n", i+1)
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}
@@ -57,14 +57,14 @@ func main() {
 		fmt.Printf("  Source: %s\n", analystInsights.Source)
 		fmt.Printf("  Producer: %s\n", analystInsights.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", analystInsights.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show all line items (analyst insights usually has fewer items)
 		for i, line := range analystInsights.Lines {
 			fmt.Printf("  Line %d:\n", i+1)
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}
@@ -82,7 +82,7 @@ func main() {
 		fmt.Printf("  Source: %s\n", balanceSheet.Source)
 		fmt.Printf("  Producer: %s\n", balanceSheet.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", balanceSheet.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show first few line items
 		for i, line := range balanceSheet.Lines {
 			if i >= 5 { // Show only first 5 line items
@@ -93,7 +93,7 @@ func main() {
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}
@@ -111,7 +111,7 @@ func main() {
 		fmt.Printf("  Source: %s\n", cashFlow.Source)
 		fmt.Printf("  Producer: %s\n", cashFlow.Meta.Producer)
 		fmt.Printf("  As Of: %s\n", cashFlow.AsOf.AsTime().Format(time.RFC3339))
-		
+
 		// Show first few line items
 		for i, line := range cashFlow.Lines {
 			if i >= 5 { // Show only first 5 line items
@@ -122,7 +122,7 @@ func main() {
 			fmt.Printf("    Key: %s\n", line.Key)
 			fmt.Printf("    Value: %d (scale: %d)\n", line.Value.Scaled, line.Value.Scale)
 			fmt.Printf("    Currency: %s\n", line.CurrencyCode)
-			fmt.Printf("    Period: %s to %s\n", 
+			fmt.Printf("    Period: %s to %s\n",
 				line.PeriodStart.AsTime().Format("2006-01-02"),
 				line.PeriodEnd.AsTime().Format("2006-01-02"))
 		}
@@ -154,11 +154,11 @@ func main() {
 			fmt.Printf("     Schema: %s\n", snapshot.Meta.SchemaVersion)
 			fmt.Printf("     Line Items: %d\n", len(snapshot.Lines))
 			fmt.Printf("     As Of: %s\n", snapshot.AsOf.AsTime().Format(time.RFC3339))
-			
+
 			// Show first line item as example
 			if len(snapshot.Lines) > 0 {
 				firstLine := snapshot.Lines[0]
-				fmt.Printf("     Example Line: %s = %d (scale: %d) %s\n", 
+				fmt.Printf("     Example Line: %s = %d (scale: %d) %s\n",
 					firstLine.Key, firstLine.Value.Scaled, firstLine.Value.Scale, firstLine.CurrencyCode)
 			}
 			fmt.Println()
@@ -168,7 +168,7 @@ func main() {
 	fmt.Println("=== ALL DATA TYPES COMPLETE ===")
 	fmt.Println("Summary of ampy-proto data types available:")
 	fmt.Println("1. Quotes → ampy.ticks.v1.QuoteSnapshot")
-	fmt.Println("2. Historical Bars → ampy.bars.v1.BarBatch") 
+	fmt.Println("2. Historical Bars → ampy.bars.v1.BarBatch")
 	fmt.Println("3. News → ampy.news.v1.NewsItem[]")
 	fmt.Println("4. Financials → ampy.fundamentals.v1.FundamentalsSnapshot")
 	fmt.Println("5. Balance Sheet → ampy.fundamentals.v1.FundamentalsSnapshot")

@@ -2,14 +2,15 @@ package scrape
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // RegexConfig holds the regex patterns for statistics extraction
@@ -25,7 +26,7 @@ type RegexConfig struct {
 		EnterpriseValueRevenue string `yaml:"enterprise_value_revenue"`
 		EnterpriseValueEBITDA  string `yaml:"enterprise_value_ebitda"`
 	} `yaml:"current"`
-	
+
 	Additional struct {
 		Beta              string `yaml:"beta"`
 		SharesOutstanding string `yaml:"shares_outstanding"`
@@ -34,7 +35,7 @@ type RegexConfig struct {
 		ReturnOnAssets    string `yaml:"return_on_assets"`
 		ReturnOnEquity    string `yaml:"return_on_equity"`
 	} `yaml:"additional"`
-	
+
 	HistoricalColumns struct {
 		Column2 ColumnPatterns `yaml:"column_2"`
 		Column3 ColumnPatterns `yaml:"column_3"`
@@ -42,7 +43,7 @@ type RegexConfig struct {
 		Column5 ColumnPatterns `yaml:"column_5"`
 		Column6 ColumnPatterns `yaml:"column_6"`
 	} `yaml:"historical_columns"`
-	
+
 	DateHeaders string `yaml:"date_headers"`
 }
 
@@ -64,7 +65,7 @@ type ComprehensiveKeyStatisticsDTO struct {
 	Market   string    `json:"market"`
 	Currency string    `json:"currency"`
 	AsOf     time.Time `json:"as_of"`
-	
+
 	// Current values (most recent data)
 	Current struct {
 		MarketCap              *Scaled `json:"market_cap,omitempty"`
@@ -77,17 +78,17 @@ type ComprehensiveKeyStatisticsDTO struct {
 		EnterpriseValueRevenue *Scaled `json:"enterprise_value_revenue,omitempty"`
 		EnterpriseValueEBITDA  *Scaled `json:"enterprise_value_ebitda,omitempty"`
 	} `json:"current"`
-	
+
 	// Additional statistics (from other parts of the page)
 	Additional struct {
-		Beta                *Scaled `json:"beta,omitempty"`
-		SharesOutstanding   *int64  `json:"shares_outstanding,omitempty"`
-		ProfitMargin        *Scaled `json:"profit_margin,omitempty"`
-		OperatingMargin     *Scaled `json:"operating_margin,omitempty"`
-		ReturnOnAssets      *Scaled `json:"return_on_assets,omitempty"`
-		ReturnOnEquity      *Scaled `json:"return_on_equity,omitempty"`
+		Beta              *Scaled `json:"beta,omitempty"`
+		SharesOutstanding *int64  `json:"shares_outstanding,omitempty"`
+		ProfitMargin      *Scaled `json:"profit_margin,omitempty"`
+		OperatingMargin   *Scaled `json:"operating_margin,omitempty"`
+		ReturnOnAssets    *Scaled `json:"return_on_assets,omitempty"`
+		ReturnOnEquity    *Scaled `json:"return_on_equity,omitempty"`
 	} `json:"additional"`
-	
+
 	// Historical values - dynamic quarters
 	Historical []HistoricalQuarter `json:"historical,omitempty"`
 }
@@ -112,25 +113,25 @@ func LoadRegexConfig() error {
 	if regexConfig != nil {
 		return nil // Already loaded
 	}
-	
+
 	// Get the directory of the current file
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return fmt.Errorf("unable to get current file path")
 	}
-	
+
 	configPath := filepath.Join(filepath.Dir(filename), "regex", "statistics.yaml")
-	
-	data, err := ioutil.ReadFile(configPath)
+
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("failed to read regex config file: %w", err)
 	}
-	
+
 	regexConfig = &RegexConfig{}
 	if err := yaml.Unmarshal(data, regexConfig); err != nil {
 		return fmt.Errorf("failed to parse regex config YAML: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -139,25 +140,25 @@ func ParseComprehensiveKeyStatistics(html []byte, symbol, market string) (*Compr
 	if err := LoadRegexConfig(); err != nil {
 		return nil, fmt.Errorf("failed to load regex config: %w", err)
 	}
-	
+
 	dto := &ComprehensiveKeyStatisticsDTO{
 		Symbol:   symbol,
 		Market:   market,
 		Currency: "USD", // Default, will be updated from actual data
 		AsOf:     time.Now().UTC(),
 	}
-	
+
 	htmlStr := string(html)
-	
+
 	// Extract current values
 	extractCurrentValues(htmlStr, dto)
-	
+
 	// Extract additional statistics
 	extractAdditionalValues(htmlStr, dto)
-	
+
 	// Extract historical values dynamically
 	extractHistoricalValues(htmlStr, dto)
-	
+
 	return dto, nil
 }
 
@@ -181,7 +182,7 @@ func extractAdditionalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 	dto.Additional.OperatingMargin = extractScaledValue(html, regexConfig.Additional.OperatingMargin)
 	dto.Additional.ReturnOnAssets = extractScaledValue(html, regexConfig.Additional.ReturnOnAssets)
 	dto.Additional.ReturnOnEquity = extractScaledValue(html, regexConfig.Additional.ReturnOnEquity)
-	
+
 	// Shares Outstanding needs special handling since it's an integer, not a scaled value
 	if sharesStr := extractStringValue(html, regexConfig.Additional.SharesOutstanding); sharesStr != "" {
 		dto.Additional.SharesOutstanding = parseSharesOutstanding(sharesStr)
@@ -192,7 +193,7 @@ func extractAdditionalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 func extractHistoricalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 	// Extract dates from table headers
 	dates := extractDates(html)
-	
+
 	// Define column patterns in order
 	columnPatterns := []ColumnPatterns{
 		regexConfig.HistoricalColumns.Column2,
@@ -201,7 +202,7 @@ func extractHistoricalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 		regexConfig.HistoricalColumns.Column5,
 		regexConfig.HistoricalColumns.Column6,
 	}
-	
+
 	// Extract data for each available column/date
 	for i, patterns := range columnPatterns {
 		var date string
@@ -211,7 +212,7 @@ func extractHistoricalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 			// If we don't have a date, skip this column
 			continue
 		}
-		
+
 		quarter := HistoricalQuarter{
 			Date:                   date,
 			MarketCap:              extractScaledValue(html, patterns.MarketCap),
@@ -224,7 +225,7 @@ func extractHistoricalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 			EnterpriseValueRevenue: extractScaledValue(html, patterns.EnterpriseValueRevenue),
 			EnterpriseValueEBITDA:  extractScaledValue(html, patterns.EnterpriseValueEBITDA),
 		}
-		
+
 		dto.Historical = append(dto.Historical, quarter)
 	}
 }
@@ -233,7 +234,7 @@ func extractHistoricalValues(html string, dto *ComprehensiveKeyStatisticsDTO) {
 func extractDates(html string) []string {
 	re := regexp.MustCompile(regexConfig.DateHeaders)
 	matches := re.FindAllStringSubmatch(html, -1)
-	
+
 	var dates []string
 	for _, match := range matches {
 		if len(match) > 1 {
@@ -249,7 +250,7 @@ func extractDates(html string) []string {
 			}
 		}
 	}
-	
+
 	return dates
 }
 
@@ -258,15 +259,15 @@ func extractScaledValue(html, pattern string) *Scaled {
 	if pattern == "" {
 		return nil
 	}
-	
+
 	re := regexp.MustCompile(pattern)
 	matches := re.FindStringSubmatch(html)
-	
+
 	if len(matches) > 1 {
 		value := strings.TrimSpace(matches[1])
 		return parseFinancialValue(value)
 	}
-	
+
 	return nil
 }
 
@@ -275,12 +276,12 @@ func parseFinancialValue(value string) *Scaled {
 	if value == "" || value == "--" || value == "N/A" {
 		return nil
 	}
-	
+
 	// Remove any currency symbols and commas
 	cleanValue := strings.ReplaceAll(value, ",", "")
 	cleanValue = strings.ReplaceAll(cleanValue, "$", "")
 	cleanValue = strings.TrimSpace(cleanValue)
-	
+
 	// Handle percentage values
 	if strings.HasSuffix(cleanValue, "%") {
 		cleanValue = strings.TrimSuffix(cleanValue, "%")
@@ -289,7 +290,7 @@ func parseFinancialValue(value string) *Scaled {
 			return &Scaled{Scaled: int64(val * 100), Scale: 2}
 		}
 	}
-	
+
 	// Handle suffixed values (B, M, K)
 	var multiplier int64 = 1
 	if strings.HasSuffix(cleanValue, "B") {
@@ -302,7 +303,7 @@ func parseFinancialValue(value string) *Scaled {
 		multiplier = 1000 // Thousand
 		cleanValue = strings.TrimSuffix(cleanValue, "K")
 	}
-	
+
 	// Parse the numeric value
 	if val, err := strconv.ParseFloat(cleanValue, 64); err == nil {
 		// Use scale 2 for ratios and percentages, scale 0 for large numbers
@@ -312,7 +313,7 @@ func parseFinancialValue(value string) *Scaled {
 		}
 		return &Scaled{Scaled: int64(val * float64(multiplier) * 100), Scale: scale}
 	}
-	
+
 	return nil
 }
 
@@ -321,14 +322,14 @@ func extractStringValue(html, pattern string) string {
 	if pattern == "" {
 		return ""
 	}
-	
+
 	re := regexp.MustCompile(pattern)
 	matches := re.FindStringSubmatch(html)
-	
+
 	if len(matches) > 1 {
 		return strings.TrimSpace(matches[1])
 	}
-	
+
 	return ""
 }
 
@@ -337,11 +338,11 @@ func parseSharesOutstanding(value string) *int64 {
 	if value == "" || value == "--" || value == "N/A" {
 		return nil
 	}
-	
+
 	// Remove any commas and spaces
 	cleanValue := strings.ReplaceAll(value, ",", "")
 	cleanValue = strings.TrimSpace(cleanValue)
-	
+
 	// Handle suffixed values (B, M, K)
 	var multiplier int64 = 1
 	if strings.HasSuffix(cleanValue, "B") {
@@ -354,12 +355,12 @@ func parseSharesOutstanding(value string) *int64 {
 		multiplier = 1000 // Thousand
 		cleanValue = strings.TrimSuffix(cleanValue, "K")
 	}
-	
+
 	// Parse the numeric value
 	if val, err := strconv.ParseFloat(cleanValue, 64); err == nil {
 		result := int64(val * float64(multiplier))
 		return &result
 	}
-	
+
 	return nil
 }

@@ -17,12 +17,12 @@ func (m *MockFXConverter) ConvertValue(ctx context.Context, value ScaledDecimal,
 	if m.ConvertValueFunc != nil {
 		return m.ConvertValueFunc(ctx, value, fromCurrency, toCurrency, at)
 	}
-	
+
 	// Default behavior - return error for different currencies
 	if fromCurrency != toCurrency {
 		return ScaledDecimal{}, nil, fmt.Errorf("FX conversion not enabled (provider: none)")
 	}
-	
+
 	// Same currency - return unchanged value
 	return value, &FXMeta{
 		Provider: "none",

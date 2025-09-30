@@ -6,18 +6,18 @@ import (
 	"strings"
 	"time"
 
+	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
+	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 	"github.com/AmpyFin/yfinance-go/internal/emit"
 	"github.com/AmpyFin/yfinance-go/internal/httpx"
 	"github.com/AmpyFin/yfinance-go/internal/norm"
 	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"github.com/AmpyFin/yfinance-go/internal/yahoo"
-	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
-	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 )
 
 // Client provides a high-level interface for fetching Yahoo Finance data
 type Client struct {
-	yahooClient *yahoo.Client
+	yahooClient  *yahoo.Client
 	scrapeClient scrape.Client
 }
 
@@ -29,7 +29,7 @@ func NewClient() *Client {
 	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
-		yahooClient: yahooClient,
+		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
 	}
 }
@@ -41,7 +41,7 @@ func NewClientWithConfig(config *httpx.Config) *Client {
 	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
-		yahooClient: yahooClient,
+		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
 	}
 }
@@ -54,7 +54,7 @@ func NewClientWithSessionRotation() *Client {
 	scrapeClient := scrape.NewClient(scrape.DefaultConfig(), httpClient)
 
 	return &Client{
-		yahooClient: yahooClient,
+		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
 	}
 }

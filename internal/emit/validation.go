@@ -24,7 +24,7 @@ func ValidateSecurity(sec norm.Security) error {
 	if sec.Symbol == "" {
 		return ValidationError{Field: "symbol", Message: "symbol cannot be empty"}
 	}
-	
+
 	if sec.MIC != "" {
 		// MIC must be uppercase and 4 characters
 		if len(sec.MIC) != 4 {
@@ -35,7 +35,7 @@ func ValidateSecurity(sec norm.Security) error {
 			return ValidationError{Field: "mic", Message: "MIC must be uppercase alphanumeric (4 chars)"}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -49,14 +49,14 @@ func ValidateTimeWindow(start, end, event time.Time) error {
 			Message: fmt.Sprintf("end time must be start + 24h, got %v, expected %v", end, expectedEnd),
 		}
 	}
-	
+
 	if !event.Equal(end) {
 		return ValidationError{
 			Field:   "event_time",
 			Message: fmt.Sprintf("event_time must equal end time for daily bars, got %v, expected %v", event, end),
 		}
 	}
-	
+
 	return nil
 }
 
@@ -68,9 +68,9 @@ func ValidateDecimal(d norm.ScaledDecimal) error {
 			Message: fmt.Sprintf("scale must be between 0 and 9, got %d", d.Scale),
 		}
 	}
-	
+
 	// Note: d.Scaled is already int64, so it's guaranteed to be within int64 range
-	
+
 	return nil
 }
 
@@ -79,7 +79,7 @@ func ValidateCurrency(code string) error {
 	if code == "" {
 		return ValidationError{Field: "currency_code", Message: "currency code cannot be empty"}
 	}
-	
+
 	// Basic validation: 3 uppercase letters
 	if len(code) != 3 {
 		return ValidationError{
@@ -87,7 +87,7 @@ func ValidateCurrency(code string) error {
 			Message: fmt.Sprintf("currency code must be 3 characters, got %d", len(code)),
 		}
 	}
-	
+
 	currencyRegex := regexp.MustCompile(`^[A-Z]{3}$`)
 	if !currencyRegex.MatchString(code) {
 		return ValidationError{
@@ -95,7 +95,7 @@ func ValidateCurrency(code string) error {
 			Message: "currency code must be 3 uppercase letters",
 		}
 	}
-	
+
 	// Check against known major currencies (pass-through for others)
 	majorCurrencies := map[string]bool{
 		"USD": true, "EUR": true, "GBP": true, "JPY": true, "CHF": true,
@@ -104,31 +104,31 @@ func ValidateCurrency(code string) error {
 		"CNY": true, "KRW": true, "SGD": true, "HKD": true, "INR": true,
 		"BRL": true, "MXN": true, "ZAR": true, "TRY": true, "ILS": true,
 	}
-	
+
 	if !majorCurrencies[code] {
 		// Allow pass-through for other currencies but log a warning
 		// In production, you might want to maintain a more comprehensive list
 		_ = code // Suppress unused variable warning
 	}
-	
+
 	return nil
 }
 
 // ValidateAdjustments validates adjustment policy consistency
 func ValidateAdjustments(adjusted bool, policyID string) error {
 	validPolicies := map[string]bool{
-		"raw":             true,
-		"split_only":      true,
-		"split_dividend":  true,
+		"raw":            true,
+		"split_only":     true,
+		"split_dividend": true,
 	}
-	
+
 	if !validPolicies[policyID] {
 		return ValidationError{
 			Field:   "adjustment_policy_id",
 			Message: fmt.Sprintf("invalid adjustment policy: %s, must be one of: raw, split_only, split_dividend", policyID),
 		}
 	}
-	
+
 	// Validate consistency
 	if adjusted && policyID == "raw" {
 		return ValidationError{
@@ -136,14 +136,14 @@ func ValidateAdjustments(adjusted bool, policyID string) error {
 			Message: "cannot have adjusted=true with policy=raw",
 		}
 	}
-	
+
 	if !adjusted && (policyID == "split_only" || policyID == "split_dividend") {
 		return ValidationError{
 			Field:   "adjustment_consistency",
 			Message: fmt.Sprintf("cannot have adjusted=false with policy=%s", policyID),
 		}
 	}
-	
+
 	return nil
 }
 
@@ -151,30 +151,30 @@ func ValidateAdjustments(adjusted bool, policyID string) error {
 func ValidateFundamentals(lines []norm.NormalizedFundamentalsLine) error {
 	// Whitelist of allowed keys (can be extended)
 	allowedKeys := map[string]bool{
-		"revenue":                 true,
-		"total_revenue":           true,
-		"gross_profit":            true,
-		"operating_income":        true,
-		"net_income":              true,
-		"eps_basic":               true,
-		"total_assets":            true,
-		"total_liabilities":       true,
-		"shareholders_equity":     true,
-		"cash_and_equivalents":    true,
-		"total_debt":              true,
-		"free_cash_flow":          true,
-		"operating_cash_flow":     true,
-		"investing_cash_flow":     true,
-		"financing_cash_flow":     true,
-		"earnings_per_share":      true,
-		"book_value_per_share":    true,
-		"price_to_earnings":       true,
-		"price_to_book":           true,
-		"debt_to_equity":          true,
-		"return_on_equity":        true,
-		"return_on_assets":        true,
+		"revenue":              true,
+		"total_revenue":        true,
+		"gross_profit":         true,
+		"operating_income":     true,
+		"net_income":           true,
+		"eps_basic":            true,
+		"total_assets":         true,
+		"total_liabilities":    true,
+		"shareholders_equity":  true,
+		"cash_and_equivalents": true,
+		"total_debt":           true,
+		"free_cash_flow":       true,
+		"operating_cash_flow":  true,
+		"investing_cash_flow":  true,
+		"financing_cash_flow":  true,
+		"earnings_per_share":   true,
+		"book_value_per_share": true,
+		"price_to_earnings":    true,
+		"price_to_book":        true,
+		"debt_to_equity":       true,
+		"return_on_equity":     true,
+		"return_on_assets":     true,
 	}
-	
+
 	for i, line := range lines {
 		// Check if key is whitelisted or has allowed prefix
 		if !allowedKeys[line.Key] && !strings.HasPrefix(line.Key, "custom_") {
@@ -183,17 +183,17 @@ func ValidateFundamentals(lines []norm.NormalizedFundamentalsLine) error {
 				Message: fmt.Sprintf("key '%s' not in whitelist and doesn't have 'custom_' prefix", line.Key),
 			}
 		}
-		
+
 		// Validate decimal
 		if err := ValidateDecimal(line.Value); err != nil {
 			return fmt.Errorf("lines[%d].value: %w", i, err)
 		}
-		
+
 		// Validate currency
 		if err := ValidateCurrency(line.CurrencyCode); err != nil {
 			return fmt.Errorf("lines[%d].currency_code: %w", i, err)
 		}
-		
+
 		// Validate period
 		if line.PeriodStart.After(line.PeriodEnd) {
 			return ValidationError{
@@ -202,6 +202,6 @@ func ValidateFundamentals(lines []norm.NormalizedFundamentalsLine) error {
 			}
 		}
 	}
-	
+
 	return nil
 }

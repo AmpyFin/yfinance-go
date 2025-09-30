@@ -8,90 +8,90 @@ import (
 
 // ConvertedBar represents a bar with converted currency values
 type ConvertedBar struct {
-	Start               time.Time     `json:"start"`
-	End                 time.Time     `json:"end"`
-	Open                ScaledDecimal `json:"open"`
-	High                ScaledDecimal `json:"high"`
-	Low                 ScaledDecimal `json:"low"`
-	Close               ScaledDecimal `json:"close"`
-	OriginalCurrency    string        `json:"original_currency"`    // Source currency
-	ConvertedCurrency   string        `json:"converted_currency"`   // Target currency
-	Volume              int64         `json:"volume"`
-	Adjusted            bool          `json:"adjusted"`
-	AdjustmentPolicyID  string        `json:"adjustment_policy_id"`
-	EventTime           time.Time     `json:"event_time"`
-	IngestTime          time.Time     `json:"ingest_time"`
-	AsOf                time.Time     `json:"as_of"`
+	Start              time.Time     `json:"start"`
+	End                time.Time     `json:"end"`
+	Open               ScaledDecimal `json:"open"`
+	High               ScaledDecimal `json:"high"`
+	Low                ScaledDecimal `json:"low"`
+	Close              ScaledDecimal `json:"close"`
+	OriginalCurrency   string        `json:"original_currency"`  // Source currency
+	ConvertedCurrency  string        `json:"converted_currency"` // Target currency
+	Volume             int64         `json:"volume"`
+	Adjusted           bool          `json:"adjusted"`
+	AdjustmentPolicyID string        `json:"adjustment_policy_id"`
+	EventTime          time.Time     `json:"event_time"`
+	IngestTime         time.Time     `json:"ingest_time"`
+	AsOf               time.Time     `json:"as_of"`
 }
 
 // ConvertedBarBatch represents a batch of converted bars
 type ConvertedBarBatch struct {
-	Security Security         `json:"security"`
-	Bars     []ConvertedBar   `json:"bars"`
-	Meta     Meta            `json:"meta"`
-	FXMeta   *FXMeta         `json:"fx_meta,omitempty"`
+	Security Security       `json:"security"`
+	Bars     []ConvertedBar `json:"bars"`
+	Meta     Meta           `json:"meta"`
+	FXMeta   *FXMeta        `json:"fx_meta,omitempty"`
 }
 
 // ConvertedQuote represents a quote with converted currency values
 type ConvertedQuote struct {
-	Security           Security       `json:"security"`
-	Type               string         `json:"type"`
-	Bid                *ScaledDecimal `json:"bid,omitempty"`
-	BidSize            *int64         `json:"bid_size,omitempty"`
-	Ask                *ScaledDecimal `json:"ask,omitempty"`
-	AskSize            *int64         `json:"ask_size,omitempty"`
-	RegularMarketPrice *ScaledDecimal `json:"regular_market_price,omitempty"`
-	RegularMarketHigh  *ScaledDecimal `json:"regular_market_high,omitempty"`
-	RegularMarketLow   *ScaledDecimal `json:"regular_market_low,omitempty"`
-	RegularMarketVolume *int64        `json:"regular_market_volume,omitempty"`
-	OriginalCurrency   string         `json:"original_currency"`    // Source currency
-	ConvertedCurrency  string         `json:"converted_currency"`   // Target currency
-	Venue              string         `json:"venue,omitempty"`
-	EventTime          time.Time      `json:"event_time"`
-	IngestTime         time.Time      `json:"ingest_time"`
-	Meta               Meta           `json:"meta"`
-	FXMeta             *FXMeta        `json:"fx_meta,omitempty"`
+	Security            Security       `json:"security"`
+	Type                string         `json:"type"`
+	Bid                 *ScaledDecimal `json:"bid,omitempty"`
+	BidSize             *int64         `json:"bid_size,omitempty"`
+	Ask                 *ScaledDecimal `json:"ask,omitempty"`
+	AskSize             *int64         `json:"ask_size,omitempty"`
+	RegularMarketPrice  *ScaledDecimal `json:"regular_market_price,omitempty"`
+	RegularMarketHigh   *ScaledDecimal `json:"regular_market_high,omitempty"`
+	RegularMarketLow    *ScaledDecimal `json:"regular_market_low,omitempty"`
+	RegularMarketVolume *int64         `json:"regular_market_volume,omitempty"`
+	OriginalCurrency    string         `json:"original_currency"`  // Source currency
+	ConvertedCurrency   string         `json:"converted_currency"` // Target currency
+	Venue               string         `json:"venue,omitempty"`
+	EventTime           time.Time      `json:"event_time"`
+	IngestTime          time.Time      `json:"ingest_time"`
+	Meta                Meta           `json:"meta"`
+	FXMeta              *FXMeta        `json:"fx_meta,omitempty"`
 }
 
 // ConvertedFundamentalsLine represents a fundamentals line with converted currency
 type ConvertedFundamentalsLine struct {
-	Key                string        `json:"key"`
-	Value              ScaledDecimal `json:"value"`
-	OriginalCurrency   string        `json:"original_currency"`    // Source currency
-	ConvertedCurrency  string        `json:"converted_currency"`   // Target currency
-	PeriodStart        time.Time     `json:"period_start"`
-	PeriodEnd          time.Time     `json:"period_end"`
+	Key               string        `json:"key"`
+	Value             ScaledDecimal `json:"value"`
+	OriginalCurrency  string        `json:"original_currency"`  // Source currency
+	ConvertedCurrency string        `json:"converted_currency"` // Target currency
+	PeriodStart       time.Time     `json:"period_start"`
+	PeriodEnd         time.Time     `json:"period_end"`
 }
 
 // ConvertedFundamentalsSnapshot represents a fundamentals snapshot with converted currency
 type ConvertedFundamentalsSnapshot struct {
-	Security Security                      `json:"security"`
-	Lines    []ConvertedFundamentalsLine   `json:"lines"`
-	Source   string                        `json:"source"`
-	AsOf     time.Time                     `json:"as_of"`
-	Meta     Meta                          `json:"meta"`
-	FXMeta   *FXMeta                       `json:"fx_meta,omitempty"`
+	Security Security                    `json:"security"`
+	Lines    []ConvertedFundamentalsLine `json:"lines"`
+	Source   string                      `json:"source"`
+	AsOf     time.Time                   `json:"as_of"`
+	Meta     Meta                        `json:"meta"`
+	FXMeta   *FXMeta                     `json:"fx_meta,omitempty"`
 }
 
 // ConvertedMarketData represents market data with converted currency
 type ConvertedMarketData struct {
-	Security               Security       `json:"security"`
-	RegularMarketPrice     *ScaledDecimal `json:"regular_market_price,omitempty"`
-	RegularMarketHigh      *ScaledDecimal `json:"regular_market_high,omitempty"`
-	RegularMarketLow       *ScaledDecimal `json:"regular_market_low,omitempty"`
-	RegularMarketVolume    *int64         `json:"regular_market_volume,omitempty"`
-	FiftyTwoWeekHigh       *ScaledDecimal `json:"fifty_two_week_high,omitempty"`
-	FiftyTwoWeekLow        *ScaledDecimal `json:"fifty_two_week_low,omitempty"`
-	PreviousClose          *ScaledDecimal `json:"previous_close,omitempty"`
-	ChartPreviousClose     *ScaledDecimal `json:"chart_previous_close,omitempty"`
-	OriginalCurrency       string         `json:"original_currency"`    // Source currency
-	ConvertedCurrency      string         `json:"converted_currency"`   // Target currency
-	RegularMarketTime      *time.Time     `json:"regular_market_time,omitempty"`
-	HasPrePostMarketData   bool           `json:"has_pre_post_market_data"`
-	EventTime              time.Time      `json:"event_time"`
-	IngestTime             time.Time      `json:"ingest_time"`
-	Meta                   Meta           `json:"meta"`
-	FXMeta                 *FXMeta        `json:"fx_meta,omitempty"`
+	Security             Security       `json:"security"`
+	RegularMarketPrice   *ScaledDecimal `json:"regular_market_price,omitempty"`
+	RegularMarketHigh    *ScaledDecimal `json:"regular_market_high,omitempty"`
+	RegularMarketLow     *ScaledDecimal `json:"regular_market_low,omitempty"`
+	RegularMarketVolume  *int64         `json:"regular_market_volume,omitempty"`
+	FiftyTwoWeekHigh     *ScaledDecimal `json:"fifty_two_week_high,omitempty"`
+	FiftyTwoWeekLow      *ScaledDecimal `json:"fifty_two_week_low,omitempty"`
+	PreviousClose        *ScaledDecimal `json:"previous_close,omitempty"`
+	ChartPreviousClose   *ScaledDecimal `json:"chart_previous_close,omitempty"`
+	OriginalCurrency     string         `json:"original_currency"`  // Source currency
+	ConvertedCurrency    string         `json:"converted_currency"` // Target currency
+	RegularMarketTime    *time.Time     `json:"regular_market_time,omitempty"`
+	HasPrePostMarketData bool           `json:"has_pre_post_market_data"`
+	EventTime            time.Time      `json:"event_time"`
+	IngestTime           time.Time      `json:"ingest_time"`
+	Meta                 Meta           `json:"meta"`
+	FXMeta               *FXMeta        `json:"fx_meta,omitempty"`
 }
 
 // ConvertTo converts a NormalizedBarBatch to a target currency
@@ -164,7 +164,7 @@ func (b *NormalizedBarBatch) ConvertTo(ctx context.Context, target string, fxCon
 			return nil, nil, fmt.Errorf("failed to convert low price for bar %d: %w", i, err)
 		}
 
-		close, _, err := fxConverter.ConvertValue(ctx, bar.Close, sourceCurrency, target, bar.AsOf)
+		closePrice, _, err := fxConverter.ConvertValue(ctx, bar.Close, sourceCurrency, target, bar.AsOf)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to convert close price for bar %d: %w", i, err)
 		}
@@ -175,7 +175,7 @@ func (b *NormalizedBarBatch) ConvertTo(ctx context.Context, target string, fxCon
 			Open:               open,
 			High:               high,
 			Low:                low,
-			Close:              close,
+			Close:              closePrice,
 			OriginalCurrency:   sourceCurrency,
 			ConvertedCurrency:  target,
 			Volume:             bar.Volume,
@@ -392,38 +392,38 @@ func (m *NormalizedMarketData) ConvertTo(ctx context.Context, target string, fxC
 			AsOf:     time.Now().UTC(),
 		}
 		converted := &ConvertedMarketData{
-			Security:               m.Security,
-			RegularMarketPrice:     m.RegularMarketPrice,
-			RegularMarketHigh:      m.RegularMarketHigh,
-			RegularMarketLow:       m.RegularMarketLow,
-			RegularMarketVolume:    m.RegularMarketVolume,
-			FiftyTwoWeekHigh:       m.FiftyTwoWeekHigh,
-			FiftyTwoWeekLow:        m.FiftyTwoWeekLow,
-			PreviousClose:          m.PreviousClose,
-			ChartPreviousClose:     m.ChartPreviousClose,
-			OriginalCurrency:       sourceCurrency,
-			ConvertedCurrency:      target,
-			RegularMarketTime:      m.RegularMarketTime,
-			HasPrePostMarketData:   m.HasPrePostMarketData,
-			EventTime:              m.EventTime,
-			IngestTime:             m.IngestTime,
-			Meta:                   m.Meta,
-			FXMeta:                 fxMeta,
+			Security:             m.Security,
+			RegularMarketPrice:   m.RegularMarketPrice,
+			RegularMarketHigh:    m.RegularMarketHigh,
+			RegularMarketLow:     m.RegularMarketLow,
+			RegularMarketVolume:  m.RegularMarketVolume,
+			FiftyTwoWeekHigh:     m.FiftyTwoWeekHigh,
+			FiftyTwoWeekLow:      m.FiftyTwoWeekLow,
+			PreviousClose:        m.PreviousClose,
+			ChartPreviousClose:   m.ChartPreviousClose,
+			OriginalCurrency:     sourceCurrency,
+			ConvertedCurrency:    target,
+			RegularMarketTime:    m.RegularMarketTime,
+			HasPrePostMarketData: m.HasPrePostMarketData,
+			EventTime:            m.EventTime,
+			IngestTime:           m.IngestTime,
+			Meta:                 m.Meta,
+			FXMeta:               fxMeta,
 		}
 		return converted, fxMeta, nil
 	}
 
 	// Convert prices
 	converted := &ConvertedMarketData{
-		Security:               m.Security,
-		RegularMarketVolume:    m.RegularMarketVolume,
-		OriginalCurrency:       sourceCurrency,
-		ConvertedCurrency:      target,
-		RegularMarketTime:      m.RegularMarketTime,
-		HasPrePostMarketData:   m.HasPrePostMarketData,
-		EventTime:              m.EventTime,
-		IngestTime:             m.IngestTime,
-		Meta:                   m.Meta,
+		Security:             m.Security,
+		RegularMarketVolume:  m.RegularMarketVolume,
+		OriginalCurrency:     sourceCurrency,
+		ConvertedCurrency:    target,
+		RegularMarketTime:    m.RegularMarketTime,
+		HasPrePostMarketData: m.HasPrePostMarketData,
+		EventTime:            m.EventTime,
+		IngestTime:           m.IngestTime,
+		Meta:                 m.Meta,
 	}
 
 	var fxMeta *FXMeta

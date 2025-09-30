@@ -10,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
+	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
+	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
 	"github.com/AmpyFin/yfinance-go"
 	"github.com/AmpyFin/yfinance-go/internal/bus"
 	"github.com/AmpyFin/yfinance-go/internal/config"
@@ -20,8 +21,7 @@ import (
 	"github.com/AmpyFin/yfinance-go/internal/obsv"
 	"github.com/AmpyFin/yfinance-go/internal/scrape"
 	"github.com/AmpyFin/yfinance-go/internal/soak"
-	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
-	newsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/news/v1"
+	"github.com/spf13/cobra"
 )
 
 // Version information set via ldflags during build
@@ -33,23 +33,23 @@ var (
 
 // Exit codes as specified in the requirements
 const (
-	ExitSuccess = 0
-	ExitGeneral = 1
-	ExitPaidFeature = 2
-	ExitConfigError = 3
+	ExitSuccess      = 0
+	ExitGeneral      = 1
+	ExitPaidFeature  = 2
+	ExitConfigError  = 3
 	ExitPublishError = 4
 )
 
 // Global configuration
 type GlobalConfig struct {
-	ConfigFile   string
-	LogLevel     string
-	RunID        string
-	Concurrency  int
-	QPS          float64
-	RetryMax     int
-	Sessions     int
-	Timeout      time.Duration
+	ConfigFile  string
+	LogLevel    string
+	RunID       string
+	Concurrency int
+	QPS         float64
+	RetryMax    int
+	Sessions    int
+	Timeout     time.Duration
 }
 
 // Pull command configuration
@@ -95,8 +95,8 @@ type ScrapeConfig struct {
 	Endpoints    string // Comma-separated list of endpoints for preview-json
 	Preview      bool
 	PreviewJSON  bool
-	PreviewNews  bool   // Preview news articles without emitting proto
-	PreviewProto bool   // Preview proto summaries without full output
+	PreviewNews  bool // Preview news articles without emitting proto
+	PreviewProto bool // Preview proto summaries without full output
 	Force        bool
 }
 
@@ -136,15 +136,15 @@ type SoakConfig struct {
 }
 
 var (
-	globalConfig GlobalConfig
-	pullConfig   PullConfig
-	quoteConfig  QuoteConfig
-	fundConfig   FundamentalsConfig
-	scrapeConfig ScrapeConfig
-	comprehensiveStatsConfig ComprehensiveStatsConfig
+	globalConfig               GlobalConfig
+	pullConfig                 PullConfig
+	quoteConfig                QuoteConfig
+	fundConfig                 FundamentalsConfig
+	scrapeConfig               ScrapeConfig
+	comprehensiveStatsConfig   ComprehensiveStatsConfig
 	comprehensiveProfileConfig ComprehensiveProfileConfig
-	configConfig ConfigConfig
-	soakConfig   SoakConfig
+	configConfig               ConfigConfig
+	soakConfig                 SoakConfig
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -294,7 +294,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&globalConfig.RetryMax, "retry-max", 0, "HTTP retry attempts")
 	rootCmd.PersistentFlags().IntVar(&globalConfig.Sessions, "sessions", 0, "Session rotation pool size")
 	rootCmd.PersistentFlags().DurationVar(&globalConfig.Timeout, "timeout", 0, "HTTP timeout (e.g., 6s)")
-	
+
 	// Observability flags
 	rootCmd.PersistentFlags().Bool("observability-disable-tracing", false, "Disable OpenTelemetry tracing")
 	rootCmd.PersistentFlags().Bool("observability-disable-metrics", false, "Disable Prometheus metrics")
@@ -365,7 +365,9 @@ func init() {
 	soakCmd.Flags().DurationVar(&soakConfig.ProbeInterval, "probe-interval", 1*time.Hour, "Interval for correctness probes")
 	soakCmd.Flags().Float64Var(&soakConfig.FailureRate, "failure-rate", 0.1, "Simulated failure rate for testing (0.0-1.0)")
 	soakCmd.Flags().BoolVar(&soakConfig.MemoryCheck, "memory-check", true, "Enable memory and goroutine leak detection")
-	soakCmd.MarkFlagRequired("universe-file")
+	if err := soakCmd.MarkFlagRequired("universe-file"); err != nil {
+		panic(fmt.Sprintf("Failed to mark universe-file as required: %v", err))
+	}
 
 	// Add subcommands
 	rootCmd.AddCommand(pullCmd)
@@ -420,10 +422,10 @@ func runPull(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "ERROR: Failed to load configuration: %v\n", err)
 		os.Exit(ExitConfigError)
 	}
-	
+
 	// For yfinance-go, we only support daily intervals
-	if err := cfg.ValidateInterval("1d"); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+	if validateErr := cfg.ValidateInterval("1d"); validateErr != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", validateErr)
 		os.Exit(ExitConfigError)
 	}
 
@@ -431,7 +433,7 @@ func runPull(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
 	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
-	
+
 	obsvConfig := &obsv.Config{
 		ServiceName:       "yfinance-go",
 		ServiceVersion:    version,
@@ -444,9 +446,9 @@ func runPull(cmd *cobra.Command, args []string) error {
 		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
 		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
 	}
-	
-	if err := obsv.Init(ctx, obsvConfig); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+
+	if obsvErr := obsv.Init(ctx, obsvConfig); obsvErr != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", obsvErr)
 		os.Exit(ExitConfigError)
 	}
 	defer func() { _ = obsv.Shutdown(ctx) }()
@@ -633,7 +635,7 @@ func runScrape(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
 	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
-	
+
 	obsvConfig := &obsv.Config{
 		ServiceName:       "yfinance-go",
 		ServiceVersion:    version,
@@ -646,9 +648,9 @@ func runScrape(cmd *cobra.Command, args []string) error {
 		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
 		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
 	}
-	
-	if err := obsv.Init(ctx, obsvConfig); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+
+	if obsvErr := obsv.Init(ctx, obsvConfig); obsvErr != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", obsvErr)
 		os.Exit(ExitConfigError)
 	}
 	defer func() { _ = obsv.Shutdown(ctx) }()
@@ -717,7 +719,7 @@ func runComprehensiveStats(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
 	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
-	
+
 	obsvConfig := &obsv.Config{
 		ServiceName:       "yfinance-go",
 		ServiceVersion:    version,
@@ -730,9 +732,9 @@ func runComprehensiveStats(cmd *cobra.Command, args []string) error {
 		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
 		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
 	}
-	
-	if err := obsv.Init(ctx, obsvConfig); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+
+	if obsvErr := obsv.Init(ctx, obsvConfig); obsvErr != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", obsvErr)
 		os.Exit(ExitConfigError)
 	}
 	defer func() { _ = obsv.Shutdown(ctx) }()
@@ -796,17 +798,17 @@ func runConfig(cmd *cobra.Command, args []string) error {
 // printEffectiveConfig prints the effective configuration in key=value format
 func printEffectiveConfig(configMap map[string]interface{}) {
 	fmt.Println("EFFECTIVE CONFIG (redacted)")
-	
+
 	// Flatten the configuration map
 	flattened := flattenConfigMap(configMap, "")
-	
+
 	// Sort keys for consistent output
 	var keys []string
 	for key := range flattened {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	
+
 	// Print sorted key-value pairs
 	for _, key := range keys {
 		value := flattened[key]
@@ -817,13 +819,13 @@ func printEffectiveConfig(configMap map[string]interface{}) {
 // flattenConfigMap flattens a nested configuration map into dot-notation keys
 func flattenConfigMap(configMap map[string]interface{}, prefix string) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	for key, value := range configMap {
 		fullKey := key
 		if prefix != "" {
 			fullKey = prefix + "." + key
 		}
-		
+
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			// Recursively flatten nested maps
 			nested := flattenConfigMap(nestedMap, fullKey)
@@ -845,7 +847,7 @@ func flattenConfigMap(configMap map[string]interface{}, prefix string) map[strin
 			result[fullKey] = value
 		}
 	}
-	
+
 	return result
 }
 
@@ -894,18 +896,18 @@ func validateScrapeFlags() error {
 	if !scrapeConfig.Check && !scrapeConfig.PreviewJSON && !scrapeConfig.PreviewNews && !scrapeConfig.PreviewProto {
 		return fmt.Errorf("either --check, --preview-json, --preview-news, or --preview-proto flag is required")
 	}
-	
+
 	// All modes require ticker
 	if scrapeConfig.Ticker == "" {
 		return fmt.Errorf("--ticker is required")
 	}
-	
+
 	// Check mode requires endpoint
 	if scrapeConfig.Check {
 		if scrapeConfig.Endpoint == "" {
 			return fmt.Errorf("--endpoint is required for --check mode")
 		}
-		
+
 		// Validate endpoint
 		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
 		valid := false
@@ -919,13 +921,13 @@ func validateScrapeFlags() error {
 			return fmt.Errorf("--endpoint must be one of: %v", validEndpoints)
 		}
 	}
-	
+
 	// Preview-json mode requires endpoints
 	if scrapeConfig.PreviewJSON {
 		if scrapeConfig.Endpoints == "" {
 			return fmt.Errorf("--endpoints is required for --preview-json mode")
 		}
-		
+
 		// Validate endpoints
 		endpointList := strings.Split(scrapeConfig.Endpoints, ",")
 		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
@@ -946,13 +948,13 @@ func validateScrapeFlags() error {
 			}
 		}
 	}
-	
+
 	// Preview-proto mode requires endpoints
 	if scrapeConfig.PreviewProto {
 		if scrapeConfig.Endpoints == "" {
 			return fmt.Errorf("--endpoints is required for --preview-proto mode")
 		}
-		
+
 		// Validate endpoints
 		endpointList := strings.Split(scrapeConfig.Endpoints, ",")
 		validEndpoints := []string{"profile", "key-statistics", "financials", "balance-sheet", "cash-flow", "analysis", "analyst-insights", "news"}
@@ -973,7 +975,7 @@ func validateScrapeFlags() error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1007,13 +1009,13 @@ func getSymbols(ticker, universeFile string) ([]string, error) {
 	if ticker != "" {
 		return []string{ticker}, nil
 	}
-	
+
 	// Read universe file
 	content, err := os.ReadFile(universeFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read universe file: %v", err)
 	}
-	
+
 	lines := strings.Split(string(content), "\n")
 	var symbols []string
 	for _, line := range lines {
@@ -1022,11 +1024,11 @@ func getSymbols(ticker, universeFile string) ([]string, error) {
 			symbols = append(symbols, line)
 		}
 	}
-	
+
 	if len(symbols) == 0 {
 		return nil, fmt.Errorf("no symbols found in universe file")
 	}
-	
+
 	return symbols, nil
 }
 
@@ -1038,17 +1040,17 @@ func createClient() (*yfinance.Client, error) {
 		// Default to a standard effective config path
 		effectivePath = "configs/effective.yaml"
 	}
-	
+
 	// Load configuration using ampy-config
 	loader := config.NewLoader(effectivePath)
 	cfg, err := loader.Load()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
-	
+
 	// Convert to HTTP config
 	httpConfig := cfg.GetHTTPConfig()
-	
+
 	// Apply global flags if set (CLI flags override config)
 	if globalConfig.QPS > 0 {
 		httpConfig.QPS = globalConfig.QPS
@@ -1063,27 +1065,27 @@ func createClient() (*yfinance.Client, error) {
 	if globalConfig.Timeout > 0 {
 		httpConfig.Timeout = globalConfig.Timeout
 	}
-	
+
 	// Create httpx config from our config
 	httpxConfig := &httpx.Config{
-		BaseURL:            httpConfig.BaseURL,
-		Timeout:            httpConfig.Timeout,
-		IdleTimeout:        httpConfig.IdleTimeout,
-		MaxConnsPerHost:    httpConfig.MaxConnsPerHost,
-		UserAgent:          httpConfig.UserAgent,
-		MaxAttempts:        httpConfig.MaxAttempts,
-		BackoffBaseMs:      httpConfig.BackoffBaseMs,
-		BackoffJitterMs:    httpConfig.BackoffJitterMs,
-		MaxDelayMs:         httpConfig.MaxDelayMs,
-		QPS:                httpConfig.QPS,
-		Burst:              httpConfig.Burst,
-		CircuitWindow:      httpConfig.CircuitWindow,
-		FailureThreshold:   int(httpConfig.FailureThreshold * 100), // Convert to percentage
-		ResetTimeout:       httpConfig.ResetTimeout,
+		BaseURL:               httpConfig.BaseURL,
+		Timeout:               httpConfig.Timeout,
+		IdleTimeout:           httpConfig.IdleTimeout,
+		MaxConnsPerHost:       httpConfig.MaxConnsPerHost,
+		UserAgent:             httpConfig.UserAgent,
+		MaxAttempts:           httpConfig.MaxAttempts,
+		BackoffBaseMs:         httpConfig.BackoffBaseMs,
+		BackoffJitterMs:       httpConfig.BackoffJitterMs,
+		MaxDelayMs:            httpConfig.MaxDelayMs,
+		QPS:                   httpConfig.QPS,
+		Burst:                 httpConfig.Burst,
+		CircuitWindow:         httpConfig.CircuitWindow,
+		FailureThreshold:      int(httpConfig.FailureThreshold * 100), // Convert to percentage
+		ResetTimeout:          httpConfig.ResetTimeout,
 		EnableSessionRotation: httpConfig.EnableSessionRotation,
-		NumSessions:        httpConfig.NumSessions,
+		NumSessions:           httpConfig.NumSessions,
 	}
-	
+
 	// Create client
 	if httpConfig.EnableSessionRotation {
 		return yfinance.NewClientWithSessionRotation(), nil
@@ -1099,7 +1101,7 @@ func createBusConfig(env, topicPrefix string) *bus.Config {
 		// Default to a standard effective config path
 		effectivePath = "configs/effective.yaml"
 	}
-	
+
 	// Load configuration using ampy-config
 	loader := config.NewLoader(effectivePath)
 	cfg, err := loader.Load()
@@ -1131,15 +1133,15 @@ func createBusConfig(env, topicPrefix string) *bus.Config {
 			},
 		}
 	}
-	
+
 	// Get bus config from loaded configuration
 	busConfig := cfg.GetBusConfig()
-	
+
 	// Override with CLI parameters
 	busConfig.Enabled = true
 	busConfig.Env = env
 	busConfig.TopicPrefix = topicPrefix
-	
+
 	// Convert to bus.Config
 	return &bus.Config{
 		Enabled:         busConfig.Enabled,
@@ -1180,22 +1182,22 @@ func processSymbol(ctx context.Context, client *yfinance.Client, symbol string, 
 	if err != nil {
 		return err
 	}
-	
+
 	if len(bars.Bars) == 0 {
 		fmt.Printf("No bars found for %s in the specified period\n", symbol)
 		return nil
 	}
-	
+
 	// Print preview
 	printBarsPreview(bars, runID, pullConfig.Env, pullConfig.TopicPrefix)
-	
+
 	// Handle FX preview if requested
 	if pullConfig.FXTarget != "" {
 		if err := handleFXPreview(ctx, client, bars, pullConfig.FXTarget); err != nil {
 			fmt.Printf("FX preview failed: %v\n", err)
 		}
 	}
-	
+
 	// Handle bus publishing
 	if busInstance != nil {
 		preview := pullConfig.Preview || pullConfig.DryRunPublish
@@ -1203,14 +1205,14 @@ func processSymbol(ctx context.Context, client *yfinance.Client, symbol string, 
 			return fmt.Errorf("bus publishing failed: %v", err)
 		}
 	}
-	
+
 	// Handle local export
 	if pullConfig.Out != "" && pullConfig.OutDir != "" {
 		if err := handleLocalExport(bars, symbol, start, end, adjusted, pullConfig.Out, pullConfig.OutDir); err != nil {
 			return fmt.Errorf("local export failed: %v", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1221,24 +1223,24 @@ func processQuote(ctx context.Context, client *yfinance.Client, ticker string, r
 	if err != nil {
 		return err
 	}
-	
+
 	// Print preview
 	printQuotePreview(quote)
-	
+
 	// Handle bus publishing
 	if busInstance != nil {
 		if err := handleQuoteBusPublishing(ctx, quote, busInstance, busConfig, runID, quoteConfig.Preview); err != nil {
 			return fmt.Errorf("bus publishing failed: %v", err)
 		}
 	}
-	
+
 	// Handle local export
 	if quoteConfig.Out != "" && quoteConfig.OutDir != "" {
 		if err := handleQuoteLocalExport(quote, ticker, quoteConfig.Out, quoteConfig.OutDir); err != nil {
 			return fmt.Errorf("local export failed: %v", err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -1249,10 +1251,10 @@ func processFundamentals(ctx context.Context, client *yfinance.Client, ticker st
 	if err != nil {
 		return err
 	}
-	
+
 	// Print preview
 	printFundamentalsPreview(fundamentals)
-	
+
 	return nil
 }
 
@@ -1260,7 +1262,7 @@ func processFundamentals(ctx context.Context, client *yfinance.Client, ticker st
 func printBarsPreview(bars *norm.NormalizedBarBatch, runID, env, topicPrefix string) {
 	firstBar := bars.Bars[0]
 	lastBar := bars.Bars[len(bars.Bars)-1]
-	
+
 	fmt.Printf("RUN %s  (env=%s, topic_prefix=%s)\n", runID, env, topicPrefix)
 	fmt.Printf("SYMBOL %s (MIC=%s, CCY=%s)  range=%s..%s  bars=%d  adjusted=%s\n",
 		bars.Security.Symbol,
@@ -1283,17 +1285,17 @@ func printQuotePreview(quote *norm.NormalizedQuote) {
 	if quote.RegularMarketPrice != nil {
 		price = fmt.Sprintf("%.4f", norm.FromScaledDecimal(*quote.RegularMarketPrice))
 	}
-	
+
 	high := "N/A"
 	if quote.RegularMarketHigh != nil {
 		high = fmt.Sprintf("%.4f", norm.FromScaledDecimal(*quote.RegularMarketHigh))
 	}
-	
+
 	low := "N/A"
 	if quote.RegularMarketLow != nil {
 		low = fmt.Sprintf("%.4f", norm.FromScaledDecimal(*quote.RegularMarketLow))
 	}
-	
+
 	fmt.Printf("SYMBOL %s quote  price=%s %s  high=%s  low=%s  venue=%s\n",
 		quote.Security.Symbol, price, quote.CurrencyCode, high, low, quote.Venue)
 }
@@ -1302,7 +1304,7 @@ func printQuotePreview(quote *norm.NormalizedQuote) {
 func printFundamentalsPreview(fundamentals *norm.NormalizedFundamentalsSnapshot) {
 	fmt.Printf("SYMBOL %s fundamentals  lines=%d  source=%s\n",
 		fundamentals.Security.Symbol, len(fundamentals.Lines), fundamentals.Source)
-	
+
 	// Show first few lines
 	for i, line := range fundamentals.Lines {
 		if i >= 5 {
@@ -1320,12 +1322,12 @@ func handleFXPreview(ctx context.Context, client *yfinance.Client, bars *norm.No
 		fmt.Printf("fx_preview target=%s (no conversion needed)\n", targetCurrency)
 		return nil
 	}
-	
+
 	// For now, just show that FX preview is requested
 	// In a full implementation, this would use the FX manager
 	fmt.Printf("fx_preview target=%s as_of=%s rate_scale=8 rounding=half_up  (provider=yahoo-web, cache_hit=true)\n",
 		targetCurrency, time.Now().Format("2006-01-02T15:04:05Z"))
-	
+
 	return nil
 }
 
@@ -1336,7 +1338,7 @@ func handleBusPublishing(ctx context.Context, bars *norm.NormalizedBarBatch, bus
 	if err != nil {
 		return fmt.Errorf("failed to emit bar batch: %v", err)
 	}
-	
+
 	// Create bus message
 	busMessage := &bus.BarBatchMessage{
 		Batch: ampyBatch,
@@ -1347,7 +1349,7 @@ func handleBusPublishing(ctx context.Context, bars *norm.NormalizedBarBatch, bus
 		RunID: runID,
 		Env:   busConfig.Env,
 	}
-	
+
 	if preview {
 		// Estimate payload size
 		payloadSize := estimateBarBatchSize(ampyBatch)
@@ -1363,7 +1365,7 @@ func handleBusPublishing(ctx context.Context, bars *norm.NormalizedBarBatch, bus
 		}
 		fmt.Printf("Published %d bars to bus\n", len(bars.Bars))
 	}
-	
+
 	return nil
 }
 
@@ -1374,7 +1376,7 @@ func handleQuoteBusPublishing(ctx context.Context, quote *norm.NormalizedQuote, 
 	if err != nil {
 		return fmt.Errorf("failed to emit quote: %v", err)
 	}
-	
+
 	// Create bus message
 	busMessage := &bus.QuoteMessage{
 		Quote: ampyQuote,
@@ -1385,7 +1387,7 @@ func handleQuoteBusPublishing(ctx context.Context, quote *norm.NormalizedQuote, 
 		RunID: runID,
 		Env:   busConfig.Env,
 	}
-	
+
 	if preview {
 		// Estimate payload size
 		payloadSize := estimateQuoteSize(ampyQuote)
@@ -1401,7 +1403,7 @@ func handleQuoteBusPublishing(ctx context.Context, quote *norm.NormalizedQuote, 
 		}
 		fmt.Printf("Published quote to bus\n")
 	}
-	
+
 	return nil
 }
 
@@ -1411,7 +1413,7 @@ func handleLocalExport(bars *norm.NormalizedBarBatch, symbol string, start, end 
 	if err := os.MkdirAll(outDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %v", err)
 	}
-	
+
 	// Generate filename
 	adjustedStr := "raw"
 	if adjusted {
@@ -1423,14 +1425,14 @@ func handleLocalExport(bars *norm.NormalizedBarBatch, symbol string, start, end 
 		end.Format("20060102"),
 		adjustedStr,
 		outFormat)
-	
+
 	filePath := filepath.Join(outDir, "bars", filename)
-	
+
 	// Create bars subdirectory
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return fmt.Errorf("failed to create bars directory: %v", err)
 	}
-	
+
 	// Write file
 	switch outFormat {
 	case "json":
@@ -1448,16 +1450,16 @@ func handleQuoteLocalExport(quote *norm.NormalizedQuote, ticker, outFormat, outD
 	if err := os.MkdirAll(outDir, 0755); err != nil {
 		return fmt.Errorf("failed to create output directory: %v", err)
 	}
-	
+
 	// Generate filename
 	filename := fmt.Sprintf("%s_snapshot_quote.%s", ticker, outFormat)
 	filePath := filepath.Join(outDir, "quotes", filename)
-	
+
 	// Create quotes subdirectory
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return fmt.Errorf("failed to create quotes directory: %v", err)
 	}
-	
+
 	// Write file
 	switch outFormat {
 	case "json":
@@ -1474,7 +1476,7 @@ func writeJSONFile(filepath string, data interface{}) error {
 		return err
 	}
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(data)
@@ -1535,7 +1537,7 @@ func createScrapeClient(cfg *config.ScrapeConfig) (scrape.Client, error) {
 func runScrapeCheck(ctx context.Context, client scrape.Client, ticker, endpoint, runID string) error {
 	// Build URL for the endpoint
 	url := buildScrapeURL(ticker, endpoint)
-	
+
 	// Fetch the page
 	body, meta, err := client.Fetch(ctx, url)
 	if err != nil {
@@ -1626,7 +1628,7 @@ func runScrapePreviewNews(ctx context.Context, client scrape.Client, ticker, run
 // formatRelativeTime formats a time relative to now for display
 func formatRelativeTime(t, now time.Time) string {
 	diff := now.Sub(t)
-	
+
 	if diff < time.Minute {
 		return "now"
 	} else if diff < time.Hour {
@@ -1663,7 +1665,7 @@ func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, end
 	if ticker == "" {
 		return fmt.Errorf("ticker is required for preview-json mode")
 	}
-	
+
 	if endpoints == "" {
 		return fmt.Errorf("endpoints is required for preview-json mode")
 	}
@@ -1683,21 +1685,21 @@ func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, end
 		}
 
 		fmt.Printf("\n--- %s ---\n", strings.ToUpper(endpoint))
-		
+
 		// Create a timeout context for each endpoint (15 seconds max)
 		endpointCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		
+
 		// Build URL and fetch
 		url := buildScrapeURL(ticker, endpoint)
 		body, meta, err := client.Fetch(endpointCtx, url)
 		cancel() // Always cancel the context
-		
+
 		if err != nil {
 			fmt.Printf("ERROR: Failed to fetch %s: %v\n", url, err)
 			continue
 		}
 
-		fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+		fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n",
 			meta.Host, meta.Status, meta.Bytes, meta.Gzip)
 
 		// Parse based on endpoint type
@@ -1724,7 +1726,7 @@ func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, end
 			// For balance sheet and cash flow, we need to fetch financials page to get currency
 			financialsURL := buildScrapeURL(ticker, "financials")
 			fmt.Printf("FETCHING CURRENCY: %s\n", financialsURL)
-			
+
 			financialsBody, financialsMeta, err := client.Fetch(ctx, financialsURL)
 			if err != nil {
 				fmt.Printf("CURRENCY FETCH ERROR: %v\n", err)
@@ -1735,9 +1737,9 @@ func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, end
 					printComprehensiveFinancialsSummary(dto)
 				}
 			} else {
-				fmt.Printf("CURRENCY FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+				fmt.Printf("CURRENCY FETCHED: host=%s status=%d bytes=%d gzip=%t\n",
 					financialsMeta.Host, financialsMeta.Status, financialsMeta.Bytes, financialsMeta.Gzip)
-				
+
 				// Parse the current endpoint (balance-sheet or cash-flow) with currency from financials
 				if dto, err := scrape.ParseComprehensiveFinancialsWithCurrency(body, financialsBody, ticker, "NMS"); err != nil {
 					fmt.Printf("PARSE ERROR: %v\n", err)
@@ -1768,12 +1770,12 @@ func runScrapePreviewJSON(ctx context.Context, client scrape.Client, ticker, end
 // printAnalysisSummary prints a comprehensive summary of analysis data
 func printAnalysisSummary(dto *scrape.ComprehensiveAnalysisDTO) {
 	fmt.Printf("ANALYSIS SUMMARY: symbol=%s\n", dto.Symbol)
-	
+
 	// Earnings Estimate
 	fmt.Printf("\nEARNINGS ESTIMATE (Currency: %s):\n", dto.EarningsEstimate.Currency)
 	fmt.Printf("                     Current Qtr    Next Qtr    Current Year    Next Year\n")
 	fmt.Printf("No. of Analysts      ")
-	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.NoOfAnalysts, dto.EarningsEstimate.NextQtr.NoOfAnalysts, 
+	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.NoOfAnalysts, dto.EarningsEstimate.NextQtr.NoOfAnalysts,
 		dto.EarningsEstimate.CurrentYear.NoOfAnalysts, dto.EarningsEstimate.NextYear.NoOfAnalysts, "int")
 	fmt.Printf("Avg. Estimate        ")
 	printAnalysisRow(dto.EarningsEstimate.CurrentQtr.AvgEstimate, dto.EarningsEstimate.NextQtr.AvgEstimate,
@@ -1932,12 +1934,12 @@ func printAnalysisCell(value interface{}, dataType string) {
 // printAnalystInsightsSummary prints a comprehensive summary of analyst insights
 func printAnalystInsightsSummary(dto *scrape.AnalystInsightsDTO) {
 	fmt.Printf("ANALYST INSIGHTS: symbol=%s\n", dto.Symbol)
-	
+
 	// Current Price
 	if dto.CurrentPrice != nil {
 		fmt.Printf("Current Price: %.2f\n", *dto.CurrentPrice)
 	}
-	
+
 	// Price Targets
 	fmt.Printf("\nPRICE TARGETS:\n")
 	if dto.TargetMeanPrice != nil {
@@ -1952,7 +1954,7 @@ func printAnalystInsightsSummary(dto *scrape.AnalystInsightsDTO) {
 	if dto.TargetLowPrice != nil {
 		fmt.Printf("  Low Target: %.2f\n", *dto.TargetLowPrice)
 	}
-	
+
 	// Analyst Recommendations
 	fmt.Printf("\nANALYST RECOMMENDATIONS:\n")
 	if dto.NumberOfAnalysts != nil {
@@ -1964,7 +1966,7 @@ func printAnalystInsightsSummary(dto *scrape.AnalystInsightsDTO) {
 	if dto.RecommendationKey != nil {
 		fmt.Printf("  Recommendation: %s\n", *dto.RecommendationKey)
 	}
-	
+
 	// Calculate upside/downside potential
 	if dto.CurrentPrice != nil && dto.TargetMeanPrice != nil {
 		upside := ((*dto.TargetMeanPrice - *dto.CurrentPrice) / *dto.CurrentPrice) * 100
@@ -1981,7 +1983,7 @@ func printAnalystInsightsSummary(dto *scrape.AnalystInsightsDTO) {
 func printKeyStatisticsSummary(dto *scrape.KeyStatisticsDTO) {
 	fmt.Printf("KEY STATISTICS: ok fields={")
 	fields := []string{}
-	
+
 	if dto.MarketCap != nil {
 		fields = append(fields, "market_cap")
 	}
@@ -2000,9 +2002,9 @@ func printKeyStatisticsSummary(dto *scrape.KeyStatisticsDTO) {
 	if dto.Beta != nil {
 		fields = append(fields, "beta")
 	}
-	
+
 	fmt.Printf("%s} currency=%s", strings.Join(fields, ","), dto.Currency)
-	
+
 	// Show some key numeric values (redacted format)
 	if dto.MarketCap != nil {
 		// Calculate the actual value correctly
@@ -2035,24 +2037,24 @@ func printFinancialsSummary(dto *scrape.FinancialsDTO) {
 	for _, line := range dto.Lines {
 		years[line.PeriodEnd.Year()]++
 	}
-	
+
 	yearList := make([]int, 0, len(years))
 	for year := range years {
 		yearList = append(yearList, year)
 	}
 	sort.Ints(yearList)
-	
+
 	// Get currency from first line or default to USD
 	currency := "USD"
 	if len(dto.Lines) > 0 {
 		currency = dto.Lines[0].Currency
 	}
 	fmt.Printf("FINANCIALS: lines=%d currency=%s", len(dto.Lines), currency)
-	
+
 	if len(yearList) > 0 {
 		fmt.Printf(" periods=[%d..%d]", yearList[0], yearList[len(yearList)-1])
 	}
-	
+
 	// Show some key financial metrics (redacted format)
 	var revenue, netIncome *scrape.Scaled
 	for _, line := range dto.Lines {
@@ -2063,7 +2065,7 @@ func printFinancialsSummary(dto *scrape.FinancialsDTO) {
 			netIncome = &line.Value
 		}
 	}
-	
+
 	if revenue != nil {
 		// Calculate the actual value correctly
 		multiplier := float64(1)
@@ -2085,22 +2087,21 @@ func printFinancialsSummary(dto *scrape.FinancialsDTO) {
 	fmt.Printf("\n")
 }
 
-
 // printProfileSummary prints a summary of profile
 func printProfileSummary(dto *scrape.ProfileDTO) {
 	employees := "unknown"
 	if dto.Employees != nil {
 		employees = fmt.Sprintf("~%d", *dto.Employees)
 	}
-	
-	fmt.Printf("PROFILE: officers=%d employees=%s industry=\"%s\" sector=\"%s\"\n", 
+
+	fmt.Printf("PROFILE: officers=%d employees=%s industry=\"%s\" sector=\"%s\"\n",
 		len(dto.Officers), employees, dto.Industry, dto.Sector)
 }
 
 // buildScrapeURL builds the URL for a given ticker and endpoint
 func buildScrapeURL(ticker, endpoint string) string {
 	baseURL := "https://finance.yahoo.com"
-	
+
 	switch endpoint {
 	case "profile":
 		return fmt.Sprintf("%s/quote/%s/profile", baseURL, ticker)
@@ -2138,12 +2139,12 @@ func runComprehensiveStatsExtraction(ctx context.Context, client scrape.Client, 
 	// Build URL for key-statistics endpoint
 	url := buildScrapeURL(ticker, "key-statistics")
 	body, meta, err := client.Fetch(extractionCtx, url)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to fetch %s: %w", url, err)
 	}
 
-	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n",
 		meta.Host, meta.Status, meta.Bytes, meta.Gzip)
 
 	// Parse comprehensive statistics
@@ -2161,7 +2162,7 @@ func runComprehensiveStatsExtraction(ctx context.Context, client scrape.Client, 
 // printComprehensiveStatisticsSummary prints a summary of comprehensive statistics
 func printComprehensiveStatisticsSummary(dto *scrape.ComprehensiveKeyStatisticsDTO) {
 	fmt.Printf("COMPREHENSIVE STATISTICS: symbol=%s currency=%s\n", dto.Symbol, dto.Currency)
-	
+
 	// Current values
 	fmt.Printf("CURRENT VALUES:\n")
 	if dto.Current.MarketCap != nil {
@@ -2282,7 +2283,7 @@ func printComprehensiveStatisticsSummary(dto *scrape.ComprehensiveKeyStatisticsD
 		actualValue := float64(dto.Additional.ReturnOnEquity.Scaled) / multiplier
 		fmt.Printf("  Return on Equity: %.2f%%\n", actualValue)
 	}
-	
+
 	// Historical values
 	if len(dto.Historical) > 0 {
 		fmt.Printf("HISTORICAL VALUES:\n")
@@ -2348,7 +2349,7 @@ func runComprehensiveProfile(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 	disableTracing, _ := cmd.Flags().GetBool("observability-disable-tracing")
 	disableMetrics, _ := cmd.Flags().GetBool("observability-disable-metrics")
-	
+
 	obsvConfig := &obsv.Config{
 		ServiceName:       "yfinance-go",
 		ServiceVersion:    version,
@@ -2361,9 +2362,9 @@ func runComprehensiveProfile(cmd *cobra.Command, args []string) error {
 		MetricsEnabled:    cfg.Observability.Metrics.Prometheus.Enabled && !disableMetrics,
 		TracingEnabled:    cfg.Observability.Tracing.OTLP.Enabled && !disableTracing,
 	}
-	
-	if err := obsv.Init(ctx, obsvConfig); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", err)
+
+	if obsvErr := obsv.Init(ctx, obsvConfig); obsvErr != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: Failed to initialize observability: %v\n", obsvErr)
 		os.Exit(ExitConfigError)
 	}
 	defer func() { _ = obsv.Shutdown(ctx) }()
@@ -2394,12 +2395,12 @@ func runComprehensiveProfileExtraction(ctx context.Context, client scrape.Client
 	// Build URL for profile endpoint
 	url := buildScrapeURL(ticker, "profile")
 	body, meta, err := client.Fetch(extractionCtx, url)
-	
+
 	if err != nil {
 		return fmt.Errorf("failed to fetch %s: %w", url, err)
 	}
 
-	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n", 
+	fmt.Printf("FETCHED: host=%s status=%d bytes=%d gzip=%t\n",
 		meta.Host, meta.Status, meta.Bytes, meta.Gzip)
 
 	// Parse comprehensive profile
@@ -2417,7 +2418,7 @@ func runComprehensiveProfileExtraction(ctx context.Context, client scrape.Client
 // printComprehensiveProfileSummary prints a summary of comprehensive profile
 func printComprehensiveProfileSummary(dto *scrape.ComprehensiveProfileDTO) {
 	fmt.Printf("COMPREHENSIVE PROFILE: symbol=%s\n", dto.Symbol)
-	
+
 	// Company Information
 	fmt.Printf("COMPANY INFORMATION:\n")
 	if dto.CompanyName != "" {
@@ -2508,7 +2509,7 @@ func printComprehensiveProfileSummary(dto *scrape.ComprehensiveProfileDTO) {
 // printComprehensiveFinancialsSummary prints a summary of comprehensive financials
 func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO) {
 	fmt.Printf("COMPREHENSIVE FINANCIALS: symbol=%s currency=%s\n", dto.Symbol, dto.Currency)
-	
+
 	// Current values
 	fmt.Printf("CURRENT VALUES:\n")
 	if dto.Current.TotalRevenue != nil {
@@ -2605,7 +2606,7 @@ func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO)
 		actualValue := float64(dto.Current.NormalizedEBITDA.Scaled) / multiplier
 		fmt.Printf("  Normalized EBITDA: %.0f\n", actualValue)
 	}
-	
+
 	// Balance Sheet values
 	fmt.Printf("\nBALANCE SHEET:\n")
 	if dto.Current.TotalAssets != nil {
@@ -2683,7 +2684,7 @@ func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO)
 	if dto.Current.ShareIssued != nil {
 		fmt.Printf("  Share Issued: %d\n", *dto.Current.ShareIssued)
 	}
-	
+
 	// Cash Flow values
 	fmt.Printf("\nCASH FLOW:\n")
 	if dto.Current.OperatingCashFlow != nil {
@@ -2758,7 +2759,7 @@ func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO)
 		actualValue := float64(dto.Current.FreeCashFlow.Scaled) / multiplier
 		fmt.Printf("  Free Cash Flow: %.0f\n", actualValue)
 	}
-	
+
 	// Historical values
 	fmt.Printf("HISTORICAL VALUES:\n")
 	if dto.Historical.Q2_2025.TotalRevenue != nil {
@@ -2785,29 +2786,51 @@ func printComprehensiveFinancialsSummary(dto *scrape.ComprehensiveFinancialsDTO)
 		actualValue := float64(dto.Historical.Q4_2024.TotalRevenue.Scaled) / multiplier
 		fmt.Printf("  Q4 2024 Revenue: %.0f\n", actualValue)
 	}
-	
+
 	fmt.Printf("EXTRACTED: %d fields\n", countFinancialsFields(dto))
 }
 
 // countFinancialsFields counts the number of extracted fields in financials data
 func countFinancialsFields(dto *scrape.ComprehensiveFinancialsDTO) int {
 	count := 0
-	
+
 	// Count current fields
-	if dto.Current.TotalRevenue != nil { count++ }
-	if dto.Current.CostOfRevenue != nil { count++ }
-	if dto.Current.GrossProfit != nil { count++ }
-	if dto.Current.OperatingIncome != nil { count++ }
-	if dto.Current.NetIncomeCommonStockholders != nil { count++ }
-	if dto.Current.BasicEPS != nil { count++ }
-	if dto.Current.DilutedEPS != nil { count++ }
-	if dto.Current.EBITDA != nil { count++ }
-	
+	if dto.Current.TotalRevenue != nil {
+		count++
+	}
+	if dto.Current.CostOfRevenue != nil {
+		count++
+	}
+	if dto.Current.GrossProfit != nil {
+		count++
+	}
+	if dto.Current.OperatingIncome != nil {
+		count++
+	}
+	if dto.Current.NetIncomeCommonStockholders != nil {
+		count++
+	}
+	if dto.Current.BasicEPS != nil {
+		count++
+	}
+	if dto.Current.DilutedEPS != nil {
+		count++
+	}
+	if dto.Current.EBITDA != nil {
+		count++
+	}
+
 	// Count historical fields
-	if dto.Historical.Q2_2025.TotalRevenue != nil { count++ }
-	if dto.Historical.Q1_2025.TotalRevenue != nil { count++ }
-	if dto.Historical.Q4_2024.TotalRevenue != nil { count++ }
-	
+	if dto.Historical.Q2_2025.TotalRevenue != nil {
+		count++
+	}
+	if dto.Historical.Q1_2025.TotalRevenue != nil {
+		count++
+	}
+	if dto.Historical.Q4_2024.TotalRevenue != nil {
+		count++
+	}
+
 	return count
 }
 
@@ -2816,7 +2839,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 	if ticker == "" {
 		return fmt.Errorf("ticker is required for preview-proto mode")
 	}
-	
+
 	if endpoints == "" {
 		return fmt.Errorf("endpoints is required for preview-proto mode")
 	}
@@ -2836,7 +2859,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 		Source:   "yfinance-go/scrape",
 		TraceID:  "", // Could be extracted from context if available
 	}
-	
+
 	// mapper := emit.NewScrapeMapper(mapperConfig) // Not used in this function
 
 	// Process each endpoint
@@ -2846,21 +2869,21 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 		}
 
 		fmt.Printf("\n--- %s ---\n", strings.ToUpper(endpoint))
-		
+
 		// Create a timeout context for each endpoint (15 seconds max)
 		endpointCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		
+
 		// Build URL and fetch
 		url := buildScrapeURL(ticker, endpoint)
 		body, meta, err := client.Fetch(endpointCtx, url)
 		cancel() // Always cancel the context
-		
+
 		if err != nil {
 			fmt.Printf("ERROR: Failed to fetch %s: %v\n", url, err)
 			continue
 		}
 
-		fmt.Printf("FETCH META: host=%s status=%d bytes=%d gzip=%t redirects=%d latency=%dms\n", 
+		fmt.Printf("FETCH META: host=%s status=%d bytes=%d gzip=%t redirects=%d latency=%dms\n",
 			meta.Host, meta.Status, meta.Bytes, meta.Gzip, meta.Redirects, meta.Duration.Milliseconds())
 
 		// Parse and map based on endpoint type
@@ -2878,7 +2901,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					}
 				}
 			}
-		
+
 		case "profile":
 			if dto, err := scrape.ParseComprehensiveProfile(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2889,7 +2912,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					printProfileResult(result)
 				}
 			}
-		
+
 		case "news":
 			if articles, stats, err := scrape.ParseNews(body, "https://finance.yahoo.com", time.Now()); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2900,7 +2923,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					printNewsArticles(protoArticles, stats)
 				}
 			}
-		
+
 		case "balance-sheet":
 			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2914,7 +2937,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					}
 				}
 			}
-		
+
 		case "cash-flow":
 			if dto, err := scrape.ParseComprehensiveFinancials(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2928,7 +2951,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					}
 				}
 			}
-		
+
 		case "key-statistics":
 			if dto, err := scrape.ParseComprehensiveKeyStatistics(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2939,7 +2962,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					printFundamentalsSnapshot(snapshot)
 				}
 			}
-		
+
 		case "analysis":
 			if dto, err := scrape.ParseAnalysis(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2950,7 +2973,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					printFundamentalsSnapshot(snapshot)
 				}
 			}
-		
+
 		case "analyst-insights":
 			if dto, err := scrape.ParseAnalystInsights(body, ticker, "XNAS"); err != nil {
 				fmt.Printf("PARSE ERROR: %v\n", err)
@@ -2961,7 +2984,7 @@ func runScrapePreviewProto(ctx context.Context, client scrape.Client, ticker, en
 					printFundamentalsSnapshot(snapshot)
 				}
 			}
-		
+
 		default:
 			fmt.Printf("PROTO MAPPING: endpoint '%s' not yet supported for proto emission\n", endpoint)
 			fmt.Printf("Supported endpoints: financials, balance-sheet, cash-flow, key-statistics, analysis, analyst-insights, profile, news\n")
@@ -3031,31 +3054,31 @@ func convertToFinancialsDTO(comprehensive *scrape.ComprehensiveFinancialsDTO) *s
 
 // printFundamentalsSnapshot prints a summary of fundamentals snapshot
 func printFundamentalsSnapshot(snapshot *fundamentalsv1.FundamentalsSnapshot) {
-	fmt.Printf("%s fundamentals: lines=%d currency=%s source=%s ok\n", 
-		snapshot.Security.Symbol, 
+	fmt.Printf("%s fundamentals: lines=%d currency=%s source=%s ok\n",
+		snapshot.Security.Symbol,
 		len(snapshot.Lines),
 		getCurrencyFromLines(snapshot.Lines),
 		snapshot.Source)
-	
+
 	if len(snapshot.Lines) > 0 {
 		earliest, latest := getTimeBounds(snapshot.Lines)
-		fmt.Printf("Period range: %s to %s\n", 
-			earliest.Format("2006-01-02"), 
+		fmt.Printf("Period range: %s to %s\n",
+			earliest.Format("2006-01-02"),
 			latest.Format("2006-01-02"))
 	}
-	
+
 	fmt.Printf("Schema version: %s\n", snapshot.Meta.SchemaVersion)
 	fmt.Printf("Run ID: %s\n", snapshot.Meta.RunId)
 }
 
 // printProfileResult prints a summary of profile mapping result
 func printProfileResult(result *emit.ProfileMappingResult) {
-	fmt.Printf("%s profile: content_type=%s bytes=%d schema=%s\n", 
-		result.Security.Symbol, 
+	fmt.Printf("%s profile: content_type=%s bytes=%d schema=%s\n",
+		result.Security.Symbol,
 		result.ContentType,
 		len(result.JSONBytes),
 		result.SchemaFQDN)
-	
+
 	fmt.Printf("Schema version: %s\n", result.Meta.SchemaVersion)
 	fmt.Printf("Run ID: %s\n", result.Meta.RunId)
 }
@@ -3068,22 +3091,22 @@ func printNewsArticles(articles []*newsv1.NewsItem, stats *scrape.NewsStats) {
 	}
 
 	summary := emit.CreateNewsSummary(articles)
-	
-	fmt.Printf("News articles: total=%d unique_sources=%d has_images=%d\n", 
+
+	fmt.Printf("News articles: total=%d unique_sources=%d has_images=%d\n",
 		summary.TotalArticles,
 		summary.UniqueSources,
 		summary.HasImages)
-	
+
 	if summary.EarliestTime != nil && summary.LatestTime != nil {
-		fmt.Printf("Time range: %s to %s\n", 
+		fmt.Printf("Time range: %s to %s\n",
 			summary.EarliestTime.Format("2006-01-02T15:04:05Z"),
 			summary.LatestTime.Format("2006-01-02T15:04:05Z"))
 	}
-	
+
 	if len(summary.TopSources) > 0 {
 		fmt.Printf("Top sources: %s\n", strings.Join(summary.TopSources, ", "))
 	}
-	
+
 	if len(summary.RelatedTickers) > 0 {
 		fmt.Printf("Related tickers: %s\n", strings.Join(summary.RelatedTickers, ", "))
 	}
@@ -3091,7 +3114,7 @@ func printNewsArticles(articles []*newsv1.NewsItem, stats *scrape.NewsStats) {
 	if len(articles) > 0 {
 		fmt.Printf("Schema version: %s\n", articles[0].Meta.SchemaVersion)
 		fmt.Printf("Run ID: %s\n", articles[0].Meta.RunId)
-		
+
 		// Print actual ampy-proto messages
 		fmt.Printf("\n--- AMPY-PROTO NEWS MESSAGES ---\n")
 		for i, article := range articles {
@@ -3099,14 +3122,14 @@ func printNewsArticles(articles []*newsv1.NewsItem, stats *scrape.NewsStats) {
 				fmt.Printf("... and %d more articles\n", len(articles)-3)
 				break
 			}
-			
+
 			// Convert to JSON for display
 			jsonData, err := json.MarshalIndent(article, "", "  ")
 			if err != nil {
 				fmt.Printf("Error marshaling article %d: %v\n", i+1, err)
 				continue
 			}
-			
+
 			fmt.Printf("\nArticle %d:\n%s\n", i+1, string(jsonData))
 		}
 	}
@@ -3128,10 +3151,10 @@ func getTimeBounds(lines []*fundamentalsv1.LineItem) (time.Time, time.Time) {
 		now := time.Now()
 		return now, now
 	}
-	
+
 	earliest := lines[0].PeriodStart.AsTime()
 	latest := lines[0].PeriodEnd.AsTime()
-	
+
 	for _, line := range lines {
 		if line.PeriodStart.AsTime().Before(earliest) {
 			earliest = line.PeriodStart.AsTime()
@@ -3140,21 +3163,21 @@ func getTimeBounds(lines []*fundamentalsv1.LineItem) (time.Time, time.Time) {
 			latest = line.PeriodEnd.AsTime()
 		}
 	}
-	
+
 	return earliest, latest
 }
 
 // runSoak executes the soak test command
 func runSoak(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
-	
+
 	// Load configuration
 	loader := config.NewLoader(globalConfig.ConfigFile)
 	cfg, err := loader.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	
+
 	// Initialize soak test orchestrator
 	orchestrator, err := soak.NewOrchestrator(cfg, &soak.SoakConfig{
 		UniverseFile:  soakConfig.UniverseFile,
@@ -3175,12 +3198,12 @@ func runSoak(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create soak orchestrator: %w", err)
 	}
 	defer orchestrator.Close()
-	
+
 	// Run soak test
 	if err := orchestrator.Run(ctx); err != nil {
 		return fmt.Errorf("soak test failed: %w", err)
 	}
-	
+
 	return nil
 }
 

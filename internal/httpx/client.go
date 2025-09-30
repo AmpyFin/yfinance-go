@@ -15,73 +15,73 @@ import (
 
 // Config holds HTTP client configuration
 type Config struct {
-	BaseURL            string
-	Timeout            time.Duration
-	IdleTimeout        time.Duration
-	MaxConnsPerHost    int
-	MaxAttempts        int
-	BackoffBaseMs      int
-	BackoffJitterMs    int
-	MaxDelayMs         int
-	QPS                float64
-	Burst              int
-	CircuitWindow      time.Duration
-	FailureThreshold   int
-	ResetTimeout       time.Duration
-	UserAgent          string
+	BaseURL               string
+	Timeout               time.Duration
+	IdleTimeout           time.Duration
+	MaxConnsPerHost       int
+	MaxAttempts           int
+	BackoffBaseMs         int
+	BackoffJitterMs       int
+	MaxDelayMs            int
+	QPS                   float64
+	Burst                 int
+	CircuitWindow         time.Duration
+	FailureThreshold      int
+	ResetTimeout          time.Duration
+	UserAgent             string
 	EnableSessionRotation bool
-	NumSessions        int
+	NumSessions           int
 }
 
 // DefaultConfig returns a sensible default configuration
 func DefaultConfig() *Config {
 	return &Config{
-		BaseURL:            "https://query1.finance.yahoo.com",
-		Timeout:            30 * time.Second,
-		IdleTimeout:        90 * time.Second,
-		MaxConnsPerHost:    10,
-		MaxAttempts:        3, // Reduced to avoid overwhelming the API
-		BackoffBaseMs:      200, // Increased base delay
-		BackoffJitterMs:    100, // Increased jitter
-		MaxDelayMs:         10000, // Increased max delay
-		QPS:                1.0, // Reduced QPS to be more conservative
-		Burst:              3, // Reduced burst size
-		CircuitWindow:      60 * time.Second,
-		FailureThreshold:   3, // Reduced failure threshold
-		ResetTimeout:       30 * time.Second,
-		UserAgent:          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		BaseURL:               "https://query1.finance.yahoo.com",
+		Timeout:               30 * time.Second,
+		IdleTimeout:           90 * time.Second,
+		MaxConnsPerHost:       10,
+		MaxAttempts:           3,     // Reduced to avoid overwhelming the API
+		BackoffBaseMs:         200,   // Increased base delay
+		BackoffJitterMs:       100,   // Increased jitter
+		MaxDelayMs:            10000, // Increased max delay
+		QPS:                   1.0,   // Reduced QPS to be more conservative
+		Burst:                 3,     // Reduced burst size
+		CircuitWindow:         60 * time.Second,
+		FailureThreshold:      3, // Reduced failure threshold
+		ResetTimeout:          30 * time.Second,
+		UserAgent:             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 		EnableSessionRotation: false, // Disabled by default
-		NumSessions:        5, // Default number of sessions
+		NumSessions:           5,     // Default number of sessions
 	}
 }
 
 // SessionRotationConfig returns a configuration optimized for session rotation
 func SessionRotationConfig() *Config {
 	return &Config{
-		BaseURL:            "https://query1.finance.yahoo.com",
-		Timeout:            30 * time.Second,
-		IdleTimeout:        90 * time.Second,
-		MaxConnsPerHost:    10,
-		MaxAttempts:        2, // Reduced since we have multiple sessions
-		BackoffBaseMs:      100, // Reduced since sessions distribute load
-		BackoffJitterMs:    50, // Reduced jitter
-		MaxDelayMs:         5000, // Reduced max delay
-		QPS:                5.0, // Increased QPS since we have session rotation
-		Burst:              10, // Increased burst size
-		CircuitWindow:      60 * time.Second,
-		FailureThreshold:   5, // Increased failure threshold
-		ResetTimeout:       30 * time.Second,
-		UserAgent:          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		BaseURL:               "https://query1.finance.yahoo.com",
+		Timeout:               30 * time.Second,
+		IdleTimeout:           90 * time.Second,
+		MaxConnsPerHost:       10,
+		MaxAttempts:           2,    // Reduced since we have multiple sessions
+		BackoffBaseMs:         100,  // Reduced since sessions distribute load
+		BackoffJitterMs:       50,   // Reduced jitter
+		MaxDelayMs:            5000, // Reduced max delay
+		QPS:                   5.0,  // Increased QPS since we have session rotation
+		Burst:                 10,   // Increased burst size
+		CircuitWindow:         60 * time.Second,
+		FailureThreshold:      5, // Increased failure threshold
+		ResetTimeout:          30 * time.Second,
+		UserAgent:             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 		EnableSessionRotation: true, // Enable session rotation
-		NumSessions:        7, // Use 7 sessions for good distribution
+		NumSessions:           7,    // Use 7 sessions for good distribution
 	}
 }
 
 // Client provides a robust HTTP client with retry, backoff, rate limiting, circuit breaker, and session rotation
 type Client struct {
-	config        *Config
-	httpClient    *http.Client
-	rateLimiter   *RateLimiter
+	config         *Config
+	httpClient     *http.Client
+	rateLimiter    *RateLimiter
 	circuitBreaker *CircuitBreaker
 	sessionManager *SessionManager
 }
@@ -104,17 +104,17 @@ func NewClient(config *Config) *Client {
 	httpClient := &http.Client{
 		Timeout: config.Timeout,
 		Transport: &http.Transport{
-			IdleConnTimeout:     config.IdleTimeout,
-			MaxConnsPerHost:     config.MaxConnsPerHost,
-			DisableCompression:  false,
-			DisableKeepAlives:   false,
+			IdleConnTimeout:    config.IdleTimeout,
+			MaxConnsPerHost:    config.MaxConnsPerHost,
+			DisableCompression: false,
+			DisableKeepAlives:  false,
 		},
 	}
 
 	return &Client{
-		config:        config,
-		httpClient:    httpClient,
-		rateLimiter:   NewRateLimiter(int(config.QPS), config.Burst),
+		config:         config,
+		httpClient:     httpClient,
+		rateLimiter:    NewRateLimiter(int(config.QPS), config.Burst),
 		circuitBreaker: NewCircuitBreaker(config.CircuitWindow, config.FailureThreshold, config.ResetTimeout),
 		sessionManager: sessionManager,
 	}
@@ -127,7 +127,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 
 	// Extract endpoint from URL path for observability
 	endpoint := extractEndpoint(req.URL.Path)
-	
+
 	// Start fetch span
 	ctx, span := obsv.StartIngestFetchSpan(ctx, endpoint, "", "", req.URL.String(), 0)
 	defer span.End()
@@ -148,25 +148,25 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 
 	var lastErr error
 	startTime := time.Now()
-	
+
 	for attempt := 0; attempt < c.config.MaxAttempts; attempt++ {
 		// Get session for this attempt if session rotation is enabled
 		var clientToUse *http.Client = c.httpClient
 		if c.sessionManager != nil {
 			clientToUse = c.sessionManager.GetNextSession()
 		}
-		
+
 		// Execute request with the selected client (either default or rotated session)
 		resp, err := clientToUse.Do(req.WithContext(ctx))
 		if err != nil {
 			lastErr = err
 			c.circuitBreaker.RecordFailure()
-			
+
 			// Record retry
 			if attempt > 0 {
 				obsv.RecordRetry(endpoint, "network_error")
 			}
-			
+
 			if !c.shouldRetry(err, attempt) {
 				obsv.RecordRequest(endpoint, "error", "network_error")
 				obsv.RecordRequestLatency(endpoint, time.Since(startTime))
@@ -179,12 +179,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 				resp.Body.Close()
 				lastErr = fmt.Errorf("HTTP %d", resp.StatusCode)
 				c.circuitBreaker.RecordFailure()
-				
+
 				// Record retry
 				if attempt > 0 {
 					obsv.RecordRetry(endpoint, fmt.Sprintf("http_%d", resp.StatusCode))
 				}
-				
+
 				// Don't return here, continue to backoff and retry
 			} else {
 				// Check if this is actually a success or a failure we can't retry
@@ -199,13 +199,13 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 					// Failure that we can't retry (e.g., 400, 404, etc.)
 					resp.Body.Close()
 					lastErr = fmt.Errorf("HTTP %d", resp.StatusCode)
-					
+
 					// Don't count 401 errors as circuit breaker failures
 					// 401 errors are expected for paid endpoints like fundamentals
 					if resp.StatusCode != 401 {
 						c.circuitBreaker.RecordFailure()
 					}
-					
+
 					obsv.RecordRequest(endpoint, "error", fmt.Sprintf("%d", resp.StatusCode))
 					obsv.RecordRequestLatency(endpoint, time.Since(startTime))
 					obsv.RecordSpanError(span, lastErr)
@@ -216,15 +216,15 @@ func (c *Client) Do(ctx context.Context, req *http.Request) (*http.Response, err
 
 		// Calculate backoff delay
 		delay := c.calculateBackoff(attempt)
-		
+
 		// Record backoff
 		obsv.RecordBackoff(endpoint, "retry")
 		obsv.RecordBackoffSleep(endpoint, delay)
-		
+
 		// Wait with context cancellation support
 		select {
 		case <-ctx.Done():
-			obsv.RecordRequest(endpoint, "error", "context_cancelled")
+			obsv.RecordRequest(endpoint, "error", "context_canceled")
 			obsv.RecordSpanError(span, ctx.Err())
 			return nil, ctx.Err()
 		case <-time.After(delay):
@@ -285,21 +285,21 @@ func (c *Client) calculateBackoff(attempt int) time.Duration {
 	// Exponential backoff: base * 2^attempt
 	baseDelay := time.Duration(c.config.BackoffBaseMs) * time.Millisecond
 	exponentialDelay := baseDelay * time.Duration(math.Pow(2, float64(attempt)))
-	
+
 	// Add jitter
 	var jitter time.Duration
 	if c.config.BackoffJitterMs > 0 {
 		jitter = time.Duration(rand.Intn(c.config.BackoffJitterMs)) * time.Millisecond
 	}
-	
+
 	// Cap at max delay
 	totalDelay := exponentialDelay + jitter
 	maxDelay := time.Duration(c.config.MaxDelayMs) * time.Millisecond
-	
+
 	if totalDelay > maxDelay {
 		totalDelay = maxDelay
 	}
-	
+
 	return totalDelay
 }
 
@@ -325,31 +325,31 @@ func NewRateLimiter(qps, burst int) *RateLimiter {
 // Wait blocks until a token is available
 func (r *RateLimiter) Wait(ctx context.Context) error {
 	r.mu.Lock()
-	
+
 	now := time.Now()
 	elapsed := now.Sub(r.lastTime)
-	
+
 	// Add tokens based on elapsed time
 	r.tokens += r.rate * elapsed.Seconds()
 	if r.tokens > r.capacity {
 		r.tokens = r.capacity
 	}
-	
+
 	r.lastTime = now
-	
+
 	// Check if we have a token available
 	if r.tokens >= 1.0 {
 		r.tokens -= 1.0
 		r.mu.Unlock()
 		return nil
 	}
-	
+
 	// Calculate wait time needed to get a token
-	waitTime := time.Duration((1.0-r.tokens)/r.rate * float64(time.Second))
-	
+	waitTime := time.Duration((1.0 - r.tokens) / r.rate * float64(time.Second))
+
 	// Release the lock before waiting
 	r.mu.Unlock()
-	
+
 	// Wait with context cancellation
 	select {
 	case <-ctx.Done():
@@ -365,14 +365,14 @@ func (r *RateLimiter) Wait(ctx context.Context) error {
 
 // CircuitBreaker implements a circuit breaker pattern
 type CircuitBreaker struct {
-	window         time.Duration
+	window           time.Duration
 	failureThreshold int
-	resetTimeout   time.Duration
-	
-	state          CircuitState
-	failures       int
-	lastFailure    time.Time
-	mu             sync.RWMutex
+	resetTimeout     time.Duration
+
+	state       CircuitState
+	failures    int
+	lastFailure time.Time
+	mu          sync.RWMutex
 }
 
 // CircuitState represents the state of the circuit breaker
@@ -400,7 +400,7 @@ func (cb *CircuitBreaker) Allow() bool {
 	defer cb.mu.RUnlock()
 
 	now := time.Now()
-	
+
 	switch cb.state {
 	case StateClosed:
 		return true
@@ -442,7 +442,7 @@ func (cb *CircuitBreaker) RecordFailure() {
 
 	cb.failures++
 	cb.lastFailure = time.Now()
-	
+
 	if cb.failures >= cb.failureThreshold {
 		cb.state = StateOpen
 	}
@@ -469,7 +469,7 @@ func (c *Client) GetSessionStats() map[string]interface{} {
 			"session_rotation_enabled": false,
 		}
 	}
-	
+
 	stats := c.sessionManager.GetSessionStats()
 	stats["session_rotation_enabled"] = true
 	return stats

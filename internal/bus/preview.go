@@ -6,24 +6,24 @@ import (
 
 // PreviewPublisher provides preview functionality without actually publishing
 type PreviewPublisher struct {
-	config       *Config
-	topicBuilder *TopicBuilder
+	config          *Config
+	topicBuilder    *TopicBuilder
 	envelopeBuilder *EnvelopeBuilder
-	chunking     *ChunkingStrategy
+	chunking        *ChunkingStrategy
 }
 
 // NewPreviewPublisher creates a new preview publisher
 func NewPreviewPublisher(config *Config) *PreviewPublisher {
 	// Create topic builder
 	topicBuilder := NewTopicBuilder(config.Env, config.TopicPrefix)
-	
+
 	// Create envelope builder
 	producer := fmt.Sprintf("yfinance-go@%s", getHostname())
 	envelopeBuilder := NewEnvelopeBuilder(producer, "yfinance-go")
-	
+
 	// Create chunking strategy
 	chunking := NewChunkingStrategy(config.MaxPayloadBytes)
-	
+
 	return &PreviewPublisher{
 		config:          config,
 		topicBuilder:    topicBuilder,
@@ -36,7 +36,7 @@ func NewPreviewPublisher(config *Config) *PreviewPublisher {
 func (p *PreviewPublisher) PreviewBars(batch *BarBatchMessage, payloadSize int) (*PreviewSummary, error) {
 	// Build topic
 	topic := p.topicBuilder.BuildBarsTopic(batch.Key, "v1")
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.bars.v1.BarBatch",
@@ -46,10 +46,10 @@ func (p *PreviewPublisher) PreviewBars(batch *BarBatchMessage, payloadSize int) 
 		"", // traceID
 		nil,
 	)
-	
+
 	// Get chunking info
 	chunkingInfo := p.chunking.GetChunkingInfo(payloadSize)
-	
+
 	return &PreviewSummary{
 		Topic:        topic,
 		Envelope:     envelope,
@@ -65,7 +65,7 @@ func (p *PreviewPublisher) PreviewBars(batch *BarBatchMessage, payloadSize int) 
 func (p *PreviewPublisher) PreviewQuote(quote *QuoteMessage, payloadSize int) (*PreviewSummary, error) {
 	// Build topic
 	topic := p.topicBuilder.BuildQuotesTopic(quote.Key, "v1")
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.ticks.v1.QuoteTick",
@@ -75,10 +75,10 @@ func (p *PreviewPublisher) PreviewQuote(quote *QuoteMessage, payloadSize int) (*
 		"", // traceID
 		nil,
 	)
-	
+
 	// Get chunking info
 	chunkingInfo := p.chunking.GetChunkingInfo(payloadSize)
-	
+
 	return &PreviewSummary{
 		Topic:        topic,
 		Envelope:     envelope,
@@ -94,7 +94,7 @@ func (p *PreviewPublisher) PreviewQuote(quote *QuoteMessage, payloadSize int) (*
 func (p *PreviewPublisher) PreviewFundamentals(fundamentals *FundamentalsMessage, payloadSize int) (*PreviewSummary, error) {
 	// Build topic
 	topic := p.topicBuilder.BuildFundamentalsTopic(fundamentals.Key, "v1")
-	
+
 	// Build envelope
 	envelope := p.envelopeBuilder.BuildEnvelope(
 		"ampy.fundamentals.v1.FundamentalsSnapshot",
@@ -104,10 +104,10 @@ func (p *PreviewPublisher) PreviewFundamentals(fundamentals *FundamentalsMessage
 		"", // traceID
 		nil,
 	)
-	
+
 	// Get chunking info
 	chunkingInfo := p.chunking.GetChunkingInfo(payloadSize)
-	
+
 	return &PreviewSummary{
 		Topic:        topic,
 		Envelope:     envelope,
@@ -129,7 +129,7 @@ func PrintPreview(summary *PreviewSummary) {
 		summary.Envelope.SchemaVersion,
 		summary.Envelope.RunID)
 	fmt.Printf("PartitionKey: %s\n", summary.PartitionKey)
-	
+
 	if summary.Chunking.ChunkCount > 1 {
 		fmt.Printf("Chunking: %d messages (max_payload=%.1f MiB)\n",
 			summary.Chunking.ChunkCount,
@@ -137,7 +137,7 @@ func PrintPreview(summary *PreviewSummary) {
 	} else {
 		fmt.Printf("Payload: %d bytes (single message)\n", summary.PayloadBytes)
 	}
-	
+
 	fmt.Printf("Span: %s  p95=420ms\n", summary.Span)
 }
 

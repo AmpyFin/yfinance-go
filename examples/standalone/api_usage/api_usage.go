@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error fetching financials: %v", err)
 	} else {
-		fmt.Printf("✅ Financials: %d line items, source: %s\n", 
+		fmt.Printf("✅ Financials: %d line items, source: %s\n",
 			len(financials.Lines), financials.Source)
 	}
 
@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error fetching key statistics: %v", err)
 	} else {
-		fmt.Printf("✅ Key Statistics: %d line items, source: %s\n", 
+		fmt.Printf("✅ Key Statistics: %d line items, source: %s\n",
 			len(keyStats.Lines), keyStats.Source)
 	}
 
@@ -45,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Printf("Error fetching analysis: %v", err)
 	} else {
-		fmt.Printf("✅ Analysis: %d line items, source: %s\n", 
+		fmt.Printf("✅ Analysis: %d line items, source: %s\n",
 			len(analysis.Lines), analysis.Source)
 	}
 
@@ -66,7 +66,7 @@ func main() {
 	} else {
 		fmt.Printf("✅ All Fundamentals: %d snapshots\n", len(allFundamentals))
 		for i, snapshot := range allFundamentals {
-			fmt.Printf("   %d. %s (%d line items)\n", 
+			fmt.Printf("   %d. %s (%d line items)\n",
 				i+1, snapshot.Source, len(snapshot.Lines))
 		}
 	}

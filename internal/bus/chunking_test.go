@@ -9,7 +9,7 @@ import (
 
 func TestChunkingStrategy_ChunkPayload(t *testing.T) {
 	strategy := NewChunkingStrategy(1000) // 1KB max
-	
+
 	tests := []struct {
 		name           string
 		payload        []byte
@@ -36,16 +36,16 @@ func TestChunkingStrategy_ChunkPayload(t *testing.T) {
 			expectedChunks: 3,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := strategy.ChunkPayload(tt.payload)
 			require.NoError(t, err)
 			require.NotNil(t, result)
-			
+
 			assert.Equal(t, tt.expectedChunks, len(result.Chunks))
 			assert.Equal(t, tt.expectedChunks, len(result.ChunkInfo))
-			
+
 			// Verify chunk sizes
 			for i, chunk := range result.Chunks {
 				assert.LessOrEqual(t, int64(len(chunk)), strategy.MaxPayloadBytes)
@@ -59,7 +59,7 @@ func TestChunkingStrategy_ChunkPayload(t *testing.T) {
 
 func TestChunkingStrategy_EstimateChunkCount(t *testing.T) {
 	strategy := NewChunkingStrategy(1000) // 1KB max
-	
+
 	tests := []struct {
 		name           string
 		payloadSize    int
@@ -86,7 +86,7 @@ func TestChunkingStrategy_EstimateChunkCount(t *testing.T) {
 			expectedChunks: 3,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			chunkCount := strategy.EstimateChunkCount(tt.payloadSize)
@@ -97,7 +97,7 @@ func TestChunkingStrategy_EstimateChunkCount(t *testing.T) {
 
 func TestChunkingStrategy_ValidateChunkSize(t *testing.T) {
 	strategy := NewChunkingStrategy(1000) // 1KB max
-	
+
 	tests := []struct {
 		name      string
 		chunk     []byte
@@ -119,7 +119,7 @@ func TestChunkingStrategy_ValidateChunkSize(t *testing.T) {
 			wantError: true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := strategy.ValidateChunkSize(tt.chunk)
@@ -134,7 +134,7 @@ func TestChunkingStrategy_ValidateChunkSize(t *testing.T) {
 
 func TestChunkingStrategy_GetChunkingInfo(t *testing.T) {
 	strategy := NewChunkingStrategy(1000) // 1KB max
-	
+
 	tests := []struct {
 		name           string
 		payloadSize    int
@@ -151,15 +151,15 @@ func TestChunkingStrategy_GetChunkingInfo(t *testing.T) {
 			expectedChunks: 3,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			info := strategy.GetChunkingInfo(tt.payloadSize)
-			
+
 			assert.Equal(t, tt.expectedChunks, info.ChunkCount)
 			assert.Equal(t, strategy.MaxPayloadBytes, info.MaxPayload)
 			assert.Equal(t, tt.expectedChunks, len(info.ChunkSizes))
-			
+
 			// Verify chunk sizes sum to payload size
 			totalSize := 0
 			for _, size := range info.ChunkSizes {

@@ -1,0 +1,7 @@
+# Small Test Universe
+# Generated on Tue Sep 30 00:46:12 EDT 2025
+AAPL
+MSFT
+GOOGL
+AMZN
+TSLA
