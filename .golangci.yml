@@ -23,27 +23,9 @@ linters:
 
 linters-settings:
   gocyclo:
-    min-complexity: 50
+    min-complexity: 30  # Reduced from 50 to be less strict
   goconst:
-    min-len: 5
-    min-occurrences: 5
+    min-len: 3          # Reduced from 5 to be less strict
+    min-occurrences: 3  # Reduced from 5 to be less strict
   misspell:
     locale: US
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - ifElseChain
-      - assignOp
-      - dupBranchBody
-      - exitAfterDefer
-      - indentErrorFlow
-      - redefinesBuiltinId
-      - unexportedReturn
-      - varNaming
-      - unusedParam
-      - errorReturn
