@@ -381,7 +381,18 @@ func main() {
 ### Core Documentation
 - **[Installation Guide](docs/install.md)** - Setup and installation instructions
 - **[Usage Guide](docs/usage.md)** - Comprehensive usage examples and patterns
-- **[API Reference](https://godoc.org/github.com/AmpyFin/yfinance-go)** - Complete API documentation
+- **[API Reference](docs/api-reference.md)** - Complete API documentation with method capabilities and limitations
+- **[Data Structures](docs/data-structures.md)** - Detailed data structure guide with field naming conventions
+- **[Complete Examples](docs/examples.md)** - Working code examples with data processing and error handling
+
+### Method Comparison & Migration
+- **[Method Comparison](docs/method-comparison.md)** - Method comparison table and use case guidance
+- **[Migration Guide](docs/migration-guide.md)** - Migration from Python yfinance with feature comparison
+
+### Error Handling & Quality
+- **[Error Handling Guide](docs/error-handling.md)** - Comprehensive error handling and troubleshooting
+- **[Data Quality Guide](docs/data-quality.md)** - Data quality expectations and validation guidelines
+- **[Performance Guide](docs/performance.md)** - Performance optimization and best practices
 
 ### Scrape Fallback System
 - **[Scrape Overview](docs/scrape/overview.md)** - Architecture and data flow

@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-01-24
+
+### Added
+- Comprehensive API Reference documentation with method capabilities and limitations
+- Detailed Data Structures guide with field naming conventions and scaled decimal format
+- Complete working examples with data processing, formatting, and error handling
+- Method comparison table and use case guidance
+- Comprehensive error handling and troubleshooting guide
+- Migration guide from Python yfinance with feature comparison
+- Data quality and validation guidelines
+- Performance optimization and best practices guide
+- Documentation improvements summary
+
+### Changed
+- Significantly improved developer experience with comprehensive documentation
+- Enhanced README.md with organized documentation links
+- Better navigation and discoverability of documentation resources
+
+### Fixed
+- Addressed all critical documentation gaps identified by user feedback
+- Clarified API method capabilities and limitations
+- Explained data structure naming conventions and scaled decimal format
+- Provided complete working examples for all use cases
+- Added comprehensive error handling guidance
+- Included migration support from Python yfinance
+
 ## [1.0.6] - 2025-01-24
 
 ### Fixed
