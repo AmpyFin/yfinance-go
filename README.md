@@ -390,6 +390,8 @@ func main() {
 
 ## 📚 Documentation
 
+> **Note:** For the latest release notes, see [Release Notes](docs/releases/RELEASE_NOTES.md). For the complete changelog, see [CHANGELOG.md](CHANGELOG.md).
+
 ### Core Documentation
 - **[Installation Guide](docs/install.md)** - Setup and installation instructions
 - **[Usage Guide](docs/usage.md)** - Comprehensive usage examples and patterns
@@ -415,6 +417,17 @@ func main() {
 ### Operations & Monitoring
 - **[Observability Guide](docs/observability.md)** - Metrics, logging, and monitoring
 - **[Soak Testing Guide](docs/soak-testing.md)** - Load testing and validation
+- **[Production Readiness Report](docs/production-readiness.md)** - Production readiness assessment and checklist
+
+### Development & Testing
+- **[Testing Implementation](docs/testing-implementation.md)** - Testing strategy and implementation details
+- **[Release Guide](docs/releases/release-guide.md)** - Release process and procedures
+- **[Release Notes](docs/releases/RELEASE_NOTES.md)** - Version release notes and changelog
+
+### Audit & Quality Assurance
+- **[Audit Report](docs/audit/AUDIT_REPORT.md)** - Comprehensive repository audit findings
+- **[Audit Summary](docs/audit/AUDIT_SUMMARY.md)** - Summary of audit results and fixes
+- **[Final Audit Summary](docs/audit/FINAL_AUDIT_SUMMARY.md)** - Final audit validation
 
 ### Operator Runbooks
 - **[Scrape Fallback Runbook](runbooks/scrape-fallback.md)** - Operational procedures
