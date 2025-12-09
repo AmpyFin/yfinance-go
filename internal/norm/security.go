@@ -8,9 +8,10 @@ import (
 // ExchangeToMIC maps Yahoo Finance exchange names to MIC codes
 var ExchangeToMIC = map[string]string{
 	"NASDAQ":   "XNAS",
-	"NMS":      "XNMS", // Nasdaq Market System
+	"NMS":      "XNAS", // Nasdaq Market System -> XNAS (normalize to primary NASDAQ MIC)
 	"NasdaqGS": "XNAS", // Nasdaq Global Select Market
 	"NYSE":     "XNYS",
+	"NYQ":      "XNYS", // NYSE Arca/New York Stock Exchange
 	"AMEX":     "XASE",
 	"OTC":      "OTC",
 	"OTCBB":    "OTC",

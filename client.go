@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	fundamentalsv1 "github.com/AmpyFin/ampy-proto/v2/gen/go/ampy/fundamentals/v1"
@@ -19,6 +20,8 @@ import (
 type Client struct {
 	yahooClient  *yahoo.Client
 	scrapeClient scrape.Client
+	micCache     map[string]string // Cache for MIC inference to avoid repeated API calls
+	micCacheMu   sync.RWMutex      // Mutex for MIC cache
 }
 
 // NewClient creates a new Yahoo Finance client with default configuration
@@ -31,6 +34,7 @@ func NewClient() *Client {
 	return &Client{
 		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
+		micCache:     make(map[string]string),
 	}
 }
 
@@ -43,6 +47,7 @@ func NewClientWithConfig(config *httpx.Config) *Client {
 	return &Client{
 		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
+		micCache:     make(map[string]string),
 	}
 }
 
@@ -56,6 +61,7 @@ func NewClientWithSessionRotation() *Client {
 	return &Client{
 		yahooClient:  yahooClient,
 		scrapeClient: scrapeClient,
+		micCache:     make(map[string]string),
 	}
 }
 
@@ -236,6 +242,37 @@ func (c *Client) FetchMarketData(ctx context.Context, symbol string, runID strin
 
 // Scraping Functions - Return AMPY-PROTO Data
 
+// inferMICForSymbol attempts to infer the MIC code for a symbol by fetching company info
+// Uses caching to avoid repeated API calls for the same symbol
+func (c *Client) inferMICForSymbol(ctx context.Context, symbol string) string {
+	// Check cache first
+	c.micCacheMu.RLock()
+	if mic, found := c.micCache[symbol]; found {
+		c.micCacheMu.RUnlock()
+		return mic
+	}
+	c.micCacheMu.RUnlock()
+
+	// Cache miss - fetch company info
+	companyInfo, err := c.FetchCompanyInfo(ctx, symbol, "mic-inference")
+	if err != nil {
+		// If we can't fetch company info, cache empty string to avoid repeated failures
+		c.micCacheMu.Lock()
+		c.micCache[symbol] = ""
+		c.micCacheMu.Unlock()
+		return ""
+	}
+
+	mic := norm.InferMIC(companyInfo.Exchange, companyInfo.FullExchangeName)
+
+	// Cache the result
+	c.micCacheMu.Lock()
+	c.micCache[symbol] = mic
+	c.micCacheMu.Unlock()
+
+	return mic
+}
+
 // ScrapeFinancials fetches financials data and returns ampy-proto FundamentalsSnapshot
 func (c *Client) ScrapeFinancials(ctx context.Context, symbol string, runID string) (*fundamentalsv1.FundamentalsSnapshot, error) {
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/financials", symbol)
@@ -244,7 +281,14 @@ func (c *Client) ScrapeFinancials(ctx context.Context, symbol string, runID stri
 		return nil, fmt.Errorf("failed to fetch financials: %w", err)
 	}
 
-	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		// Fallback: try to extract from HTML or use empty (parser will handle)
+		mic = ""
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse financials: %w", err)
 	}
@@ -269,7 +313,13 @@ func (c *Client) ScrapeBalanceSheet(ctx context.Context, symbol string, runID st
 		return nil, fmt.Errorf("failed to fetch balance sheet: %w", err)
 	}
 
-	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		mic = ""
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse balance sheet: %w", err)
 	}
@@ -285,7 +335,13 @@ func (c *Client) ScrapeCashFlow(ctx context.Context, symbol string, runID string
 		return nil, fmt.Errorf("failed to fetch cash flow: %w", err)
 	}
 
-	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		mic = ""
+	}
+
+	dto, err := scrape.ParseComprehensiveFinancials(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse cash flow: %w", err)
 	}
@@ -301,7 +357,13 @@ func (c *Client) ScrapeKeyStatistics(ctx context.Context, symbol string, runID s
 		return nil, fmt.Errorf("failed to fetch key statistics: %w", err)
 	}
 
-	dto, err := scrape.ParseComprehensiveKeyStatistics(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		mic = ""
+	}
+
+	dto, err := scrape.ParseComprehensiveKeyStatistics(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse key statistics: %w", err)
 	}
@@ -317,7 +379,13 @@ func (c *Client) ScrapeAnalysis(ctx context.Context, symbol string, runID string
 		return nil, fmt.Errorf("failed to fetch analysis: %w", err)
 	}
 
-	dto, err := scrape.ParseAnalysis(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		mic = ""
+	}
+
+	dto, err := scrape.ParseAnalysis(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse analysis: %w", err)
 	}
@@ -333,7 +401,13 @@ func (c *Client) ScrapeAnalystInsights(ctx context.Context, symbol string, runID
 		return nil, fmt.Errorf("failed to fetch analyst insights: %w", err)
 	}
 
-	dto, err := scrape.ParseAnalystInsights(body, symbol, "XNAS")
+	// Infer MIC from exchange information
+	mic := c.inferMICForSymbol(ctx, symbol)
+	if mic == "" {
+		mic = ""
+	}
+
+	dto, err := scrape.ParseAnalystInsights(body, symbol, mic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse analyst insights: %w", err)
 	}

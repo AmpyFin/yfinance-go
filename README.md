@@ -175,7 +175,13 @@ When Yahoo Finance API endpoints are unavailable, rate-limited, or require paid 
 ### Supported Scrape Endpoints
 - **Key Statistics**: P/E ratios, market cap, financial metrics
 - **Financials**: Income statements, balance sheets, cash flow
-- **Analysis**: Analyst recommendations and price targets
+- **Analysis**: Comprehensive analyst data including:
+  - Earnings estimates (current/next quarter, current/next year)
+  - EPS trends (current estimate, 7/30/60/90 days ago)
+  - EPS revisions (up/down revisions in last 7/30 days)
+  - Revenue estimates (quarterly and annual)
+  - Growth estimates
+- **Analyst Insights**: Target prices, recommendations, analyst counts
 - **Profile**: Company information, executives, business summary
 - **News**: Recent news articles and press releases
 
@@ -187,6 +193,12 @@ keyStats, err := client.ScrapeKeyStatistics(ctx, "AAPL", runID)
 
 // Scrape financial statements
 financials, err := client.ScrapeFinancials(ctx, "AAPL", runID)
+
+// Scrape comprehensive analysis data (earnings trends, EPS revisions, revenue estimates)
+analysis, err := client.ScrapeAnalysis(ctx, "AAPL", runID)
+
+// Scrape analyst insights (target prices, recommendations)
+analystInsights, err := client.ScrapeAnalystInsights(ctx, "AAPL", runID)
 
 // Scrape news articles
 news, err := client.ScrapeNews(ctx, "AAPL", runID)

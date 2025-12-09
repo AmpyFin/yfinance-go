@@ -260,28 +260,30 @@ func ParseAnalysis(html []byte, symbol, market string) (*ComprehensiveAnalysisDT
 	htmlStr := string(html)
 
 	// Extract analysis data from HTML tables
+	// Continue even if some sections fail - collect what we can
 	if err := extractEarningsEstimate(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract earnings estimate: %w", err)
+		// Log but don't fail - some sections may be missing
+		_ = err
 	}
 
 	if err := extractRevenueEstimate(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract revenue estimate: %w", err)
+		_ = err
 	}
 
 	if err := extractEarningsHistory(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract earnings history: %w", err)
+		_ = err
 	}
 
 	if err := extractEPSTrend(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract EPS trend: %w", err)
+		_ = err
 	}
 
 	if err := extractEPSRevisions(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract EPS revisions: %w", err)
+		_ = err
 	}
 
 	if err := extractGrowthEstimate(htmlStr, dto); err != nil {
-		return nil, fmt.Errorf("failed to extract growth estimate: %w", err)
+		_ = err
 	}
 
 	return dto, nil
@@ -323,14 +325,29 @@ func parseString(s string) *string {
 // extractEarningsEstimate extracts earnings estimate data from HTML
 func extractEarningsEstimate(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the earnings estimate table section
-	re := regexp.MustCompile(analysisRegexConfig.EarningsEstimate.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.EarningsEstimate.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("earnings estimate section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract currency from table header
-	re = regexp.MustCompile(analysisRegexConfig.EarningsEstimate.CurrencyPattern)
+	re := regexp.MustCompile(analysisRegexConfig.EarningsEstimate.CurrencyPattern)
 	currencyMatch := re.FindStringSubmatch(match)
 	if len(currencyMatch) > 1 {
 		dto.EarningsEstimate.Currency = currencyMatch[1]
@@ -388,14 +405,29 @@ func extractEarningsEstimate(html string, dto *ComprehensiveAnalysisDTO) error {
 // extractRevenueEstimate extracts revenue estimate data from HTML
 func extractRevenueEstimate(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the revenue estimate table section
-	re := regexp.MustCompile(analysisRegexConfig.RevenueEstimate.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.RevenueEstimate.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("revenue estimate section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract currency from table header
-	re = regexp.MustCompile(analysisRegexConfig.RevenueEstimate.CurrencyPattern)
+	re := regexp.MustCompile(analysisRegexConfig.RevenueEstimate.CurrencyPattern)
 	currencyMatch := re.FindStringSubmatch(match)
 	if len(currencyMatch) > 1 {
 		dto.RevenueEstimate.Currency = currencyMatch[1]
@@ -458,14 +490,29 @@ func extractRevenueEstimate(html string, dto *ComprehensiveAnalysisDTO) error {
 // extractEarningsHistory extracts earnings history data with dynamic dates from HTML
 func extractEarningsHistory(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the earnings history table section
-	re := regexp.MustCompile(analysisRegexConfig.EarningsHistory.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.EarningsHistory.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("earnings history section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract currency from table header
-	re = regexp.MustCompile(analysisRegexConfig.EarningsHistory.CurrencyPattern)
+	re := regexp.MustCompile(analysisRegexConfig.EarningsHistory.CurrencyPattern)
 	currencyMatch := re.FindStringSubmatch(match)
 	if len(currencyMatch) > 1 {
 		dto.EarningsHistory.Currency = currencyMatch[1]
@@ -563,14 +610,29 @@ func extractEarningsHistory(html string, dto *ComprehensiveAnalysisDTO) error {
 // extractEPSTrend extracts EPS trend data from HTML
 func extractEPSTrend(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the EPS trend table section
-	re := regexp.MustCompile(analysisRegexConfig.EPSTrend.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.EPSTrend.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("EPS trend section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract currency from table header
-	re = regexp.MustCompile(analysisRegexConfig.EPSTrend.CurrencyPattern)
+	re := regexp.MustCompile(analysisRegexConfig.EPSTrend.CurrencyPattern)
 	currencyMatch := re.FindStringSubmatch(match)
 	if len(currencyMatch) > 1 {
 		dto.EPSTrend.Currency = currencyMatch[1]
@@ -628,14 +690,29 @@ func extractEPSTrend(html string, dto *ComprehensiveAnalysisDTO) error {
 // extractEPSRevisions extracts EPS revisions data from HTML
 func extractEPSRevisions(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the EPS revisions table section
-	re := regexp.MustCompile(analysisRegexConfig.EPSRevisions.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.EPSRevisions.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("EPS revisions section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract currency from table header
-	re = regexp.MustCompile(analysisRegexConfig.EPSRevisions.CurrencyPattern)
+	re := regexp.MustCompile(analysisRegexConfig.EPSRevisions.CurrencyPattern)
 	currencyMatch := re.FindStringSubmatch(match)
 	if len(currencyMatch) > 1 {
 		dto.EPSRevisions.Currency = currencyMatch[1]
@@ -688,14 +765,29 @@ func extractEPSRevisions(html string, dto *ComprehensiveAnalysisDTO) error {
 // extractGrowthEstimate extracts growth estimate data from HTML (only ticker data, not S&P 500)
 func extractGrowthEstimate(html string, dto *ComprehensiveAnalysisDTO) error {
 	// Find the growth estimates table section
-	re := regexp.MustCompile(analysisRegexConfig.GrowthEstimate.SectionPattern)
-	match := re.FindString(html)
-	if match == "" {
+	sectionStart := strings.Index(html, analysisRegexConfig.GrowthEstimate.SectionPattern)
+	if sectionStart == -1 {
 		return fmt.Errorf("growth estimate section not found")
 	}
+	
+	// Find the end of the section (next data-testid or </section>)
+	sectionEnd := strings.Index(html[sectionStart:], "</section>")
+	if sectionEnd == -1 {
+		// Try to find next data-testid
+		nextSection := strings.Index(html[sectionStart+1:], `data-testid="`)
+		if nextSection != -1 {
+			sectionEnd = nextSection
+		} else {
+			sectionEnd = len(html) - sectionStart
+		}
+	} else {
+		sectionEnd += len("</section>")
+	}
+	
+	match := html[sectionStart : sectionStart+sectionEnd]
 
 	// Extract table rows - we only want the first row (ticker data, not S&P 500)
-	re = regexp.MustCompile(analysisRegexConfig.GrowthEstimate.TableRowPattern)
+	re := regexp.MustCompile(analysisRegexConfig.GrowthEstimate.TableRowPattern)
 	matches := re.FindAllStringSubmatch(match, -1)
 
 	// Only process the first row (ticker data)

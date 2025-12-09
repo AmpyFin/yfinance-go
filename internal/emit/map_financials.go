@@ -684,6 +684,129 @@ func MapAnalysisDTO(dto *scrape.ComprehensiveAnalysisDTO, runID, producer string
 		}
 	}
 
+	// Map EPS trends (Current Estimate, 7/30/60/90 Days Ago)
+	if dto.EPSTrend.CurrentQtr.CurrentEstimate != nil {
+		epsValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSTrend.CurrentQtr.CurrentEstimate * 10000),
+			Scale:  4,
+		}
+		line := createLineItem("eps_trend_current_quarter", epsValue, dto.EPSTrend.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSTrend.CurrentQtr.Days7Ago != nil {
+		epsValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSTrend.CurrentQtr.Days7Ago * 10000),
+			Scale:  4,
+		}
+		line := createLineItem("eps_trend_current_quarter_7d_ago", epsValue, dto.EPSTrend.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSTrend.CurrentQtr.Days30Ago != nil {
+		epsValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSTrend.CurrentQtr.Days30Ago * 10000),
+			Scale:  4,
+		}
+		line := createLineItem("eps_trend_current_quarter_30d_ago", epsValue, dto.EPSTrend.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSTrend.CurrentYear.CurrentEstimate != nil {
+		epsValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSTrend.CurrentYear.CurrentEstimate * 10000),
+			Scale:  4,
+		}
+		line := createLineItem("eps_trend_current_year", epsValue, dto.EPSTrend.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSTrend.NextYear.CurrentEstimate != nil {
+		epsValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSTrend.NextYear.CurrentEstimate * 10000),
+			Scale:  4,
+		}
+		line := createLineItem("eps_trend_next_year", epsValue, dto.EPSTrend.Currency, periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	// Map EPS revisions (Up/Down in last 7/30 days)
+	if dto.EPSRevisions.CurrentQtr.UpLast7Days != nil {
+		revisionValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSRevisions.CurrentQtr.UpLast7Days),
+			Scale:  0,
+		}
+		line := createLineItem("eps_revisions_up_7d_current_quarter", revisionValue, "", periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSRevisions.CurrentQtr.DownLast7Days != nil {
+		revisionValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSRevisions.CurrentQtr.DownLast7Days),
+			Scale:  0,
+		}
+		line := createLineItem("eps_revisions_down_7d_current_quarter", revisionValue, "", periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSRevisions.CurrentQtr.UpLast30Days != nil {
+		revisionValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSRevisions.CurrentQtr.UpLast30Days),
+			Scale:  0,
+		}
+		line := createLineItem("eps_revisions_up_30d_current_quarter", revisionValue, "", periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	if dto.EPSRevisions.CurrentQtr.DownLast30Days != nil {
+		revisionValue := &scrape.Scaled{
+			Scaled: int64(*dto.EPSRevisions.CurrentQtr.DownLast30Days),
+			Scale:  0,
+		}
+		line := createLineItem("eps_revisions_down_30d_current_quarter", revisionValue, "", periodStart, periodEnd)
+		if line != nil {
+			lines = append(lines, line)
+		}
+	}
+
+	// Map revenue estimates
+	if dto.RevenueEstimate.CurrentQtr.AvgEstimate != nil {
+		// Revenue estimates are strings like "187.14B", need to parse
+		revStr := *dto.RevenueEstimate.CurrentQtr.AvgEstimate
+		if revVal := parseRevenueEstimateString(revStr); revVal != nil {
+			line := createLineItem("revenue_estimate_current_quarter", revVal, dto.RevenueEstimate.Currency, periodStart, periodEnd)
+			if line != nil {
+				lines = append(lines, line)
+			}
+		}
+	}
+
+	if dto.RevenueEstimate.CurrentYear.AvgEstimate != nil {
+		revStr := *dto.RevenueEstimate.CurrentYear.AvgEstimate
+		if revVal := parseRevenueEstimateString(revStr); revVal != nil {
+			line := createLineItem("revenue_estimate_current_year", revVal, dto.RevenueEstimate.Currency, periodStart, periodEnd)
+			if line != nil {
+				lines = append(lines, line)
+			}
+		}
+	}
+
 	// Map growth estimates (if available)
 	if dto.GrowthEstimate.CurrentYear != nil {
 		// Parse growth rate if it's a percentage string
@@ -838,6 +961,47 @@ func MapAnalystInsightsDTO(dto *scrape.AnalystInsightsDTO, runID, producer strin
 		AsOf:     timestamppb.New(dto.AsOf),
 		Meta:     meta,
 	}, nil
+}
+
+// parseRevenueEstimateString parses revenue estimate strings like "187.14B" or "1.2T" into Scaled decimal
+func parseRevenueEstimateString(s string) *scrape.Scaled {
+	s = strings.TrimSpace(s)
+	if s == "" || s == "--" || s == "N/A" {
+		return nil
+	}
+
+	// Remove any currency symbols or commas
+	s = strings.ReplaceAll(s, ",", "")
+	s = strings.TrimPrefix(s, "$")
+
+	// Check for suffix (B=billions, T=trillions, M=millions)
+	var multiplier float64 = 1
+	if strings.HasSuffix(s, "B") {
+		multiplier = 1e9
+		s = strings.TrimSuffix(s, "B")
+	} else if strings.HasSuffix(s, "T") {
+		multiplier = 1e12
+		s = strings.TrimSuffix(s, "T")
+	} else if strings.HasSuffix(s, "M") {
+		multiplier = 1e6
+		s = strings.TrimSuffix(s, "M")
+	} else if strings.HasSuffix(s, "K") {
+		multiplier = 1e3
+		s = strings.TrimSuffix(s, "K")
+	}
+
+	// Parse the numeric value
+	val, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return nil
+	}
+
+	// Convert to scaled decimal (scale 0 for whole numbers, but we'll use scale 0 for large values)
+	finalValue := val * multiplier
+	return &scrape.Scaled{
+		Scaled: int64(finalValue),
+		Scale:  0,
+	}
 }
 
 // MapBalanceSheetDTO converts ComprehensiveFinancialsDTO to ampy.fundamentals.v1.FundamentalsSnapshot for balance sheet data

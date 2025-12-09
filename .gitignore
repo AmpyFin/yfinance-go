@@ -91,3 +91,12 @@ yfin
 
 # Test output
 test-results/
+
+# Temporary data files
+*_all_data.json
+*_test.json
+*_all_data_clean.json
+
+# Coverage files
+coverage.out
+coverage_obsv.out
